@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import com.diegoperalta.pos.modules.compras.domain.Compra;
 import com.diegoperalta.pos.modules.compras.domain.DetalleCompra;
 import com.diegoperalta.pos.modules.compras.infrastructure.CompraRepository;
 import com.diegoperalta.pos.modules.compras.infrastructure.ProveedorRepository;
+import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
 import com.diegoperalta.pos.modules.inventario.application.ProductoService;
 import com.diegoperalta.pos.modules.inventario.domain.Producto;
@@ -40,8 +42,7 @@ public class CompraService {
         compra.setProveedor(proveedorRepository.findById(dto.getProveedorId())
                 .orElseThrow(() -> new RuntimeException("Proveedor no encontrado")));
 
-        compra.setUsuario(usuarioRepository.findById(1L)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado")));
+        compra.setUsuario(obtenerUsuarioActual());
         compra.setFolioFactura(dto.getFolioFactura());
         compra.setEstado("COMPLETADA");
         compra.setDetalles(new ArrayList<>());
@@ -75,5 +76,11 @@ public class CompraService {
 
         compra.setTotal(totalCompra);
         return compraRepository.save(compra);
+    }
+
+    private Usuario obtenerUsuarioActual() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado en la sesión actual"));
     }
 }

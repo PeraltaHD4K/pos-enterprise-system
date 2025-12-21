@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,8 +43,7 @@ public class VentaService {
     @Transactional
     public Venta registrarVenta(VentaRegistroDTO dto) {
         // 1. Obtener Usuario Actual (Hardcodeado ID 1)
-        Usuario usuario = usuarioRepository.findById(1L)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Usuario usuario = obtenerUsuarioActual();
 
         // 2. Validar que tenga CAJA ABIERTA
         SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
@@ -98,4 +98,9 @@ public class VentaService {
         return ventaRepository.save(venta);
     }
 
+    private Usuario obtenerUsuarioActual() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado en la sesión actual"));
+    }
 }

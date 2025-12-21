@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,8 +36,7 @@ public class CajaService {
     @Transactional
     public SesionCaja abrirCaja(AperturaCajaDTO dto) {
         // 1. Obtener usuario actual (Hardcodeado ID 1 por ahora)
-        Usuario usuario = usuarioRepository.findById(1L)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Usuario usuario = obtenerUsuarioActual();
 
         // 2. VALIDACIÓN: ¿Ya tiene una caja abierta?
         if (sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA").isPresent()) {
@@ -90,7 +90,7 @@ public class CajaService {
 
     @Transactional
     public MovimientoCaja registrarMovimiento(NuevoMovimientoCajaDTO dto) {
-        Usuario usuario = usuarioRepository.findById(1L).orElseThrow();
+        Usuario usuario = obtenerUsuarioActual();
 
         SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
                 .orElseThrow(() -> new RuntimeException("No hay sesión abierta."));
@@ -103,5 +103,11 @@ public class CajaService {
         mov.setMotivo(dto.getMotivo()); // Asignamos el motivo
 
         return movimientoCajaRepository.save(mov);
+    }
+
+    private Usuario obtenerUsuarioActual() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado en la sesión actual"));
     }
 }
