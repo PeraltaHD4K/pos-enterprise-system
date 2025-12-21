@@ -1,6 +1,12 @@
 package com.diegoperalta.pos.modules.iam.domain;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -18,15 +24,15 @@ import lombok.Data;
 @Data
 @Entity
 @Table(name = "usuarios")
-public class Usuario {
+public class Usuario implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "nombre_completo")
+    @Column(name = "nombre_completo", nullable = false)
     private String nombreCompleto;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String username;
 
     @JsonIgnore
@@ -41,4 +47,36 @@ public class Usuario {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "rol_id")
     private Rol rol;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        // Convierte tu Rol (String) en una "Autoridad" que Spring entienda
+        // Spring espera el formato "ROLE_NOMBRE"
+        return List.of(new SimpleGrantedAuthority("ROLE_" + rol.getNombre()));
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return this.activo; // Usamos tu campo 'activo' para bloquear acceso si es false
+    }
+
+    @Override
+    public String getPassword() {
+        return this.passwordHash;
+    }
 }
