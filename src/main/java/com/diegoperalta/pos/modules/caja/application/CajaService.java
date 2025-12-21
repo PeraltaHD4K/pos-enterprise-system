@@ -9,7 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.diegoperalta.pos.modules.caja.application.dto.AperturaCajaDTO;
 import com.diegoperalta.pos.modules.caja.application.dto.CierreCajaDTO;
+import com.diegoperalta.pos.modules.caja.application.dto.NuevoMovimientoCajaDTO;
+import com.diegoperalta.pos.modules.caja.domain.MovimientoCaja;
 import com.diegoperalta.pos.modules.caja.domain.SesionCaja;
+import com.diegoperalta.pos.modules.caja.infrastructure.MovimientoCajaRepository;
 import com.diegoperalta.pos.modules.caja.infrastructure.SesionCajaRepository;
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
@@ -25,6 +28,9 @@ public class CajaService {
 
     @Autowired
     private VentaRepository ventaRepository;
+
+    @Autowired
+    private MovimientoCajaRepository movimientoCajaRepository;
 
     @Transactional
     public SesionCaja abrirCaja(AperturaCajaDTO dto) {
@@ -60,7 +66,13 @@ public class CajaService {
 
         // 3. Calcular cuánto DEBERÍA haber (Lógica del Sistema)
         BigDecimal totalVentas = ventaRepository.sumarVentasPorSesion(sesion);
-        BigDecimal saldoEsperado = sesion.getSaldoInicial().add(totalVentas);
+        BigDecimal totalIngresos = movimientoCajaRepository.sumarPorSesionYTipo(sesion, "INGRESO");
+        BigDecimal totalRetiros = movimientoCajaRepository.sumarPorSesionYTipo(sesion, "RETIRO");
+
+        BigDecimal saldoEsperado = sesion.getSaldoInicial()
+                .add(totalVentas)
+                .add(totalIngresos)
+                .subtract(totalRetiros);
 
         // 4. Calcular Diferencia (Sobrante o Faltante)
         // Diferencia = Lo que hay fisicamente - Lo que dice el sistema
@@ -70,9 +82,26 @@ public class CajaService {
         sesion.setSaldoFinalCalculado(saldoEsperado);
         sesion.setSaldoFinalReal(dto.getSaldoFinalReal());
         sesion.setDiferencia(diferencia);
-        sesion.setFechaCierre(java.time.LocalDateTime.now());
+        sesion.setFechaCierre(LocalDateTime.now());
         sesion.setEstado("CERRADA");
 
         return sesionCajaRepository.save(sesion);
+    }
+
+    @Transactional
+    public MovimientoCaja registrarMovimiento(NuevoMovimientoCajaDTO dto) {
+        Usuario usuario = usuarioRepository.findById(1L).orElseThrow();
+
+        SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
+                .orElseThrow(() -> new RuntimeException("No hay sesión abierta."));
+
+        MovimientoCaja mov = new MovimientoCaja();
+        mov.setSesionCaja(sesion);
+        mov.setUsuario(usuario); // Ahora sí existe la columna en BD
+        mov.setMonto(dto.getMonto());
+        mov.setTipo(dto.getTipo());
+        mov.setMotivo(dto.getMotivo()); // Asignamos el motivo
+
+        return movimientoCajaRepository.save(mov);
     }
 }

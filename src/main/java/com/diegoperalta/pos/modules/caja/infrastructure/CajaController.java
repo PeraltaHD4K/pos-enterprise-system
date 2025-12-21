@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.diegoperalta.pos.modules.caja.application.CajaService;
 import com.diegoperalta.pos.modules.caja.application.dto.AperturaCajaDTO;
 import com.diegoperalta.pos.modules.caja.application.dto.CierreCajaDTO;
+import com.diegoperalta.pos.modules.caja.application.dto.NuevoMovimientoCajaDTO;
+import com.diegoperalta.pos.modules.caja.domain.MovimientoCaja;
 import com.diegoperalta.pos.modules.caja.domain.SesionCaja;
 
 @RestController
@@ -32,5 +34,10 @@ public class CajaController {
 
         SesionCaja sesionCerrada = cajaService.cerrarCaja(id, dto);
         return ResponseEntity.ok(sesionCerrada);
+    }
+
+    @PostMapping("/movimientos")
+    public ResponseEntity<MovimientoCaja> registrarMovimiento(@RequestBody NuevoMovimientoCajaDTO dto) {
+        return ResponseEntity.ok(cajaService.registrarMovimiento(dto));
     }
 }

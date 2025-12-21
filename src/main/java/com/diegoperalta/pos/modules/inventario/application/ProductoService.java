@@ -1,5 +1,6 @@
 package com.diegoperalta.pos.modules.inventario.application;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -90,5 +91,52 @@ public class ProductoService {
         movimientoRepository.save(movimiento);
 
         return producto;
+    }
+
+    // Método para procesar entradas de compras y recalcular costos
+    @Transactional
+    public void registrarEntradaPorCompra(Long productoId, Integer cantidad, BigDecimal costoCompra) {
+        Producto producto = productoRepository.findById(productoId)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+
+        // 1. Datos Actuales
+        int stockActual = producto.getStockActual() == null ? 0 : producto.getStockActual();
+        BigDecimal costoPromedioActual = producto.getCostoPromedio() == null ? BigDecimal.ZERO
+                : producto.getCostoPromedio();
+
+        // 2. Calcular Nuevo Costo Promedio (Ponderado)
+        // Valor total del inventario actual
+        BigDecimal valorInventarioActual = costoPromedioActual.multiply(new BigDecimal(stockActual));
+        // Valor de lo que estamos comprando
+        BigDecimal valorCompraNueva = costoCompra.multiply(new BigDecimal(cantidad));
+
+        // Nuevo total de unidades
+        int nuevoStockTotal = stockActual + cantidad;
+
+        // Nuevo valor total / Nuevas unidades = Nuevo Costo Promedio
+        if (nuevoStockTotal > 0) {
+            BigDecimal nuevoCostoPromedio = (valorInventarioActual.add(valorCompraNueva))
+                    .divide(new BigDecimal(nuevoStockTotal), 2, java.math.RoundingMode.HALF_UP);
+
+            producto.setCostoPromedio(nuevoCostoPromedio);
+        }
+
+        // 3. Actualizar Stock y Guardar
+        // (Reusamos la lógica interna, pero sin llamar a ajustarStock para no duplicar
+        // kardex si lo manejamos aparte)
+        // Aquí simplificaremos llamando directo a los setters para control fino
+        producto.setStockActual(nuevoStockTotal);
+        productoRepository.save(producto);
+
+        // 4. Registrar en Kardex
+        MovimientoInventario mov = new MovimientoInventario();
+        mov.setProducto(producto);
+        mov.setUsuario(usuarioRepository.findById(1L).get()); // Hardcode temporal
+        mov.setTipoMovimiento("COMPRA");
+        mov.setCantidad(cantidad);
+        mov.setStockAnterior(stockActual);
+        mov.setStockResultante(nuevoStockTotal);
+
+        movimientoRepository.save(mov);
     }
 }
