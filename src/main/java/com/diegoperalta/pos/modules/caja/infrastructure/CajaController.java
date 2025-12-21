@@ -2,6 +2,7 @@ package com.diegoperalta.pos.modules.caja.infrastructure;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.diegoperalta.pos.modules.caja.application.CajaService;
 import com.diegoperalta.pos.modules.caja.application.dto.AperturaCajaDTO;
+import com.diegoperalta.pos.modules.caja.application.dto.CierreCajaDTO;
 import com.diegoperalta.pos.modules.caja.domain.SesionCaja;
 
 @RestController
@@ -21,5 +23,14 @@ public class CajaController {
     public ResponseEntity<SesionCaja> abrirCaja(@RequestBody AperturaCajaDTO dto) {
         SesionCaja sesion = cajaService.abrirCaja(dto);
         return ResponseEntity.ok(sesion);
+    }
+
+    @PostMapping("/cerrar/{id}")
+    public ResponseEntity<SesionCaja> cerrarCaja(
+            @PathVariable Long id,
+            @RequestBody CierreCajaDTO dto) {
+
+        SesionCaja sesionCerrada = cajaService.cerrarCaja(id, dto);
+        return ResponseEntity.ok(sesionCerrada);
     }
 }
