@@ -2,6 +2,8 @@ package com.diegoperalta.pos.modules.iam.domain;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -27,6 +29,7 @@ public class Usuario {
     @Column(unique = true)
     private String username;
 
+    @JsonIgnore
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
