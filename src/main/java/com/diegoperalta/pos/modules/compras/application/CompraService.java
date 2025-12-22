@@ -5,10 +5,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.diegoperalta.pos.modules.iam.infrastructure.security.UserProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.diegoperalta.pos.common.exception.ResourceNotFoundException;
 import com.diegoperalta.pos.modules.compras.application.dto.CompraRegistroDTO;
 import com.diegoperalta.pos.modules.compras.application.dto.ItemCompraDTO;
 import com.diegoperalta.pos.modules.compras.domain.Compra;
@@ -33,6 +34,8 @@ public class CompraService {
     private ProductoRepository productoRepository;
     @Autowired
     private ProductoService productoService;
+    @Autowired
+    private UserProvider userProvider;
 
     @Transactional
     public Compra registrarCompra(CompraRegistroDTO dto) {
@@ -40,7 +43,7 @@ public class CompraService {
 
         // Validaciones básicas
         compra.setProveedor(proveedorRepository.findById(dto.getProveedorId())
-                .orElseThrow(() -> new RuntimeException("Proveedor no encontrado")));
+                .orElseThrow(() -> new ResourceNotFoundException("Proveedor no encontrado")));
 
         compra.setUsuario(obtenerUsuarioActual());
         compra.setFolioFactura(dto.getFolioFactura());
@@ -52,7 +55,8 @@ public class CompraService {
 
         for (ItemCompraDTO item : dto.getItems()) {
             Producto producto = productoRepository.findById(item.getProductoId())
-                    .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + item.getProductoId()));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException("Producto no encontrado: " + item.getProductoId()));
 
             // 1. Crear Detalle
             DetalleCompra detalle = new DetalleCompra();
@@ -79,8 +83,8 @@ public class CompraService {
     }
 
     private Usuario obtenerUsuarioActual() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = userProvider.getCurrentUser();
         return usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado en la sesión actual"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado en la sesión actual"));
     }
 }

@@ -4,9 +4,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.diegoperalta.pos.modules.iam.infrastructure.security.UserProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.diegoperalta.pos.common.exception.BusinessException;
+import com.diegoperalta.pos.common.exception.ResourceNotFoundException;
+import org.springframework.http.HttpStatus;
 
 import com.diegoperalta.pos.modules.caja.application.dto.AperturaCajaDTO;
 import com.diegoperalta.pos.modules.caja.application.dto.CierreCajaDTO;
@@ -33,14 +37,18 @@ public class CajaService {
     @Autowired
     private MovimientoCajaRepository movimientoCajaRepository;
 
+    @Autowired
+    private UserProvider userProvider;
+
     @Transactional
     public SesionCaja abrirCaja(AperturaCajaDTO dto) {
-        // 1. Obtener usuario actual (Hardcodeado ID 1 por ahora)
+        // 1. Obtener usuario actual
         Usuario usuario = obtenerUsuarioActual();
 
         // 2. VALIDACIÓN: ¿Ya tiene una caja abierta?
         if (sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA").isPresent()) {
-            throw new RuntimeException("El usuario ya tiene una sesion de caja abierta. Debe cerrar la caja actual");
+            throw new BusinessException("El usuario ya tiene una sesion de caja abierta. Debe cerrar la caja actual",
+                    HttpStatus.CONFLICT);
         }
 
         // 3. Crear la sesión
@@ -57,11 +65,11 @@ public class CajaService {
     public SesionCaja cerrarCaja(Long sesionId, CierreCajaDTO dto) {
         // 1. Buscar la sesión
         SesionCaja sesion = sesionCajaRepository.findById(sesionId)
-                .orElseThrow(() -> new RuntimeException("Sesión no encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Sesión no encontrada"));
 
         // 2. Validar que esté abierta
         if (!"ABIERTA".equals(sesion.getEstado())) {
-            throw new RuntimeException("Esta sesión ya está cerrada.");
+            throw new BusinessException("Esta sesión ya está cerrada.", HttpStatus.BAD_REQUEST);
         }
 
         // 3. Calcular cuánto DEBERÍA haber (Lógica del Sistema)
@@ -93,7 +101,7 @@ public class CajaService {
         Usuario usuario = obtenerUsuarioActual();
 
         SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
-                .orElseThrow(() -> new RuntimeException("No hay sesión abierta."));
+                .orElseThrow(() -> new BusinessException("No hay sesión abierta.", HttpStatus.BAD_REQUEST));
 
         MovimientoCaja mov = new MovimientoCaja();
         mov.setSesionCaja(sesion);
@@ -106,8 +114,8 @@ public class CajaService {
     }
 
     private Usuario obtenerUsuarioActual() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = userProvider.getCurrentUser();
         return usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado en la sesión actual"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado en la sesión actual"));
     }
 }

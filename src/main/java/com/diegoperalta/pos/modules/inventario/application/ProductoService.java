@@ -4,12 +4,18 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
+
+import com.diegoperalta.pos.common.exception.BusinessException;
+import com.diegoperalta.pos.common.exception.ResourceNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
+import com.diegoperalta.pos.modules.iam.infrastructure.security.UserProvider;
 import com.diegoperalta.pos.modules.inventario.application.dto.ProductoRegistroDTO;
 import com.diegoperalta.pos.modules.inventario.domain.Categoria;
 import com.diegoperalta.pos.modules.inventario.domain.MovimientoInventario;
@@ -32,12 +38,15 @@ public class ProductoService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    @Autowired
+    private UserProvider userProvider;
+
     public Producto crearProducto(ProductoRegistroDTO dto) {
         // 1. Validar que la categoría exista
         Optional<Categoria> categoriaOptional = categoriaRepository.findById(dto.getCategoriaId());
 
         if (categoriaOptional.isEmpty()) {
-            throw new RuntimeException("Categoría no encontrada con ID: " + dto.getCategoriaId());
+            throw new ResourceNotFoundException("Categoría no encontrada con ID: " + dto.getCategoriaId());
         }
 
         // 2. Convertir DTO a Entidad
@@ -65,16 +74,15 @@ public class ProductoService {
     @Transactional
     public Producto ajustarStock(Long productoId, Integer cantidad, String tipoMovimiento) {
         Producto producto = productoRepository.findById(productoId)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + productoId));
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + productoId));
 
-        Usuario usuario = usuarioRepository.findById(1L)
-                .orElseThrow(() -> new RuntimeException("Usuario Administrador no encontrado en BD"));
+        Usuario usuario = obtenerUsuarioActual();
 
         int stockAnterior = producto.getStockActual() == null ? 0 : producto.getStockActual();
         int stockResultante = stockAnterior + cantidad;
 
         if (stockResultante < 0) {
-            throw new RuntimeException("No se puede ajustar el stock a un valor negativo");
+            throw new BusinessException("No se puede ajustar el stock a un valor negativo", HttpStatus.BAD_REQUEST);
         }
 
         producto.setStockActual(stockResultante);
@@ -97,7 +105,7 @@ public class ProductoService {
     @Transactional
     public void registrarEntradaPorCompra(Long productoId, Integer cantidad, BigDecimal costoCompra) {
         Producto producto = productoRepository.findById(productoId)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
 
         // 1. Datos Actuales
         int stockActual = producto.getStockActual() == null ? 0 : producto.getStockActual();
@@ -121,6 +129,8 @@ public class ProductoService {
             producto.setCostoPromedio(nuevoCostoPromedio);
         }
 
+        Usuario usuario = obtenerUsuarioActual();
+
         // 3. Actualizar Stock y Guardar
         // (Reusamos la lógica interna, pero sin llamar a ajustarStock para no duplicar
         // kardex si lo manejamos aparte)
@@ -131,12 +141,18 @@ public class ProductoService {
         // 4. Registrar en Kardex
         MovimientoInventario mov = new MovimientoInventario();
         mov.setProducto(producto);
-        mov.setUsuario(usuarioRepository.findById(1L).get()); // Hardcode temporal
+        mov.setUsuario(usuario);
         mov.setTipoMovimiento("COMPRA");
         mov.setCantidad(cantidad);
         mov.setStockAnterior(stockActual);
         mov.setStockResultante(nuevoStockTotal);
 
         movimientoRepository.save(mov);
+    }
+
+    private Usuario obtenerUsuarioActual() {
+        String username = userProvider.getCurrentUser();
+        return usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado en la sesión actual"));
     }
 }

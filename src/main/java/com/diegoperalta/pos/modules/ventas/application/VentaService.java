@@ -7,9 +7,12 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.diegoperalta.pos.common.exception.BusinessException;
+import com.diegoperalta.pos.common.exception.ResourceNotFoundException;
 import com.diegoperalta.pos.modules.caja.domain.SesionCaja;
 import com.diegoperalta.pos.modules.caja.infrastructure.SesionCajaRepository;
 import com.diegoperalta.pos.modules.clientes.domain.Cliente;
@@ -58,11 +61,13 @@ public class VentaService {
 
         // 2. Validar que tenga CAJA ABIERTA
         SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
-                .orElseThrow(() -> new RuntimeException("No hay sesión de caja abierta. Abra caja primero."));
+                .orElseThrow(() -> new BusinessException("No hay sesión de caja abierta. Abra caja primero.",
+                        HttpStatus.BAD_REQUEST));
 
         // 3. Obtener Cliente
         Cliente cliente = clienteRepository.findById(dto.getClienteId())
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Cliente no encontrado con ID: " + dto.getClienteId()));
 
         // 4. Crear Cabecera de Venta
         Venta venta = new Venta();
@@ -80,7 +85,8 @@ public class VentaService {
         for (ItemVentaDTO item : dto.getItems()) {
             // A. Buscar producto
             Producto producto = productoRepository.findById(item.getProductoId())
-                    .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + item.getProductoId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Producto no encontrado con ID: " + item.getProductoId()));
 
             // B. Descontar Stock (Llama a tu módulo de Inventario)
             // Esto valida si hay stock y genera el movimiento en el Kardex
@@ -113,7 +119,7 @@ public class VentaService {
         String username = userProvider.getCurrentUser();
 
         return usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado en la sesión actual"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado en la sesión actual"));
     }
 
     @Transactional(readOnly = true)
