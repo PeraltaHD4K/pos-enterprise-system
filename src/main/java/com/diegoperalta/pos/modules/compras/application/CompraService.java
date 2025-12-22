@@ -5,15 +5,19 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+
 import com.diegoperalta.pos.modules.iam.infrastructure.security.UserProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.diegoperalta.pos.common.exception.BusinessException;
 import com.diegoperalta.pos.common.exception.ResourceNotFoundException;
 import com.diegoperalta.pos.modules.compras.application.dto.CompraRegistroDTO;
 import com.diegoperalta.pos.modules.compras.application.dto.ItemCompraDTO;
 import com.diegoperalta.pos.modules.compras.domain.Compra;
 import com.diegoperalta.pos.modules.compras.domain.DetalleCompra;
+import com.diegoperalta.pos.modules.compras.domain.Proveedor;
 import com.diegoperalta.pos.modules.compras.infrastructure.CompraRepository;
 import com.diegoperalta.pos.modules.compras.infrastructure.ProveedorRepository;
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
@@ -39,13 +43,21 @@ public class CompraService {
 
     @Transactional
     public Compra registrarCompra(CompraRegistroDTO dto) {
-        Compra compra = new Compra();
 
         // Validaciones básicas
-        compra.setProveedor(proveedorRepository.findById(dto.getProveedorId())
-                .orElseThrow(() -> new ResourceNotFoundException("Proveedor no encontrado")));
+        if (dto.getItems() == null || dto.getItems().isEmpty()) {
+            throw new BusinessException("La compra debe incluir al menos un producto", HttpStatus.BAD_REQUEST);
+        }
 
-        compra.setUsuario(obtenerUsuarioActual());
+        Usuario usuario = obtenerUsuarioActual();
+
+        Proveedor proveedor = proveedorRepository.findById(dto.getProveedorId())
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Proveedor no encontrado con ID: " + dto.getProveedorId()));
+
+        Compra compra = new Compra();
+        compra.setProveedor(proveedor);
+        compra.setUsuario(usuario);
         compra.setFolioFactura(dto.getFolioFactura());
         compra.setEstado("COMPLETADA");
         compra.setDetalles(new ArrayList<>());
@@ -54,9 +66,17 @@ public class CompraService {
         BigDecimal totalCompra = BigDecimal.ZERO;
 
         for (ItemCompraDTO item : dto.getItems()) {
+            // Validaciones por ítem
+            if (item.getCantidad() <= 0) {
+                throw new BusinessException("La cantidad del producto debe ser mayor a 0", HttpStatus.BAD_REQUEST);
+            }
+            if (item.getCostoUnitario().compareTo(BigDecimal.ZERO) < 0) {
+                throw new BusinessException("El costo unitario no puede ser negativo", HttpStatus.BAD_REQUEST);
+            }
+
             Producto producto = productoRepository.findById(item.getProductoId())
                     .orElseThrow(
-                            () -> new ResourceNotFoundException("Producto no encontrado: " + item.getProductoId()));
+                            () -> new ResourceNotFoundException("Producto no encontrado ID: " + item.getProductoId()));
 
             // 1. Crear Detalle
             DetalleCompra detalle = new DetalleCompra();
