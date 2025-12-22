@@ -7,7 +7,6 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +16,7 @@ import com.diegoperalta.pos.modules.clientes.domain.Cliente;
 import com.diegoperalta.pos.modules.clientes.infrastructure.ClienteRepository;
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
+import com.diegoperalta.pos.modules.iam.infrastructure.security.UserProvider;
 import com.diegoperalta.pos.modules.inventario.application.ProductoService;
 import com.diegoperalta.pos.modules.inventario.domain.Producto;
 import com.diegoperalta.pos.modules.inventario.infrastructure.ProductoRepository;
@@ -32,20 +32,28 @@ public class VentaService {
 
     @Autowired
     private VentaRepository ventaRepository;
+
     @Autowired
     private ProductoRepository productoRepository; // Para buscar info del producto
+
     @Autowired
     private ProductoService productoService; // Para descontar stock (Lógica Kardex)
+
     @Autowired
     private ClienteRepository clienteRepository;
+
     @Autowired
     private UsuarioRepository usuarioRepository;
+
     @Autowired
     private SesionCajaRepository sesionCajaRepository;
 
+    @Autowired
+    private UserProvider userProvider;
+
     @Transactional
     public Venta registrarVenta(VentaRegistroDTO dto) {
-        // 1. Obtener Usuario Actual (Hardcodeado ID 1)
+        // 1. Obtener Usuario Actual
         Usuario usuario = obtenerUsuarioActual();
 
         // 2. Validar que tenga CAJA ABIERTA
@@ -102,7 +110,8 @@ public class VentaService {
     }
 
     private Usuario obtenerUsuarioActual() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = userProvider.getCurrentUser();
+
         return usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado en la sesión actual"));
     }
