@@ -62,10 +62,17 @@ public class CajaService {
     }
 
     @Transactional
-    public SesionCaja cerrarCaja(Long sesionId, CierreCajaDTO dto) {
-        // 1. Buscar la sesión
-        SesionCaja sesion = sesionCajaRepository.findById(sesionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Sesión no encontrada"));
+    public SesionCaja cerrarCaja(CierreCajaDTO dto) {
+        Usuario usuario = obtenerUsuarioActual(); // El que está intentando cerrar
+
+        // 1. Buscar la caja abierta del usuario
+        SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
+                .orElseThrow(() -> new BusinessException("No hay sesion abierta para cerrar", HttpStatus.BAD_REQUEST));
+
+        // VALIDACIÓN DE SEGURIDAD
+        if (!sesion.getUsuario().getId().equals(usuario.getId())) {
+            throw new BusinessException("No puedes cerrar una caja que no te pertenece", HttpStatus.FORBIDDEN);
+        }
 
         // 2. Validar que esté abierta
         if (!"ABIERTA".equals(sesion.getEstado())) {

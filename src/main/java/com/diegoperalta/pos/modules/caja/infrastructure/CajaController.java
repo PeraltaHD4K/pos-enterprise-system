@@ -2,7 +2,6 @@ package com.diegoperalta.pos.modules.caja.infrastructure;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,13 +26,10 @@ public class CajaController {
         return ResponseEntity.ok(sesion);
     }
 
-    @PostMapping("/cerrar/{id}")
-    public ResponseEntity<SesionCaja> cerrarCaja(
-            @PathVariable Long id,
-            @RequestBody CierreCajaDTO dto) {
-
-        SesionCaja sesionCerrada = cajaService.cerrarCaja(id, dto);
-        return ResponseEntity.ok(sesionCerrada);
+    @PostMapping("/cerrar")
+    public ResponseEntity<SesionCaja> cerrarCaja(@RequestBody CierreCajaDTO dto) {
+        SesionCaja sesion = cajaService.cerrarCaja(dto);
+        return ResponseEntity.ok(sesion);
     }
 
     @PostMapping("/movimientos")
