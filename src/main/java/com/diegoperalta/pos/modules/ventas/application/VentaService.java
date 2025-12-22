@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,7 @@ import com.diegoperalta.pos.modules.inventario.domain.Producto;
 import com.diegoperalta.pos.modules.inventario.infrastructure.ProductoRepository;
 import com.diegoperalta.pos.modules.ventas.application.dto.ItemVentaDTO;
 import com.diegoperalta.pos.modules.ventas.application.dto.VentaRegistroDTO;
+import com.diegoperalta.pos.modules.ventas.application.dto.VentaResumenDTO;
 import com.diegoperalta.pos.modules.ventas.domain.DetalleVenta;
 import com.diegoperalta.pos.modules.ventas.domain.Venta;
 import com.diegoperalta.pos.modules.ventas.infrastructure.VentaRepository;
@@ -102,5 +105,28 @@ public class VentaService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado en la sesión actual"));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<VentaResumenDTO> listarVentas(Pageable pageable) {
+        Page<Venta> paginaVentas = ventaRepository.findAll(pageable);
+        return paginaVentas.map(venta -> {
+            VentaResumenDTO dto = new VentaResumenDTO();
+            dto.setId(venta.getId());
+            dto.setFolio(venta.getFolio());
+            dto.setFecha(venta.getFecha());
+            dto.setTotalVenta(venta.getTotalVenta());
+            dto.setEstado(venta.getEstado());
+
+            if (venta.getCliente() != null) {
+                dto.setNombreCliente(venta.getCliente().getNombre());
+            }
+
+            if (venta.getUsuario() != null) {
+                dto.setNombreVendedor(venta.getUsuario().getUsername());
+            }
+
+            return dto;
+        });
     }
 }
