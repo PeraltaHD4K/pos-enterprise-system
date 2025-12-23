@@ -102,6 +102,36 @@ public class ProductoService {
         return producto;
     }
 
+    @Transactional
+    public void registrarSalidaPorVenta(Long productoId, Integer cantidad, Long ventaId) {
+        Producto producto = productoRepository.findById(productoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + productoId));
+
+        Usuario usuario = obtenerUsuarioActual();
+
+        int stockActual = producto.getStockActual() == null ? 0 : producto.getStockActual();
+
+        if (stockActual < cantidad) {
+            throw new BusinessException("Stock insuficiente para el producto:" + producto.getNombre()
+                    + ". Disponible: " + stockActual + ". Cantidad solicitada: " + cantidad, HttpStatus.BAD_REQUEST);
+        }
+
+        int nuevoStock = stockActual - cantidad;
+        producto.setStockActual(nuevoStock);
+        productoRepository.save(producto);
+
+        MovimientoInventario movimiento = new MovimientoInventario();
+        movimiento.setProducto(producto);
+        movimiento.setUsuario(usuario);
+        movimiento.setTipoMovimiento("VENTA");
+        movimiento.setCantidad(cantidad * -1);
+        movimiento.setStockAnterior(stockActual);
+        movimiento.setStockResultante(nuevoStock);
+        movimiento.setReferenciaId(ventaId);
+
+        movimientoRepository.save(movimiento);
+    }
+
     // Método para procesar entradas de compras y recalcular costos
     @Transactional
     public void registrarEntradaPorCompra(Long productoId, Integer cantidad, BigDecimal costoCompra, Long compraId) {

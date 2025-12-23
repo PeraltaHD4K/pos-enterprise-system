@@ -71,6 +71,10 @@ public class CompraService {
             compra.setFechaRecepcion(LocalDateTime.now());
         }
 
+        compra.setTotal(BigDecimal.ZERO);
+
+        compra = compraRepository.save(compra);
+
         BigDecimal totalCompra = BigDecimal.ZERO;
         compra.setDetalles(new ArrayList<>());
 

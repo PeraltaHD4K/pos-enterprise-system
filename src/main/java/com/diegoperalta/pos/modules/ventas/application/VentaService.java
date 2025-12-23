@@ -78,6 +78,9 @@ public class VentaService {
         venta.setEstado("COMPLETADA");
         venta.setFolio(UUID.randomUUID().toString().substring(0, 8).toUpperCase()); // Generamos un folio simple
         venta.setDetalles(new ArrayList<>());
+        venta.setTotalVenta(BigDecimal.ZERO);
+
+        venta = ventaRepository.save(venta);
 
         BigDecimal totalAcumulado = BigDecimal.ZERO;
 
@@ -90,7 +93,7 @@ public class VentaService {
 
             // B. Descontar Stock (Llama a tu módulo de Inventario)
             // Esto valida si hay stock y genera el movimiento en el Kardex
-            productoService.ajustarStock(producto.getId(), -item.getCantidad(), "VENTA");
+            productoService.registrarSalidaPorVenta(producto.getId(), item.getCantidad(), venta.getId());
 
             // C. Crear Detalle
             DetalleVenta detalle = new DetalleVenta();
@@ -98,7 +101,10 @@ public class VentaService {
             detalle.setProducto(producto);
             detalle.setCantidad(item.getCantidad());
             detalle.setPrecioUnitario(producto.getPrecioVenta()); // Precio actual
-            detalle.setCostoUnitarioSnapshot(producto.getCostoPromedio()); // Costo actual (Snapshot)
+
+            BigDecimal costoSnapshot = producto.getCostoPromedio() != null ? producto.getCostoPromedio()
+                    : BigDecimal.ZERO;
+            detalle.setCostoUnitarioSnapshot(costoSnapshot); // Costo actual (Snapshot)
 
             // Calculo Subtotal
             BigDecimal subtotal = producto.getPrecioVenta().multiply(new BigDecimal(item.getCantidad()));
