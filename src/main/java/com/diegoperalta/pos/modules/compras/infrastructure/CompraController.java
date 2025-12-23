@@ -2,6 +2,7 @@ package com.diegoperalta.pos.modules.compras.infrastructure;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,5 +22,11 @@ public class CompraController {
     public ResponseEntity<Compra> registrarCompra(@RequestBody CompraRegistroDTO dto) {
         Compra nuevaCompra = compraService.registrarCompra(dto);
         return ResponseEntity.ok(nuevaCompra);
+    }
+
+    @PostMapping("/confirmar/{id}")
+    public ResponseEntity<Compra> confirmarRecepcion(@PathVariable Long id) {
+        Compra compraConfirmada = compraService.confirmarRecepcion(id);
+        return ResponseEntity.ok(compraConfirmada);
     }
 }

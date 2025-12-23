@@ -41,5 +41,8 @@ public class MovimientoInventario {
     @Column(name = "stock_resultante")
     private Integer stockResultante;
 
+    @Column(name = "referencia_id")
+    private Long referenciaId;
+
     private LocalDateTime fecha = LocalDateTime.now();
 }

@@ -7,6 +7,8 @@ import lombok.Data;
 @Data
 public class ItemCompraDTO {
     private Long productoId;
-    private Integer cantidad;
-    private BigDecimal costoUnitario;
+    private Integer cantidadPedida;
+    private Integer cantidadRecibida;
+    private Integer unidadesPorCaja;
+    private BigDecimal costoTotal;
 }

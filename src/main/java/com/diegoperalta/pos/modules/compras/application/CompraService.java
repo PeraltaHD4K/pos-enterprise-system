@@ -1,6 +1,7 @@
 package com.diegoperalta.pos.modules.compras.application;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
@@ -43,7 +44,6 @@ public class CompraService {
 
     @Transactional
     public Compra registrarCompra(CompraRegistroDTO dto) {
-
         // Validaciones básicas
         if (dto.getItems() == null || dto.getItems().isEmpty()) {
             throw new BusinessException("La compra debe incluir al menos un producto", HttpStatus.BAD_REQUEST);
@@ -59,21 +59,22 @@ public class CompraService {
         compra.setProveedor(proveedor);
         compra.setUsuario(usuario);
         compra.setFolioFactura(dto.getFolioFactura());
-        compra.setEstado("COMPLETADA");
-        compra.setDetalles(new ArrayList<>());
-        compra.setFechaCompra(LocalDateTime.now());
+        compra.setObservaciones(dto.getObservaciones());
+
+        compra.setFechaPedido(LocalDateTime.now());
+        compra.setFechaEstimadaEntrega(dto.getFechaEstimadaEntrega());
+
+        String estadoInicial = (dto.getEstado() != null) ? dto.getEstado() : "COMPLETADA";
+        compra.setEstado(estadoInicial);
+
+        if ("COMPLETADA".equals(estadoInicial)) {
+            compra.setFechaRecepcion(LocalDateTime.now());
+        }
 
         BigDecimal totalCompra = BigDecimal.ZERO;
+        compra.setDetalles(new ArrayList<>());
 
         for (ItemCompraDTO item : dto.getItems()) {
-            // Validaciones por ítem
-            if (item.getCantidad() <= 0) {
-                throw new BusinessException("La cantidad del producto debe ser mayor a 0", HttpStatus.BAD_REQUEST);
-            }
-            if (item.getCostoUnitario().compareTo(BigDecimal.ZERO) < 0) {
-                throw new BusinessException("El costo unitario no puede ser negativo", HttpStatus.BAD_REQUEST);
-            }
-
             Producto producto = productoRepository.findById(item.getProductoId())
                     .orElseThrow(
                             () -> new ResourceNotFoundException("Producto no encontrado ID: " + item.getProductoId()));
@@ -82,23 +83,94 @@ public class CompraService {
             DetalleCompra detalle = new DetalleCompra();
             detalle.setCompra(compra);
             detalle.setProducto(producto);
-            detalle.setCantidad(item.getCantidad());
-            detalle.setCostoUnitario(item.getCostoUnitario());
 
+            detalle.setCantidadPedida(item.getCantidadPedida());
+            detalle.setUnidadesPorCaja(item.getUnidadesPorCaja() != null ? item.getUnidadesPorCaja() : 1);
+
+            if (item.getCostoTotal() != null) {
+                detalle.setCostoTotalRenglon(item.getCostoTotal());
+            } else {
+                BigDecimal ultimoCosto = producto.getUltimoCostoCompra();
+                if (ultimoCosto != null && ultimoCosto.compareTo(BigDecimal.ZERO) > 0) {
+                    int totalPiezas = item.getCantidadPedida()
+                            * (item.getUnidadesPorCaja() != null ? item.getUnidadesPorCaja() : 1);
+
+                    BigDecimal estimado = ultimoCosto.multiply(new BigDecimal(totalPiezas));
+                    detalle.setCostoTotalRenglon(estimado);
+                }
+            }
+
+            if (detalle.getCostoTotalRenglon() != null) {
+                totalCompra = totalCompra.add(detalle.getCostoTotalRenglon());
+            }
+
+            // 2. IMPACTAR INVENTARIO
+            if ("COMPLETADA".equals(estadoInicial)) {
+                int recibida = item.getCantidadRecibida() != null ? item.getCantidadRecibida()
+                        : item.getCantidadPedida();
+                detalle.setCantidadRecibida(recibida);
+
+                if (detalle.getCostoTotalRenglon() != null && recibida > 0) {
+                    BigDecimal totalPiezas = new BigDecimal(recibida * detalle.getUnidadesPorCaja());
+                    BigDecimal costoUnitario = detalle.getCostoTotalRenglon().divide(totalPiezas, 4,
+                            RoundingMode.HALF_UP);
+
+                    detalle.setCostoUnitarioCalculado(costoUnitario);
+
+                    productoService.registrarEntradaPorCompra(
+                            producto.getId(),
+                            totalPiezas.intValue(),
+                            costoUnitario,
+                            compra.getId());
+                }
+            }
             compra.getDetalles().add(detalle);
-
-            // Sumar al total de la factura
-            BigDecimal subtotal = item.getCostoUnitario().multiply(new BigDecimal(item.getCantidad()));
-            totalCompra = totalCompra.add(subtotal);
-
-            // 2. IMPACTAR INVENTARIO (Magia del Costo Promedio)
-            productoService.registrarEntradaPorCompra(
-                    producto.getId(),
-                    item.getCantidad(),
-                    item.getCostoUnitario());
         }
 
         compra.setTotal(totalCompra);
+        return compraRepository.save(compra);
+    }
+
+    @Transactional
+    public Compra confirmarRecepcion(Long compraId) {
+        Compra compra = compraRepository.findById(compraId)
+                .orElseThrow(() -> new ResourceNotFoundException("Compra no encontrada"));
+
+        if (!"PENDIENTE".equals(compra.getEstado())) {
+            throw new BusinessException("Solo se puede confirmar la recepción de una compra PENDIENTE",
+                    HttpStatus.CONFLICT);
+        }
+
+        // Aquí asumimos que llegó TODO lo pedido.
+        // (Para la versión avanzada, el endpoint debería recibir un DTO con las
+        // diferencias,
+        // pero por ahora cerraremos asumiendo éxito total para simplificar).
+
+        BigDecimal totalReal = BigDecimal.ZERO;
+
+        for (DetalleCompra detalle : compra.getDetalles()) {
+            detalle.setCantidadRecibida(detalle.getCantidadPedida());
+
+            if (detalle.getCostoTotalRenglon() != null) {
+                BigDecimal totalPiezas = new BigDecimal(detalle.getTotalPiezasReales());
+                if (totalPiezas.compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal unitario = detalle.getCostoTotalRenglon().divide(totalPiezas, 4, RoundingMode.HALF_UP);
+                    detalle.setCostoUnitarioCalculado(unitario);
+
+                    productoService.registrarEntradaPorCompra(
+                            detalle.getProducto().getId(),
+                            totalPiezas.intValue(),
+                            unitario,
+                            compra.getId());
+                }
+                totalReal = totalReal.add(detalle.getCostoTotalRenglon());
+            }
+        }
+
+        compra.setEstado("COMPLETADA");
+        compra.setFechaRecepcion(LocalDateTime.now());
+        compra.setTotal(totalReal);
+
         return compraRepository.save(compra);
     }
 

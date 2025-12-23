@@ -57,6 +57,7 @@ public class ProductoService {
         producto.setDescripcion(dto.getDescripcion());
         producto.setPrecioVenta(dto.getPrecioVenta());
         producto.setCostoPromedio(dto.getCostoPromedio());
+        producto.setUltimoCostoCompra(dto.getCostoPromedio());
         producto.setStockMinimo(dto.getStockMinimo());
         producto.setStockActual(0);
 
@@ -103,7 +104,7 @@ public class ProductoService {
 
     // Método para procesar entradas de compras y recalcular costos
     @Transactional
-    public void registrarEntradaPorCompra(Long productoId, Integer cantidad, BigDecimal costoCompra) {
+    public void registrarEntradaPorCompra(Long productoId, Integer cantidad, BigDecimal costoCompra, Long compraId) {
         Producto producto = productoRepository.findById(productoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
 
@@ -136,6 +137,7 @@ public class ProductoService {
         // kardex si lo manejamos aparte)
         // Aquí simplificaremos llamando directo a los setters para control fino
         producto.setStockActual(nuevoStockTotal);
+        producto.setUltimoCostoCompra(costoCompra);
         productoRepository.save(producto);
 
         // 4. Registrar en Kardex
@@ -146,6 +148,7 @@ public class ProductoService {
         mov.setCantidad(cantidad);
         mov.setStockAnterior(stockActual);
         mov.setStockResultante(nuevoStockTotal);
+        mov.setReferenciaId(compraId);
 
         movimientoRepository.save(mov);
     }

@@ -24,16 +24,32 @@ public class DetalleCompra {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "compra_id")
+    @JoinColumn(name = "compra_id", nullable = false)
     @JsonIgnore
     private Compra compra;
 
     @ManyToOne
-    @JoinColumn(name = "producto_id")
+    @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
 
-    private Integer cantidad;
+    @Column(name = "cantidad_pedida", nullable = false)
+    private Integer cantidadPedida;
 
-    @Column(name = "costo_unitario")
-    private BigDecimal costoUnitario;
+    @Column(name = "cantidad_recibida")
+    private Integer cantidadRecibida;
+
+    @Column(name = "unidades_por_caja")
+    private Integer unidadesPorCaja = 1;
+
+    @Column(name = "costo_total_renglon")
+    private BigDecimal costoTotalRenglon;
+
+    @Column(name = "costo_unitario_calculado", precision = 10, scale = 4)
+    private BigDecimal costoUnitarioCalculado;
+
+    public Integer getTotalPiezasReales() {
+        int recibida = (cantidadRecibida != null) ? cantidadRecibida : 0;
+        int factor = (unidadesPorCaja != null && unidadesPorCaja > 0) ? unidadesPorCaja : 1;
+        return recibida * factor;
+    }
 }

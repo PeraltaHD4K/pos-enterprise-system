@@ -39,6 +39,9 @@ public class Producto {
     @Column(name = "costo_promedio")
     private BigDecimal costoPromedio;
 
+    @Column(name = "ultimo_costo_compra")
+    private BigDecimal ultimoCostoCompra;
+
     @Column(name = "stock_actual")
     private Integer stockActual;
 
