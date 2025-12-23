@@ -6,12 +6,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.diegoperalta.pos.modules.inventario.application.ProductoService;
 import com.diegoperalta.pos.modules.inventario.application.dto.AjusteStockDTO;
@@ -40,5 +42,12 @@ public class ProductoController {
         Producto producto = productoService.ajustarStock(productoId, dto.getCantidad(), "AJUSTE_MANUAL");
 
         return ResponseEntity.ok(producto);
+    }
+
+    @GetMapping("/buscar")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CAJERO')")
+    public ResponseEntity<List<Producto>> buscarProductos(@RequestParam("q") String query) {
+        List<Producto> resultados = productoService.buscarProductos(query);
+        return ResponseEntity.ok(resultados);
     }
 }

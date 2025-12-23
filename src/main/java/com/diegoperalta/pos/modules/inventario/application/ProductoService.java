@@ -183,6 +183,14 @@ public class ProductoService {
         movimientoRepository.save(mov);
     }
 
+    @Transactional
+    public List<Producto> buscarProductos(String query) {
+        if (query == null || query.trim().length() < 2) {
+            return List.of();
+        }
+        return productoRepository.buscarProductos(query.trim());
+    }
+
     private Usuario obtenerUsuarioActual() {
         String username = userProvider.getCurrentUser();
         return usuarioRepository.findByUsername(username)
