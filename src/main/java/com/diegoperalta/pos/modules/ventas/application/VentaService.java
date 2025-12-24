@@ -1,7 +1,10 @@
 package com.diegoperalta.pos.modules.ventas.application;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +27,7 @@ import com.diegoperalta.pos.modules.inventario.application.ProductoService;
 import com.diegoperalta.pos.modules.inventario.domain.Producto;
 import com.diegoperalta.pos.modules.inventario.infrastructure.ProductoRepository;
 import com.diegoperalta.pos.modules.ventas.application.dto.ItemVentaDTO;
+import com.diegoperalta.pos.modules.ventas.application.dto.ReporteGananciasDTO;
 import com.diegoperalta.pos.modules.ventas.application.dto.VentaRegistroDTO;
 import com.diegoperalta.pos.modules.ventas.application.dto.VentaResumenDTO;
 import com.diegoperalta.pos.modules.ventas.domain.DetalleVenta;
@@ -149,5 +153,45 @@ public class VentaService {
 
             return dto;
         });
+    }
+
+    @Transactional(readOnly = true)
+    public ReporteGananciasDTO generarReporteGanancias(LocalDateTime inicio, LocalDateTime fin) {
+        List<Venta> ventas = ventaRepository.buscarVentasEnRango(inicio, fin);
+
+        BigDecimal totalVenta = BigDecimal.ZERO;
+        BigDecimal totalCosto = BigDecimal.ZERO;
+
+        for (Venta venta : ventas) {
+            totalVenta = totalVenta.add(venta.getTotalVenta());
+
+            for (DetalleVenta detalle : venta.getDetalles()) {
+                BigDecimal costoUnitario = detalle.getCostoUnitarioSnapshot();
+
+                if (costoUnitario == null) {
+                    costoUnitario = BigDecimal.ZERO;
+                }
+
+                BigDecimal costoRenglon = costoUnitario.multiply(new BigDecimal(detalle.getCantidad()));
+                totalCosto = totalCosto.add(costoRenglon);
+            }
+        }
+
+        ReporteGananciasDTO reporte = new ReporteGananciasDTO();
+        reporte.setTotalVentas(totalVenta);
+        reporte.setCostoVentas(totalCosto);
+        reporte.setGananciaBruta(totalVenta.subtract(totalCosto));
+        reporte.setTotalTransacciones(ventas.size());
+
+        if (totalVenta.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal margen = reporte.getGananciaBruta()
+                    .divide(totalVenta, 4, RoundingMode.HALF_UP)
+                    .multiply(new BigDecimal(100));
+            reporte.setMargenPorcentaje(margen);
+        } else {
+            reporte.setMargenPorcentaje(BigDecimal.ZERO);
+        }
+
+        return reporte;
     }
 }
