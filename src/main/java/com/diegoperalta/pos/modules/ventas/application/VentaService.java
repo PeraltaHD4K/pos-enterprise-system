@@ -3,8 +3,11 @@ package com.diegoperalta.pos.modules.ventas.application;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +30,7 @@ import com.diegoperalta.pos.modules.inventario.application.ProductoService;
 import com.diegoperalta.pos.modules.inventario.domain.Producto;
 import com.diegoperalta.pos.modules.inventario.infrastructure.ProductoRepository;
 import com.diegoperalta.pos.modules.ventas.application.dto.ItemVentaDTO;
+import com.diegoperalta.pos.modules.ventas.application.dto.PuntoGraficaDTO;
 import com.diegoperalta.pos.modules.ventas.application.dto.ReporteGananciasDTO;
 import com.diegoperalta.pos.modules.ventas.application.dto.VentaRegistroDTO;
 import com.diegoperalta.pos.modules.ventas.application.dto.VentaResumenDTO;
@@ -166,22 +170,23 @@ public class VentaService {
             totalVenta = totalVenta.add(venta.getTotalVenta());
 
             for (DetalleVenta detalle : venta.getDetalles()) {
-                BigDecimal costoUnitario = detalle.getCostoUnitarioSnapshot();
-
-                if (costoUnitario == null) {
-                    costoUnitario = BigDecimal.ZERO;
-                }
+                BigDecimal costoUnitario = detalle.getCostoUnitarioSnapshot() != null
+                        ? detalle.getCostoUnitarioSnapshot()
+                        : BigDecimal.ZERO;
 
                 BigDecimal costoRenglon = costoUnitario.multiply(new BigDecimal(detalle.getCantidad()));
                 totalCosto = totalCosto.add(costoRenglon);
             }
         }
 
+        List<PuntoGraficaDTO> datosGrafica = calcularDatosGrafica(ventas, inicio, fin);
+
         ReporteGananciasDTO reporte = new ReporteGananciasDTO();
         reporte.setTotalVentas(totalVenta);
         reporte.setCostoVentas(totalCosto);
         reporte.setGananciaBruta(totalVenta.subtract(totalCosto));
         reporte.setTotalTransacciones(ventas.size());
+        reporte.setGrafica(datosGrafica);
 
         if (totalVenta.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal margen = reporte.getGananciaBruta()
@@ -193,5 +198,47 @@ public class VentaService {
         }
 
         return reporte;
+    }
+
+    private List<PuntoGraficaDTO> calcularDatosGrafica(List<Venta> ventas, LocalDateTime inicio, LocalDateTime fin) {
+        boolean esUnSoloDia = inicio.toLocalDate().isEqual(fin.toLocalDate());
+
+        DateTimeFormatter formatter = esUnSoloDia
+                ? DateTimeFormatter.ofPattern("HH:00")
+                : DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        Map<String, List<Venta>> grupos = new TreeMap<>();
+
+        for (Venta venta : ventas) {
+            String clave = venta.getFecha().format(formatter);
+            grupos.computeIfAbsent(clave, k -> new ArrayList<>()).add(venta);
+        }
+
+        List<PuntoGraficaDTO> puntos = new ArrayList<>();
+
+        for (Map.Entry<String, List<Venta>> entrada : grupos.entrySet()) {
+            String etiqueta = entrada.getKey();
+            List<Venta> ventasEnGrupo = entrada.getValue();
+
+            BigDecimal sumaVenta = BigDecimal.ZERO;
+            BigDecimal sumaCosto = BigDecimal.ZERO;
+
+            for (Venta venta : ventasEnGrupo) {
+                sumaVenta = sumaVenta.add(venta.getTotalVenta());
+
+                for (DetalleVenta detalle : venta.getDetalles()) {
+                    BigDecimal costoUnitario = detalle.getCostoUnitarioSnapshot() != null
+                            ? detalle.getCostoUnitarioSnapshot()
+                            : BigDecimal.ZERO;
+                    sumaCosto = sumaCosto.add(costoUnitario.multiply(new BigDecimal(detalle.getCantidad())));
+                }
+            }
+
+            BigDecimal gananciaGrupo = sumaVenta.subtract(sumaCosto);
+
+            puntos.add(new PuntoGraficaDTO(etiqueta, sumaVenta, gananciaGrupo, ventasEnGrupo.size()));
+        }
+
+        return puntos;
     }
 }
