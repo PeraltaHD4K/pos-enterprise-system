@@ -191,6 +191,11 @@ public class ProductoService {
         return productoRepository.buscarProductos(query.trim());
     }
 
+    @Transactional(readOnly = true)
+    public List<Producto> obtenerReporteStockBajo() {
+        return productoRepository.encontrarProductosConStockBajo();
+    }
+
     private Usuario obtenerUsuarioActual() {
         String username = userProvider.getCurrentUser();
         return usuarioRepository.findByUsername(username)

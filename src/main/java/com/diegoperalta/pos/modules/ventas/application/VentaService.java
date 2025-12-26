@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ import com.diegoperalta.pos.modules.inventario.application.ProductoService;
 import com.diegoperalta.pos.modules.inventario.domain.Producto;
 import com.diegoperalta.pos.modules.inventario.infrastructure.ProductoRepository;
 import com.diegoperalta.pos.modules.ventas.application.dto.ItemVentaDTO;
+import com.diegoperalta.pos.modules.ventas.application.dto.ProductoTopDTO;
 import com.diegoperalta.pos.modules.ventas.application.dto.PuntoGraficaDTO;
 import com.diegoperalta.pos.modules.ventas.application.dto.ReporteGananciasDTO;
 import com.diegoperalta.pos.modules.ventas.application.dto.VentaRegistroDTO;
@@ -197,6 +199,14 @@ public class VentaService {
             reporte.setMargenPorcentaje(BigDecimal.ZERO);
         }
 
+        if (reporte.getTotalTransacciones() != null && reporte.getTotalTransacciones() > 0) {
+            BigDecimal promedio = reporte.getTotalVentas()
+                    .divide(new BigDecimal(reporte.getTotalTransacciones()), 2, RoundingMode.HALF_UP);
+            reporte.setTicketPromedio(promedio);
+        } else {
+            reporte.setTicketPromedio(BigDecimal.ZERO);
+        }
+
         return reporte;
     }
 
@@ -240,5 +250,11 @@ public class VentaService {
         }
 
         return puntos;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductoTopDTO> obtenerTopProductos(LocalDateTime inicio, LocalDateTime fin, int limite) {
+        Pageable pageable = PageRequest.of(0, limite);
+        return ventaRepository.encontrarTopProductos(inicio, fin, pageable);
     }
 }

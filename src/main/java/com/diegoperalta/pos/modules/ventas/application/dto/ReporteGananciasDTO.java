@@ -13,4 +13,5 @@ public class ReporteGananciasDTO {
     private BigDecimal margenPorcentaje;
     private Integer totalTransacciones;
     private List<PuntoGraficaDTO> grafica;
+    private BigDecimal ticketPromedio;
 }

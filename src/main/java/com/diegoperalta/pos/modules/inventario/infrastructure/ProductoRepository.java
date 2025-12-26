@@ -18,4 +18,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     boolean existsByCodigoBarras(String codigoBarras);
 
     boolean existsBySku(String sku);
+
+    @Query("SELECT p FROM Producto p WHERE p.stockActual <= p.stockMinimo AND p.activo = true")
+    List<Producto> encontrarProductosConStockBajo();
 }

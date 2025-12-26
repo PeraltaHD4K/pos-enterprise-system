@@ -50,4 +50,11 @@ public class ProductoController {
         List<Producto> resultados = productoService.buscarProductos(query);
         return ResponseEntity.ok(resultados);
     }
+
+    @GetMapping("/reportes/stock-bajo")
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    public ResponseEntity<List<Producto>> obtenerStockBajo() {
+        List<Producto> productosConStockBajo = productoService.obtenerReporteStockBajo();
+        return ResponseEntity.ok(productosConStockBajo);
+    }
 }

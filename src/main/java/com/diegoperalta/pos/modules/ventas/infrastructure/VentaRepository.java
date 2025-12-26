@@ -4,12 +4,14 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.diegoperalta.pos.modules.caja.domain.SesionCaja;
+import com.diegoperalta.pos.modules.ventas.application.dto.ProductoTopDTO;
 import com.diegoperalta.pos.modules.ventas.domain.Venta;
 
 @Repository
@@ -21,4 +23,16 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
 
     @Query("SELECT v FROM Venta v WHERE v.fecha BETWEEN :inicio AND :fin AND v.estado = 'COMPLETADA'")
     List<Venta> buscarVentasEnRango(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
+
+    @Query("SELECT new com.diegoperalta.pos.modules.ventas.application.dto.ProductoTopDTO(" +
+            "d.producto.nombre, SUM(d.cantidad), SUM(d.subtotal)) " +
+            "FROM DetalleVenta d " +
+            "WHERE d.venta.fecha BETWEEN :inicio AND :fin " +
+            "AND d.venta.estado = 'COMPLETADA' " +
+            "GROUP BY d.producto.nombre " +
+            "ORDER BY SUM(d.subtotal) DESC")
+    List<ProductoTopDTO> encontrarTopProductos(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fin") LocalDateTime fin,
+            Pageable pageable);
 }
