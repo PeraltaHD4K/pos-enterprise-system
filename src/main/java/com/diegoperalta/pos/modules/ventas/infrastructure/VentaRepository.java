@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -48,4 +49,10 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
                         @Param("inicio") LocalDateTime inicio,
                         @Param("fin") LocalDateTime fin,
                         Pageable pageable);
+
+        @Query(value = "SELECT v FROM Venta v " +
+                        "JOIN FETCH v.usuario " +
+                        "LEFT JOIN FETCH v.cliente " +
+                        "ORDER BY v.fecha DESC", countQuery = "SELECT COUNT(v) FROM Venta v")
+        Page<Venta> findAllConRelaciones(Pageable pageable);
 }

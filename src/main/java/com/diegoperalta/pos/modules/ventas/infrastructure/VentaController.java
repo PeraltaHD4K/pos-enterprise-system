@@ -26,6 +26,8 @@ import com.diegoperalta.pos.modules.ventas.application.dto.VentaRegistroDTO;
 import com.diegoperalta.pos.modules.ventas.application.dto.VentaResumenDTO;
 import com.diegoperalta.pos.modules.ventas.domain.Venta;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/ventas")
 public class VentaController {
@@ -33,7 +35,8 @@ public class VentaController {
     private VentaService ventaService;
 
     @PostMapping
-    public ResponseEntity<Venta> registrarVenta(@RequestBody VentaRegistroDTO dto) {
+    public ResponseEntity<Venta> registrarVenta(
+            @Valid @RequestBody VentaRegistroDTO dto) {
         Venta nuevaVenta = ventaService.registrarVenta(dto);
         return ResponseEntity.ok(nuevaVenta);
     }

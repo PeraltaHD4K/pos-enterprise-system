@@ -117,4 +117,24 @@ class VentaServiceTest {
         // Verificamos que se guardó la venta (2 veces: inicio y final)
         verify(ventaRepository, org.mockito.Mockito.times(2)).save(any(Venta.class));
     }
+
+    @Test
+    void listarVentas_DeberiaUsarQueryOptimizada() {
+        // GIVEN
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        org.springframework.data.domain.Page<Venta> paginaMock = org.mockito.Mockito
+                .mock(org.springframework.data.domain.Page.class);
+
+        when(ventaRepository.findAllConRelaciones(pageable)).thenReturn(paginaMock);
+
+        // WHEN
+        ventaService.listarVentas(pageable);
+
+        // THEN
+        // Verificamos que llame al método optimizado (findAllConRelaciones)
+        verify(ventaRepository).findAllConRelaciones(pageable);
+        // Y aseguramos que NO llame al método estándar (findAll) que causa N+1
+        verify(ventaRepository, org.mockito.Mockito.never())
+                .findAll(any(org.springframework.data.domain.Pageable.class));
+    }
 }

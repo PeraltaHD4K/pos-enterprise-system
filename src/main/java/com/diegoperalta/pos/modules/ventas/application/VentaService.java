@@ -140,7 +140,7 @@ public class VentaService {
 
     @Transactional(readOnly = true)
     public Page<VentaResumenDTO> listarVentas(Pageable pageable) {
-        Page<Venta> paginaVentas = ventaRepository.findAll(pageable);
+        Page<Venta> paginaVentas = ventaRepository.findAllConRelaciones(pageable);
         return paginaVentas.map(venta -> {
             VentaResumenDTO dto = new VentaResumenDTO();
             dto.setId(venta.getId());
