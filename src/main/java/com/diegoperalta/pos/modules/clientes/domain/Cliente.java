@@ -6,14 +6,25 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-@Data
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
 @Table(name = "clientes")
 public class Cliente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(nullable = false)
@@ -25,14 +36,4 @@ public class Cliente {
 
     @Column(name = "puntos_fidelidad")
     private Integer puntosFidelidad;
-
-    public Cliente() {
-    }
-
-    public Cliente(String nombre, String telefono, String email) {
-        this.nombre = nombre;
-        this.telefono = telefono;
-        this.email = email;
-        this.puntosFidelidad = 0;
-    }
 }

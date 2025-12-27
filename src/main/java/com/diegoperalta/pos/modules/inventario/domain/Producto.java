@@ -1,6 +1,11 @@
 package com.diegoperalta.pos.modules.inventario.domain;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 
@@ -14,12 +19,18 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-@Data
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
 @Table(name = "productos")
 public class Producto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(unique = true)
@@ -51,9 +62,9 @@ public class Producto {
     private Boolean activo = true;
 
     // RELACIÓN: Un producto pertenece a UNA categoría.
-    // FetchType.EAGER: Cuando cargues el producto, trae también los datos de la
-    // categoría.
-    @ManyToOne(fetch = FetchType.EAGER)
+    // FetchType.LAZY: No trae la categoría cuando se carga el producto.
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categoria_id")
+    @ToString.Exclude
     private Categoria categoria;
 }

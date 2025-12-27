@@ -112,9 +112,9 @@ class VentaServiceTest {
         assertEquals("COMPLETADA", ventaResultado.getEstado());
 
         // Verificamos que se llamó al servicio de inventario para restar 2 unidades
-        verify(productoService).ajustarStock(10L, -2, "VENTA", "Venta de 2 unidades");
+        verify(productoService).registrarSalidaPorVenta(10L, 2, null);
 
-        // Verificamos que se guardó la venta
-        verify(ventaRepository).save(any(Venta.class));
+        // Verificamos que se guardó la venta (2 veces: inicio y final)
+        verify(ventaRepository, org.mockito.Mockito.times(2)).save(any(Venta.class));
     }
 }

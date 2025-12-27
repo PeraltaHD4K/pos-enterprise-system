@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import com.diegoperalta.pos.modules.inventario.domain.Producto;
 
 public interface ProductoRepository extends JpaRepository<Producto, Long> {
-    @Query("SELECT p FROM Producto p WHERE " +
+    @Query("SELECT p FROM Producto p JOIN FETCH p.categoria WHERE " +
             "(LOWER(p.nombre) LIKE LOWER(CONCAT('%', :query, '%'))) OR " +
             "(LOWER(p.sku) LIKE LOWER(CONCAT('%', :query, '%'))) OR " +
             "(p.codigoBarras = :query)")
@@ -19,6 +19,6 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     boolean existsBySku(String sku);
 
-    @Query("SELECT p FROM Producto p WHERE p.stockActual <= p.stockMinimo AND p.activo = true")
+    @Query("SELECT p FROM Producto p JOIN FETCH p.categoria WHERE p.stockActual <= p.stockMinimo AND p.activo = true")
     List<Producto> encontrarProductosConStockBajo();
 }
