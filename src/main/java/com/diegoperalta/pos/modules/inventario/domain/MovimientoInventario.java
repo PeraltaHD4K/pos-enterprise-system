@@ -33,6 +33,9 @@ public class MovimientoInventario {
     @Column(name = "tipo_movimiento")
     private String tipoMovimiento;
 
+    @Column(length = 255)
+    private String motivo;
+
     private Integer cantidad;
 
     @Column(name = "stock_anterior")

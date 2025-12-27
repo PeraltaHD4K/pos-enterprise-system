@@ -72,7 +72,8 @@ class ProductoServiceTest {
         when(usuarioRepository.findByUsername("almacenista")).thenReturn(Optional.of(usuarioMock));
 
         // --- WHEN ---
-        Producto resultado = productoService.ajustarStock(idProducto, cantidadAjuste, "AJUSTE_MANUAL");
+        Producto resultado = productoService.ajustarStock(idProducto, cantidadAjuste, "AJUSTE_MANUAL",
+                "Motivo del ajuste");
 
         // --- THEN ---
         // 1. El stock debe ser 15 (10 + 5)
@@ -99,7 +100,7 @@ class ProductoServiceTest {
         // --- WHEN & THEN ---
         // Esperamos que lance BusinessException
         assertThrows(BusinessException.class, () -> {
-            productoService.ajustarStock(idProducto, cantidadAjuste, "AJUSTE_MANUAL");
+            productoService.ajustarStock(idProducto, cantidadAjuste, "AJUSTE_MANUAL", "Motivo del ajuste");
         });
 
         // Verificamos que NUNCA se guardó nada en la BD porque falló antes

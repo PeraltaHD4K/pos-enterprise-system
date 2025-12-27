@@ -73,7 +73,7 @@ public class ProductoService {
     }
 
     @Transactional
-    public Producto ajustarStock(Long productoId, Integer cantidad, String tipoMovimiento) {
+    public Producto ajustarStock(Long productoId, Integer cantidad, String tipoMovimiento, String motivo) {
         Producto producto = productoRepository.findById(productoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + productoId));
 
@@ -96,6 +96,7 @@ public class ProductoService {
         movimiento.setCantidad(cantidad);
         movimiento.setStockAnterior(stockAnterior);
         movimiento.setStockResultante(stockResultante);
+        movimiento.setMotivo(motivo);
 
         movimientoRepository.save(movimiento);
 

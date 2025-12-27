@@ -112,7 +112,7 @@ class VentaServiceTest {
         assertEquals("COMPLETADA", ventaResultado.getEstado());
 
         // Verificamos que se llamó al servicio de inventario para restar 2 unidades
-        verify(productoService).ajustarStock(10L, -2, "VENTA");
+        verify(productoService).ajustarStock(10L, -2, "VENTA", "Venta de 2 unidades");
 
         // Verificamos que se guardó la venta
         verify(ventaRepository).save(any(Venta.class));

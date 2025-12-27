@@ -39,7 +39,11 @@ public class ProductoController {
 
     @PatchMapping("/{productoId}/stock")
     public ResponseEntity<Producto> actualizarStock(@PathVariable Long productoId, @RequestBody AjusteStockDTO dto) {
-        Producto producto = productoService.ajustarStock(productoId, dto.getCantidad(), "AJUSTE_MANUAL");
+        Producto producto = productoService.ajustarStock(
+                productoId,
+                dto.getCantidad(),
+                "AJUSTE_MANUAL",
+                dto.getMotivo());
 
         return ResponseEntity.ok(producto);
     }
