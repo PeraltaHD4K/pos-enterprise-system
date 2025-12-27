@@ -12,6 +12,8 @@ import com.diegoperalta.pos.modules.compras.application.CompraService;
 import com.diegoperalta.pos.modules.compras.application.dto.CompraRegistroDTO;
 import com.diegoperalta.pos.modules.compras.domain.Compra;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/compras")
 public class CompraController {
@@ -19,7 +21,7 @@ public class CompraController {
     private CompraService compraService;
 
     @PostMapping
-    public ResponseEntity<Compra> registrarCompra(@RequestBody CompraRegistroDTO dto) {
+    public ResponseEntity<Compra> registrarCompra(@Valid @RequestBody CompraRegistroDTO dto) {
         Compra nuevaCompra = compraService.registrarCompra(dto);
         return ResponseEntity.ok(nuevaCompra);
     }
