@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import jakarta.validation.Valid;
+
 import com.diegoperalta.pos.modules.inventario.application.ProductoService;
 import com.diegoperalta.pos.modules.inventario.application.dto.AjusteStockDTO;
 import com.diegoperalta.pos.modules.inventario.application.dto.ProductoRegistroDTO;
@@ -32,13 +34,14 @@ public class ProductoController {
     }
 
     @PostMapping
-    public ResponseEntity<Producto> crear(@RequestBody ProductoRegistroDTO dto) {
+    public ResponseEntity<Producto> crear(@Valid @RequestBody ProductoRegistroDTO dto) {
         Producto nuevoProducto = productoService.crearProducto(dto);
         return ResponseEntity.ok(nuevoProducto);
     }
 
     @PatchMapping("/{productoId}/stock")
-    public ResponseEntity<Producto> actualizarStock(@PathVariable Long productoId, @RequestBody AjusteStockDTO dto) {
+    public ResponseEntity<Producto> actualizarStock(@PathVariable Long productoId,
+            @Valid @RequestBody AjusteStockDTO dto) {
         Producto producto = productoService.ajustarStock(
                 productoId,
                 dto.getCantidad(),

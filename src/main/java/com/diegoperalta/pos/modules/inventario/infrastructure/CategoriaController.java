@@ -10,7 +10,10 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.diegoperalta.pos.modules.inventario.application.dto.CategoriaDTO;
 import com.diegoperalta.pos.modules.inventario.domain.Categoria;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/inventario/categorias")
@@ -24,7 +27,11 @@ public class CategoriaController {
     }
 
     @PostMapping
-    public Categoria crear(@RequestBody Categoria categoria) {
+    public Categoria crear(@Valid @RequestBody CategoriaDTO dto) {
+        Categoria categoria = new Categoria();
+        categoria.setNombre(dto.getNombre());
+        categoria.setDescripcion(dto.getDescripcion());
+
         return repository.save(categoria);
     }
 }
