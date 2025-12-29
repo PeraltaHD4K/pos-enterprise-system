@@ -118,6 +118,7 @@ class VentaServiceTest {
         verify(ventaRepository, org.mockito.Mockito.times(2)).save(any(Venta.class));
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void listarVentas_DeberiaUsarQueryOptimizada() {
         // GIVEN

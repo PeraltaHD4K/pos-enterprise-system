@@ -13,12 +13,14 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.diegoperalta.pos.modules.ventas.application.TicketService;
 import com.diegoperalta.pos.modules.ventas.application.VentaService;
 import com.diegoperalta.pos.modules.ventas.application.dto.ProductoTopDTO;
 import com.diegoperalta.pos.modules.ventas.application.dto.ReporteGananciasDTO;
@@ -33,6 +35,9 @@ import jakarta.validation.Valid;
 public class VentaController {
     @Autowired
     private VentaService ventaService;
+
+    @Autowired
+    private TicketService ticketService;
 
     @PostMapping
     public ResponseEntity<Venta> registrarVenta(
@@ -76,5 +81,14 @@ public class VentaController {
         LocalDateTime end = fin.atTime(LocalTime.MAX);
 
         return ResponseEntity.ok(ventaService.obtenerTopProductos(start, end, limite));
+    }
+
+    @GetMapping("/ticket/{folio}")
+    public ResponseEntity<String> obtenerTicket(@PathVariable String folio) {
+        String contenidoTicket = ticketService.generarContenidoTicket(folio);
+
+        return ResponseEntity.ok()
+                .header("Content-Type", "text/plain; charset=UTF-8")
+                .body(contenidoTicket);
     }
 }

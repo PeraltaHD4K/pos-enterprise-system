@@ -55,4 +55,12 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
                         "LEFT JOIN FETCH v.cliente " +
                         "ORDER BY v.fecha DESC", countQuery = "SELECT COUNT(v) FROM Venta v")
         Page<Venta> findAllConRelaciones(Pageable pageable);
+
+        @Query("SELECT v FROM Venta v " +
+                        "JOIN FETCH v.usuario " +
+                        "LEFT JOIN FETCH v.cliente " +
+                        "JOIN FETCH v.detalles d " +
+                        "JOIN FETCH d.producto " +
+                        "WHERE v.folio = :folio")
+        Optional<Venta> findByFolioConDetalles(@Param("folio") String folio);
 }
