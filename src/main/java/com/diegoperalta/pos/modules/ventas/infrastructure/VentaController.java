@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.diegoperalta.pos.modules.iam.application.dto.AutorizacionDTO;
 import com.diegoperalta.pos.modules.ventas.application.TicketService;
 import com.diegoperalta.pos.modules.ventas.application.VentaService;
 import com.diegoperalta.pos.modules.ventas.application.dto.ProductoTopDTO;
@@ -90,5 +91,14 @@ public class VentaController {
         return ResponseEntity.ok()
                 .header("Content-Type", "text/plain; charset=UTF-8")
                 .body(contenidoTicket);
+    }
+
+    @PostMapping("/{folio}/cancelar")
+    public ResponseEntity<Venta> cancelarVenta(
+            @PathVariable String folio,
+            @Valid @RequestBody AutorizacionDTO autorizacionDTO) {
+        Venta ventaCancelada = ventaService.cancelarVenta(folio, autorizacionDTO);
+
+        return ResponseEntity.ok(ventaCancelada);
     }
 }

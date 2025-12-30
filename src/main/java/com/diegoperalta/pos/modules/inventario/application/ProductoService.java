@@ -128,7 +128,7 @@ public class ProductoService {
         movimiento.setCantidad(cantidad * -1);
         movimiento.setStockAnterior(stockActual);
         movimiento.setStockResultante(nuevoStock);
-        movimiento.setReferenciaId(ventaId);
+        movimiento.setReferencia(String.valueOf(ventaId));
 
         movimientoRepository.save(movimiento);
     }
@@ -179,7 +179,7 @@ public class ProductoService {
         mov.setCantidad(cantidad);
         mov.setStockAnterior(stockActual);
         mov.setStockResultante(nuevoStockTotal);
-        mov.setReferenciaId(compraId);
+        mov.setReferencia("COMPRA #" + compraId);
 
         movimientoRepository.save(mov);
     }
@@ -195,6 +195,30 @@ public class ProductoService {
     @Transactional(readOnly = true)
     public List<Producto> obtenerReporteStockBajo() {
         return productoRepository.encontrarProductosConStockBajo();
+    }
+
+    @Transactional
+    public void devolverStockPorCancelacion(Long productoId, Integer cantidad, String folioVenta) {
+        Producto producto = productoRepository.findById(productoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + productoId));
+
+        int stockAnterior = producto.getStockActual() != null ? producto.getStockActual() : 0;
+        int nuevoStock = stockAnterior + cantidad;
+
+        producto.setStockActual(nuevoStock);
+        productoRepository.save(producto);
+
+        MovimientoInventario movimiento = new MovimientoInventario();
+        movimiento.setProducto(producto);
+        movimiento.setUsuario(obtenerUsuarioActual());
+        movimiento.setTipoMovimiento("ENTRADA");
+        movimiento.setMotivo("CANCELACION_VENTA");
+        movimiento.setReferencia("FOLIO: " + folioVenta);
+        movimiento.setCantidad(cantidad);
+        movimiento.setStockAnterior(stockAnterior);
+        movimiento.setStockResultante(nuevoStock);
+
+        movimientoRepository.save(movimiento);
     }
 
     private Usuario obtenerUsuarioActual() {

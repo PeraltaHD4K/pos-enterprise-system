@@ -20,7 +20,7 @@ import com.diegoperalta.pos.modules.ventas.domain.Venta;
 public interface VentaRepository extends JpaRepository<Venta, Long> {
         // JPQL: Suma el totalVenta de todas las ventas que pertenezcan a la sesión X
         // COALESCE(..., 0) sirve para que si no hay ventas, devuelva 0 en vez de null
-        @Query("SELECT COALESCE(SUM(v.totalVenta), 0) FROM Venta v WHERE v.sesionCaja = :sesion")
+        @Query("SELECT COALESCE(SUM(v.totalVenta), 0) FROM Venta v WHERE v.sesionCaja = :sesion AND v.estado = 'COMPLETADA'")
         BigDecimal sumarVentasPorSesion(SesionCaja sesion);
 
         @Query("SELECT v FROM Venta v " +

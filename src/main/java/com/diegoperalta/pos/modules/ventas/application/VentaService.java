@@ -24,6 +24,8 @@ import com.diegoperalta.pos.modules.caja.domain.SesionCaja;
 import com.diegoperalta.pos.modules.caja.infrastructure.SesionCajaRepository;
 import com.diegoperalta.pos.modules.clientes.domain.Cliente;
 import com.diegoperalta.pos.modules.clientes.infrastructure.ClienteRepository;
+import com.diegoperalta.pos.modules.iam.application.AutorizacionService;
+import com.diegoperalta.pos.modules.iam.application.dto.AutorizacionDTO;
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
 import com.diegoperalta.pos.modules.iam.infrastructure.security.UserProvider;
@@ -63,6 +65,9 @@ public class VentaService {
 
     @Autowired
     private UserProvider userProvider;
+
+    @Autowired
+    private AutorizacionService autorizacionService;
 
     @Transactional
     public Venta registrarVenta(VentaRegistroDTO dto) {
@@ -159,6 +164,29 @@ public class VentaService {
 
             return dto;
         });
+    }
+
+    @Transactional
+    public Venta cancelarVenta(String folio, AutorizacionDTO autorizacion) {
+        autorizacionService.validarAutorizacion(autorizacion, "ADMIN", "GERENTE");
+
+        Venta venta = ventaRepository.findByFolioConDetalles(folio)
+                .orElseThrow(() -> new ResourceNotFoundException("Venta no encontrada"));
+
+        if (venta.getEstado().equals("CANCELADA")) {
+            throw new BusinessException("La venta ya se encuentra cancelada", HttpStatus.BAD_REQUEST);
+        }
+
+        for (DetalleVenta detalle : venta.getDetalles()) {
+            productoService.devolverStockPorCancelacion(
+                    detalle.getProducto().getId(),
+                    detalle.getCantidad(),
+                    venta.getFolio());
+        }
+
+        venta.setEstado("CANCELADA");
+
+        return ventaRepository.save(venta);
     }
 
     @Transactional(readOnly = true)

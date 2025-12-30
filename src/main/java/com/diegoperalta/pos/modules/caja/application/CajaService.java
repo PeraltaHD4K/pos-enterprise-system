@@ -2,6 +2,8 @@ package com.diegoperalta.pos.modules.caja.application;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import com.diegoperalta.pos.modules.iam.infrastructure.security.UserProvider;
@@ -118,6 +120,20 @@ public class CajaService {
         mov.setMotivo(dto.getMotivo()); // Asignamos el motivo
 
         return movimientoCajaRepository.save(mov);
+    }
+
+    public Optional<SesionCaja> obtenerSesionActual() {
+        Usuario usuario = obtenerUsuarioActual();
+        return sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA");
+    }
+
+    @Transactional(readOnly = true)
+    public List<MovimientoCaja> obtenerMovimientosSesionActual() {
+        Usuario usuario = obtenerUsuarioActual();
+        SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
+                .orElseThrow(() -> new BusinessException("No hay sesión abierta.", HttpStatus.BAD_REQUEST));
+
+        return movimientoCajaRepository.listarPorSesionConUsuario(sesion);
     }
 
     private Usuario obtenerUsuarioActual() {

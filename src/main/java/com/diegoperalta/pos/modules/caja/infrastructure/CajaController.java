@@ -1,7 +1,11 @@
 package com.diegoperalta.pos.modules.caja.infrastructure;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,8 +36,20 @@ public class CajaController {
         return ResponseEntity.ok(sesion);
     }
 
+    @GetMapping("/movimientos")
+    public ResponseEntity<List<MovimientoCaja>> listarMovimientos() {
+        return ResponseEntity.ok(cajaService.obtenerMovimientosSesionActual());
+    }
+
     @PostMapping("/movimientos")
     public ResponseEntity<MovimientoCaja> registrarMovimiento(@RequestBody NuevoMovimientoCajaDTO dto) {
         return ResponseEntity.ok(cajaService.registrarMovimiento(dto));
+    }
+
+    @GetMapping("/estado")
+    public ResponseEntity<SesionCaja> obtenerEstadoCaja() {
+        Optional<SesionCaja> sesion = cajaService.obtenerSesionActual();
+        return sesion.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 }
