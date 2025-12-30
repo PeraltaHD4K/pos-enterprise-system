@@ -16,9 +16,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.diegoperalta.pos.common.exception.BusinessException;
+import com.diegoperalta.pos.modules.iam.application.AutorizacionService; // 👈 Nuevo servicio
+import com.diegoperalta.pos.modules.iam.domain.Rol; // 👈 Necesario para el usuario
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
 import com.diegoperalta.pos.modules.iam.infrastructure.security.UserProvider;
+import com.diegoperalta.pos.modules.inventario.application.dto.AjusteStockDTO; // 👈 Nuevo DTO
 import com.diegoperalta.pos.modules.inventario.domain.MovimientoInventario;
 import com.diegoperalta.pos.modules.inventario.domain.Producto;
 import com.diegoperalta.pos.modules.inventario.infrastructure.CategoriaRepository;
@@ -37,7 +40,9 @@ class ProductoServiceTest {
     @Mock
     private CategoriaRepository categoriaRepository;
     @Mock
-    private UserProvider userProvider; // 👈 Mockeamos seguridad
+    private UserProvider userProvider;
+    @Mock
+    private AutorizacionService autorizacionService; // 👈 Mockeamos el nuevo servicio
 
     @InjectMocks
     private ProductoService productoService;
@@ -53,27 +58,37 @@ class ProductoServiceTest {
         productoMock.setNombre("Coca Cola");
         productoMock.setStockActual(10); // Empezamos con 10
 
+        // Configurar ROL para evitar NullPointerException en la validación de seguridad
+        Rol rolAdmin = new Rol();
+        rolAdmin.setNombre("ADMIN");
+
         usuarioMock = new Usuario();
-        usuarioMock.setUsername("almacenista");
+        usuarioMock.setUsername("admin_test");
         usuarioMock.setId(2L);
+        usuarioMock.setRol(rolAdmin); // 👈 El usuario debe tener rol
     }
 
     @Test
     void ajustarStock_DeberiaSumarStockYRegistrarMovimiento() {
         // --- GIVEN ---
         Long idProducto = 1L;
-        Integer cantidadAjuste = 5; // Agregamos 5
+
+        // Creamos el DTO
+        AjusteStockDTO dto = new AjusteStockDTO();
+        dto.setCantidad(5); // Agregamos 5
+        dto.setMotivo("Motivo del ajuste");
+        // No necesitamos 'autorizacion' en el DTO porque el usuario mock es ADMIN
 
         // --- STUBBING ---
         when(productoRepository.findById(idProducto)).thenReturn(Optional.of(productoMock));
 
         // Simulamos la seguridad:
-        when(userProvider.getCurrentUser()).thenReturn("almacenista");
-        when(usuarioRepository.findByUsername("almacenista")).thenReturn(Optional.of(usuarioMock));
+        when(userProvider.getCurrentUser()).thenReturn("admin_test");
+        when(usuarioRepository.findByUsername("admin_test")).thenReturn(Optional.of(usuarioMock));
 
         // --- WHEN ---
-        Producto resultado = productoService.ajustarStock(idProducto, cantidadAjuste, "AJUSTE_MANUAL",
-                "Motivo del ajuste");
+        // Llamamos con el DTO
+        Producto resultado = productoService.ajustarStock(idProducto, dto);
 
         // --- THEN ---
         // 1. El stock debe ser 15 (10 + 5)
@@ -90,20 +105,22 @@ class ProductoServiceTest {
     void ajustarStock_DeberiaLanzarError_SiStockResultanteEsNegativo() {
         // --- GIVEN ---
         Long idProducto = 1L;
-        Integer cantidadAjuste = -20; // Queremos quitar 20, pero solo hay 10
+
+        AjusteStockDTO dto = new AjusteStockDTO();
+        dto.setCantidad(-20); // Queremos quitar 20, pero solo hay 10
+        dto.setMotivo("Error intencional");
 
         // --- STUBBING ---
         when(productoRepository.findById(idProducto)).thenReturn(Optional.of(productoMock));
-        when(userProvider.getCurrentUser()).thenReturn("almacenista");
-        when(usuarioRepository.findByUsername("almacenista")).thenReturn(Optional.of(usuarioMock));
+        when(userProvider.getCurrentUser()).thenReturn("admin_test");
+        when(usuarioRepository.findByUsername("admin_test")).thenReturn(Optional.of(usuarioMock));
 
         // --- WHEN & THEN ---
-        // Esperamos que lance BusinessException
         assertThrows(BusinessException.class, () -> {
-            productoService.ajustarStock(idProducto, cantidadAjuste, "AJUSTE_MANUAL", "Motivo del ajuste");
+            productoService.ajustarStock(idProducto, dto);
         });
 
-        // Verificamos que NUNCA se guardó nada en la BD porque falló antes
+        // Verificamos que NUNCA se guardó nada en la BD
         verify(productoRepository, never()).save(any());
         verify(movimientoRepository, never()).save(any());
     }

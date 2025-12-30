@@ -18,6 +18,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 @Getter
 @Setter
@@ -67,4 +68,7 @@ public class Producto {
     @JoinColumn(name = "categoria_id")
     @ToString.Exclude
     private Categoria categoria;
+
+    @Version
+    private Long version;
 }

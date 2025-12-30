@@ -13,9 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.diegoperalta.pos.modules.iam.application.AutorizacionService;
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
 import com.diegoperalta.pos.modules.iam.infrastructure.security.UserProvider;
+import com.diegoperalta.pos.modules.inventario.application.dto.AjusteStockDTO;
 import com.diegoperalta.pos.modules.inventario.application.dto.ProductoRegistroDTO;
 import com.diegoperalta.pos.modules.inventario.domain.Categoria;
 import com.diegoperalta.pos.modules.inventario.domain.MovimientoInventario;
@@ -40,6 +42,9 @@ public class ProductoService {
 
     @Autowired
     private UserProvider userProvider;
+
+    @Autowired
+    private AutorizacionService autorizacionService;
 
     public Producto crearProducto(ProductoRegistroDTO dto) {
         // 1. Validar que la categoría exista
@@ -73,14 +78,24 @@ public class ProductoService {
     }
 
     @Transactional
-    public Producto ajustarStock(Long productoId, Integer cantidad, String tipoMovimiento, String motivo) {
+    public Producto ajustarStock(Long productoId, AjusteStockDTO dto) {
+        Usuario usuario = obtenerUsuarioActual();
+        boolean estaAutorizado = "ADMIN".equals(usuario.getRol().getNombre()) ||
+                "GERENTE".equals(usuario.getRol().getNombre());
+
+        if (!estaAutorizado) {
+            if (dto.getAutorizacion() == null) {
+                throw new BusinessException("Se requiere autorizacion de Supervisor para ajustar stock",
+                        HttpStatus.FORBIDDEN);
+            }
+            autorizacionService.validarAutorizacion(dto.getAutorizacion(), "ADMIN", "GERENTE");
+        }
+
         Producto producto = productoRepository.findById(productoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + productoId));
 
-        Usuario usuario = obtenerUsuarioActual();
-
         int stockAnterior = producto.getStockActual() == null ? 0 : producto.getStockActual();
-        int stockResultante = stockAnterior + cantidad;
+        int stockResultante = stockAnterior + dto.getCantidad();
 
         if (stockResultante < 0) {
             throw new BusinessException("No se puede ajustar el stock a un valor negativo", HttpStatus.BAD_REQUEST);
@@ -92,11 +107,15 @@ public class ProductoService {
         MovimientoInventario movimiento = new MovimientoInventario();
         movimiento.setProducto(producto);
         movimiento.setUsuario(usuario);
-        movimiento.setTipoMovimiento(tipoMovimiento);
-        movimiento.setCantidad(cantidad);
+        movimiento.setTipoMovimiento("AJUSTE_MANUAL");
+        movimiento.setCantidad(dto.getCantidad());
         movimiento.setStockAnterior(stockAnterior);
         movimiento.setStockResultante(stockResultante);
-        movimiento.setMotivo(motivo);
+        movimiento.setMotivo(dto.getMotivo());
+
+        if (dto.getAutorizacion() != null) {
+            movimiento.setReferencia("Autorizado por: " + dto.getAutorizacion().getUsernameSupervisor());
+        }
 
         movimientoRepository.save(movimiento);
 

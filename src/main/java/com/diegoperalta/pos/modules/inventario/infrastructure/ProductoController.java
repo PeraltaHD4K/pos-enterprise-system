@@ -34,19 +34,17 @@ public class ProductoController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Producto> crear(@Valid @RequestBody ProductoRegistroDTO dto) {
         Producto nuevoProducto = productoService.crearProducto(dto);
         return ResponseEntity.ok(nuevoProducto);
     }
 
     @PatchMapping("/{productoId}/stock")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")
     public ResponseEntity<Producto> actualizarStock(@PathVariable Long productoId,
             @Valid @RequestBody AjusteStockDTO dto) {
-        Producto producto = productoService.ajustarStock(
-                productoId,
-                dto.getCantidad(),
-                "AJUSTE_MANUAL",
-                dto.getMotivo());
+        Producto producto = productoService.ajustarStock(productoId, dto);
 
         return ResponseEntity.ok(producto);
     }
