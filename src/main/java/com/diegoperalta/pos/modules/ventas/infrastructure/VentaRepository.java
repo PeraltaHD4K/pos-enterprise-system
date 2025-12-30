@@ -23,6 +23,18 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
         @Query("SELECT COALESCE(SUM(v.totalVenta), 0) FROM Venta v WHERE v.sesionCaja = :sesion AND v.estado = 'COMPLETADA'")
         BigDecimal sumarVentasPorSesion(SesionCaja sesion);
 
+        @Query("SELECT COALESCE(SUM(v.totalVenta), 0) FROM Venta v " +
+                        "WHERE v.sesionCaja = :sesion " +
+                        "AND v.estado = 'COMPLETADA' " +
+                        "AND v.metodoPago = 'EFECTIVO'")
+        BigDecimal sumarVentasEfectivo(@Param("sesion") SesionCaja sesion);
+
+        @Query("SELECT COALESCE(SUM(v.totalVenta), 0) FROM Venta v " +
+                        "WHERE v.sesionCaja = :sesion " +
+                        "AND v.estado = 'COMPLETADA' " +
+                        "AND v.metodoPago <> 'EFECTIVO'")
+        BigDecimal sumarVentasOtrosMetodos(@Param("sesion") SesionCaja sesion);
+
         @Query("SELECT v FROM Venta v " +
                         "JOIN FETCH v.usuario " +
                         "LEFT JOIN FETCH v.cliente " +

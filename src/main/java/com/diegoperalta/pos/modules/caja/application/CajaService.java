@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 
 import com.diegoperalta.pos.modules.caja.application.dto.AperturaCajaDTO;
 import com.diegoperalta.pos.modules.caja.application.dto.CierreCajaDTO;
+import com.diegoperalta.pos.modules.caja.application.dto.CorteXDTO;
 import com.diegoperalta.pos.modules.caja.application.dto.NuevoMovimientoCajaDTO;
 import com.diegoperalta.pos.modules.caja.domain.MovimientoCaja;
 import com.diegoperalta.pos.modules.caja.domain.SesionCaja;
@@ -82,12 +83,12 @@ public class CajaService {
         }
 
         // 3. Calcular cuánto DEBERÍA haber (Lógica del Sistema)
-        BigDecimal totalVentas = ventaRepository.sumarVentasPorSesion(sesion);
+        BigDecimal ventasEfectivo = ventaRepository.sumarVentasEfectivo(sesion);
         BigDecimal totalIngresos = movimientoCajaRepository.sumarPorSesionYTipo(sesion, "INGRESO");
         BigDecimal totalRetiros = movimientoCajaRepository.sumarPorSesionYTipo(sesion, "RETIRO");
 
         BigDecimal saldoEsperado = sesion.getSaldoInicial()
-                .add(totalVentas)
+                .add(ventasEfectivo)
                 .add(totalIngresos)
                 .subtract(totalRetiros);
 
@@ -105,12 +106,56 @@ public class CajaService {
         return sesionCajaRepository.save(sesion);
     }
 
+    @Transactional(readOnly = true)
+    public CorteXDTO generarCorteX() {
+        Usuario usuario = obtenerUsuarioActual();
+        SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
+                .orElseThrow(() -> new BusinessException("No hay sesión abierta para generar corte.",
+                        HttpStatus.BAD_REQUEST));
+
+        BigDecimal ventasEfectivo = ventaRepository.sumarVentasEfectivo(sesion);
+        BigDecimal ventasOtrosMetodos = ventaRepository.sumarVentasOtrosMetodos(sesion);
+        BigDecimal ingresos = movimientoCajaRepository.sumarPorSesionYTipo(sesion, "INGRESO");
+        BigDecimal retiros = movimientoCajaRepository.sumarPorSesionYTipo(sesion, "RETIRO");
+
+        BigDecimal saldoEsperado = sesion.getSaldoInicial()
+                .add(ventasEfectivo)
+                .add(ingresos)
+                .subtract(retiros);
+
+        CorteXDTO corteX = new CorteXDTO();
+        corteX.setSaldoInicial(sesion.getSaldoInicial());
+        corteX.setVentasEfectivo(ventasEfectivo);
+        corteX.setVentasOtrosMetodos(ventasOtrosMetodos);
+        corteX.setTotalIngresos(ingresos);
+        corteX.setTotalRetiros(retiros);
+        corteX.setSaldoEsperadoEnCaja(saldoEsperado);
+        return corteX;
+    }
+
     @Transactional
     public MovimientoCaja registrarMovimiento(NuevoMovimientoCajaDTO dto) {
         Usuario usuario = obtenerUsuarioActual();
 
         SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
                 .orElseThrow(() -> new BusinessException("No hay sesión abierta.", HttpStatus.BAD_REQUEST));
+
+        if (dto.getTipo().equals("RETIRO")) {
+            BigDecimal ventasEfectivo = ventaRepository.sumarVentasEfectivo(sesion);
+            BigDecimal ingresos = movimientoCajaRepository.sumarPorSesionYTipo(sesion, "INGRESO");
+            BigDecimal retiros = movimientoCajaRepository.sumarPorSesionYTipo(sesion, "RETIRO");
+
+            BigDecimal saldoDisponible = sesion.getSaldoInicial()
+                    .add(ventasEfectivo)
+                    .add(ingresos)
+                    .subtract(retiros);
+
+            if (saldoDisponible.compareTo(dto.getMonto()) < 0) {
+                throw new BusinessException(
+                        "Saldo insuficiente en caja para realizar este retiro. Disponible: $" + saldoDisponible,
+                        HttpStatus.BAD_REQUEST);
+            }
+        }
 
         MovimientoCaja mov = new MovimientoCaja();
         mov.setSesionCaja(sesion);

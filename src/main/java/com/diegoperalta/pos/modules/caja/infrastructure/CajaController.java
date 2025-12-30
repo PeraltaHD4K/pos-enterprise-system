@@ -14,9 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.diegoperalta.pos.modules.caja.application.CajaService;
 import com.diegoperalta.pos.modules.caja.application.dto.AperturaCajaDTO;
 import com.diegoperalta.pos.modules.caja.application.dto.CierreCajaDTO;
+import com.diegoperalta.pos.modules.caja.application.dto.CorteXDTO;
 import com.diegoperalta.pos.modules.caja.application.dto.NuevoMovimientoCajaDTO;
 import com.diegoperalta.pos.modules.caja.domain.MovimientoCaja;
 import com.diegoperalta.pos.modules.caja.domain.SesionCaja;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/caja")
@@ -25,15 +28,20 @@ public class CajaController {
     private CajaService cajaService;
 
     @PostMapping("/abrir")
-    public ResponseEntity<SesionCaja> abrirCaja(@RequestBody AperturaCajaDTO dto) {
+    public ResponseEntity<SesionCaja> abrirCaja(@Valid @RequestBody AperturaCajaDTO dto) {
         SesionCaja sesion = cajaService.abrirCaja(dto);
         return ResponseEntity.ok(sesion);
     }
 
     @PostMapping("/cerrar")
-    public ResponseEntity<SesionCaja> cerrarCaja(@RequestBody CierreCajaDTO dto) {
+    public ResponseEntity<SesionCaja> cerrarCaja(@Valid @RequestBody CierreCajaDTO dto) {
         SesionCaja sesion = cajaService.cerrarCaja(dto);
         return ResponseEntity.ok(sesion);
+    }
+
+    @GetMapping("/corte-x")
+    public ResponseEntity<CorteXDTO> obtenerCorteX() {
+        return ResponseEntity.ok(cajaService.generarCorteX());
     }
 
     @GetMapping("/movimientos")
@@ -42,7 +50,7 @@ public class CajaController {
     }
 
     @PostMapping("/movimientos")
-    public ResponseEntity<MovimientoCaja> registrarMovimiento(@RequestBody NuevoMovimientoCajaDTO dto) {
+    public ResponseEntity<MovimientoCaja> registrarMovimiento(@Valid @RequestBody NuevoMovimientoCajaDTO dto) {
         return ResponseEntity.ok(cajaService.registrarMovimiento(dto));
     }
 
