@@ -90,7 +90,6 @@ public class VentaService {
         venta.setCliente(cliente);
         venta.setUsuario(usuario);
         venta.setMetodoPago(dto.getMetodoPago());
-        venta.setEstado("COMPLETADA");
         venta.setFolio(UUID.randomUUID().toString().substring(0, 8).toUpperCase()); // Generamos un folio simple
         venta.setDetalles(new ArrayList<>());
         venta.setTotalVenta(BigDecimal.ZERO);
@@ -130,8 +129,21 @@ public class VentaService {
             totalAcumulado = totalAcumulado.add(subtotal);
         }
 
+        BigDecimal montoPagado = dto.getMontoPagado();
+
+        if (montoPagado.compareTo(totalAcumulado) < 0) {
+            throw new BusinessException(
+                    String.format("Pago insuficiente. Total: $%s, Pagado $%s", totalAcumulado, montoPagado),
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        BigDecimal cambio = montoPagado.subtract(totalAcumulado);
+
         // 6. Finalizar Venta
         venta.setTotalVenta(totalAcumulado);
+        venta.setMontoPagado(montoPagado);
+        venta.setCambio(cambio);
+        venta.setEstado("COMPLETADA");
 
         return ventaRepository.save(venta);
     }

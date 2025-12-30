@@ -76,6 +76,12 @@ public class Venta {
     @ToString.Exclude
     private List<DetalleVenta> detalles = new ArrayList<>();
 
+    @Column(name = "monto_pagado", nullable = false)
+    private BigDecimal montoPagado;
+
+    @Column(name = "cambio")
+    private BigDecimal cambio;
+
     public void agregarDetalle(DetalleVenta detalle) {
         detalles.add(detalle);
         detalle.setVenta(this);

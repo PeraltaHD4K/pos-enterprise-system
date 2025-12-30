@@ -61,6 +61,13 @@ public class TicketService {
         String totalStr = String.format("TOTAL: $ %s", venta.getTotalVenta());
         alinearDerecha(ticket, totalStr);
 
+        // ✅ NUEVAS LÍNEAS EN EL TICKET
+        String pagadoStr = String.format("PAGADO:  $ %s", venta.getMontoPagado());
+        alinearDerecha(ticket, pagadoStr);
+
+        String cambioStr = String.format("CAMBIO:  $ %s", venta.getCambio());
+        alinearDerecha(ticket, cambioStr);
+
         ticket.append("\n");
         centrarTexto(ticket, "¡GRACIAS POR SU COMPRA!");
         ticket.append("\n\n\n");

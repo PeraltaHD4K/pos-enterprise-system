@@ -41,12 +41,14 @@ public class VentaController {
     private TicketService ticketService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")
     public ResponseEntity<Venta> registrarVenta(
             @Valid @RequestBody VentaRegistroDTO dto) {
         Venta nuevaVenta = ventaService.registrarVenta(dto);
         return ResponseEntity.ok(nuevaVenta);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')")
     @GetMapping
     public ResponseEntity<Page<VentaResumenDTO>> listarVentas(
             @PageableDefault(size = 10, sort = "fecha") Pageable pageable) {
@@ -55,6 +57,7 @@ public class VentaController {
     }
 
     @GetMapping("/reporte/ganancias")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')")
     public ResponseEntity<ReporteGananciasDTO> obtenerReporteGanancias(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
@@ -85,6 +88,7 @@ public class VentaController {
     }
 
     @GetMapping("/ticket/{folio}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")
     public ResponseEntity<String> obtenerTicket(@PathVariable String folio) {
         String contenidoTicket = ticketService.generarContenidoTicket(folio);
 
@@ -94,6 +98,7 @@ public class VentaController {
     }
 
     @PostMapping("/{folio}/cancelar")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")
     public ResponseEntity<Venta> cancelarVenta(
             @PathVariable String folio,
             @Valid @RequestBody AutorizacionDTO autorizacionDTO) {
