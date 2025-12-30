@@ -29,6 +29,7 @@ public class ProductoController {
     private ProductoService productoService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")
     public ResponseEntity<List<Producto>> listar() {
         return ResponseEntity.ok(productoService.listarTodos());
     }
@@ -50,7 +51,7 @@ public class ProductoController {
     }
 
     @GetMapping("/buscar")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CAJERO')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")
     public ResponseEntity<List<Producto>> buscarProductos(@RequestParam("q") String query) {
         List<Producto> resultados = productoService.buscarProductos(query);
         return ResponseEntity.ok(resultados);

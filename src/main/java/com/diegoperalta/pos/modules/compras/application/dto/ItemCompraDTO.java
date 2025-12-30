@@ -22,7 +22,6 @@ public class ItemCompraDTO {
     @Min(value = 1, message = "Las unidades por caja deben ser al menos 1")
     private Integer unidadesPorCaja;
 
-    @NotNull(message = "El costo total del renglon es obligatorio")
     @PositiveOrZero(message = "El costo no puede ser negativo")
     private BigDecimal costoTotal;
 }

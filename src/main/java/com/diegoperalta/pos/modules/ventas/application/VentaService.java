@@ -92,7 +92,10 @@ public class VentaService {
         venta.setMetodoPago(dto.getMetodoPago());
         venta.setFolio(UUID.randomUUID().toString().substring(0, 8).toUpperCase()); // Generamos un folio simple
         venta.setDetalles(new ArrayList<>());
+        venta.setEstado("COMPLETADA");
         venta.setTotalVenta(BigDecimal.ZERO);
+        venta.setMontoPagado(dto.getMontoPagado());
+        venta.setCambio(BigDecimal.ZERO);
 
         venta = ventaRepository.save(venta);
 
@@ -143,7 +146,6 @@ public class VentaService {
         venta.setTotalVenta(totalAcumulado);
         venta.setMontoPagado(montoPagado);
         venta.setCambio(cambio);
-        venta.setEstado("COMPLETADA");
 
         return ventaRepository.save(venta);
     }
