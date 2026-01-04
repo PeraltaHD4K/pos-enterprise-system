@@ -32,4 +32,32 @@ build/
 ### VS Code ###
 .vscode/
 
+# ==========================================
+# SEGURIDAD Y CONFIGURACIÓN LOCAL
+# ==========================================
 .env
+.DS_Store
+
+# ==========================================
+# PYTHON & DATA SCIENCE (Tu nuevo módulo)
+# ==========================================
+# Archivos compilados de Python (Basura)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebooks (Historial y Checkpoints)
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+
+# Entornos Virtuales (Por si usas venv local en lugar de conda global)
+venv/
+.venv/
+env/
+
+# Datos Temporales (Para no subir CSVs gigantes por error)
+*.csv
+*.xlsx
+*.json
+!src/main/resources/**/*.json  
+# Excepción: No ignorar JSONs de configuración del backend
