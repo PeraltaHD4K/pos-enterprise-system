@@ -52,24 +52,39 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void cargarUsuarios() {
-        // Solo creamos al admin si NO existe ningún usuario en la BD
-        if (usuarioRepository.count() == 0) {
-            Rol rolAdmin = rolRepository.findByNombre("ADMIN").orElseThrow();
+        // 1. Lógica para el SUPER ADMIN
+        if (usuarioRepository.findByUsername(adminUsername).isEmpty()) {
+            Rol rolAdmin = rolRepository.findByNombre("ADMIN")
+                    .orElseThrow(() -> new RuntimeException("Error: Rol ADMIN no encontrado"));
 
             Usuario admin = new Usuario();
-            admin.setUsername(adminUsername); // Usamos la variable inyectada
-
-            // 🔒 Aquí está la magia: Usamos la variable, no un texto fijo
-            admin.setPasswordHash(passwordEncoder.encode(adminPassword));
-
+            admin.setUsername(adminUsername);
+            admin.setPasswordHash(passwordEncoder.encode(adminPassword)); // 🔒 Encriptado
             admin.setRol(rolAdmin);
             admin.setNombreCompleto("Administrador Sistema");
             admin.setActivo(true);
 
             usuarioRepository.save(admin);
-            System.out.println("✅ Usuario ADMIN inicial creado.");
-            System.out.println(
-                    "⚠️ ATENCIÓN: Si es producción, asegúrese de haber cambiado la contraseña por variable de entorno.");
+            System.out.println("✅ Usuario ADMIN creado: " + adminUsername);
+        } else {
+            System.out.println("ℹ️ El usuario ADMIN ya existe.");
+        }
+
+        // 2. Lógica para el CAJERO DE PRUEBA (Dev)
+        String cajeroUsername = "cajero";
+        if (usuarioRepository.findByUsername(cajeroUsername).isEmpty()) {
+            Rol rolCajero = rolRepository.findByNombre("CAJERO")
+                    .orElseThrow(() -> new RuntimeException("Error: Rol CAJERO no encontrado"));
+
+            Usuario cajero = new Usuario();
+            cajero.setUsername(cajeroUsername);
+            cajero.setPasswordHash(passwordEncoder.encode("cajero123")); // Password fija para desarrollo
+            cajero.setRol(rolCajero);
+            cajero.setNombreCompleto("Cajero Principal");
+            cajero.setActivo(true);
+
+            usuarioRepository.save(cajero);
+            System.out.println("✅ Usuario CAJERO creado: " + cajeroUsername);
         }
     }
 

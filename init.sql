@@ -214,12 +214,6 @@ CREATE INDEX idx_ventas_fecha ON ventas(fecha);
 -- ==========================================
 -- 8. SEMILLA (DATOS INICIALES)
 -- ==========================================
-INSERT INTO roles (nombre) VALUES ('ADMIN'), ('CAJERO'), ('ALMACENISTA');
-
--- Password: "password"
-INSERT INTO usuarios (nombre_completo, username, password_hash, rol_id) VALUES 
-('Cajero de Turno', 'cajero', '$2a$10$1XAt2KWLAPzeEGFHKTciRum2TeUcHYnmM11FcLp9UHwjwX0xNcKSu', 2);
-
 INSERT INTO configuracion (clave, valor) VALUES 
 ('NOMBRE_TIENDA', 'La Sorpresa Enterprise'),
 ('MONEDA', 'MXN'),
