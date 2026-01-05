@@ -18,7 +18,7 @@ import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/usuarios")
+@RequestMapping("/usuarios")
 public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;

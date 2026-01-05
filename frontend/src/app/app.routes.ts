@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { Login } from './pages/auth/login/login';
 import { Dashboard } from './pages/dashboard/dashboard';
 import { authGuard } from './core/guards/auth-guard';
+import { Users } from './pages/users/users';
 
 export const routes: Routes = [
     { path: '', redirectTo: 'login', pathMatch: 'full' }, // Redirigir raíz a login
@@ -9,6 +10,11 @@ export const routes: Routes = [
     {
         path: 'dashboard',
         component: Dashboard,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'users',
+        component: Users,
         canActivate: [authGuard]
     }
 ];
