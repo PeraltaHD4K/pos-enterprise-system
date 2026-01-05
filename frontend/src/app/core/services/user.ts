@@ -12,7 +12,14 @@ export interface Usuario {
   nombreCompleto: string;
   username: string;
   activo: boolean;
-  rol: Rol;
+  rol?: Rol;
+}
+
+export interface UsuarioRegistro {
+  nombreCompleto: string;
+  username: string;
+  password: string;
+  rolId: number;
 }
 
 @Injectable({
@@ -24,5 +31,9 @@ export class User {
 
   getUsuarios(): Observable<Usuario[]> {
     return this.http.get<Usuario[]>(this.apiURL);
+  }
+
+  crearUsuario(usuario: UsuarioRegistro): Observable<Usuario> {
+    return this.http.post<Usuario>(this.apiURL, usuario);
   }
 }
