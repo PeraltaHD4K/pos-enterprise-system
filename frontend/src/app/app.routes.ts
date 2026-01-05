@@ -6,6 +6,8 @@ import { Users } from './pages/users/users';
 import { CreateUser } from './pages/users/create-user/create-user';
 import { CategoryList } from './pages/inventory/categories/category-list/category-list';
 import { CategoryForm } from './pages/inventory/categories/category-form/category-form';
+import { ProductList } from './pages/inventory/products/product-list/product-list';
+import { ProductForm } from './pages/inventory/products/product-form/product-form';
 
 export const routes: Routes = [
     { path: '', redirectTo: 'login', pathMatch: 'full' }, // Redirigir raíz a login
@@ -38,6 +40,21 @@ export const routes: Routes = [
     {
         path: 'inventory/categories/edit/:id',
         component: CategoryForm,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'inventory/products',
+        component: ProductList,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'inventory/products/create',
+        component: ProductForm,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'inventory/products/edit/:id',
+        component: ProductForm,
         canActivate: [authGuard]
     }
 ];

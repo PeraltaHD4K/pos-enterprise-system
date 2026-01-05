@@ -18,18 +18,27 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
-                    <tr *ngFor="let cat of categorias">
-                        <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ cat.nombre }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">{{ cat.descripcion }}</td>
-                        <td class="px-6 py-4 text-right text-sm font-medium space-x-2">
-                            <a [routerLink]="['/inventory/categories/edit', cat.id]"
-                                class="text-indigo-600 hover:text-indigo-900 cursor-pointer">Editar</a>
-
-                            <button (click)="borrar(cat.id)" class="text-red-600 hover:text-red-900">Borrar</button>
+                    <tr *ngIf="isLoading">
+                        <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+                            <div class="flex flex-col items-center justify-center">
+                                <span class="text-lg font-medium">Cargando productos...</span>
+                                <span class="text-sm">Por favor espere</span>
+                            </div>
                         </td>
                     </tr>
+                    <ng-container *ngIf="!isLoading">
+                        <tr *ngFor="let cat of categorias">
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ cat.nombre }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ cat.descripcion }}</td>
+                            <td class="px-6 py-4 text-right text-sm font-medium space-x-2">
+                                <a [routerLink]="['/inventory/categories/edit', cat.id]"
+                                    class="text-indigo-600 hover:text-indigo-900 cursor-pointer">Editar</a>
 
-                    <tr *ngIf="categorias.length === 0">
+                                <button (click)="borrar(cat.id)" class="text-red-600 hover:text-red-900">Borrar</button>
+                            </td>
+                        </tr>
+                    </ng-container>
+                    <tr *ngIf="!isLoading && categorias.length === 0">
                         <td colspan="3" class="px-6 py-4 text-center text-gray-500">No hay categorías registradas.</td>
                     </tr>
                 </tbody>

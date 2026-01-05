@@ -240,6 +240,55 @@ public class ProductoService {
         movimientoRepository.save(movimiento);
     }
 
+    public Producto obtenerPorId(Long id) {
+        return productoRepository.findById(id)
+                .filter(Producto::getActivo)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
+    }
+
+    @Transactional
+    public Producto actualizarProducto(Long id, ProductoRegistroDTO dto) {
+        Producto producto = obtenerPorId(id);
+
+        // Validar que si cambia el SKU, no choque con otro
+        if (!producto.getSku().equalsIgnoreCase(dto.getSku()) && productoRepository.existsBySku(dto.getSku())) {
+            throw new BusinessException("Ya existe un producto con el SKU: " + dto.getSku(), HttpStatus.CONFLICT);
+        }
+
+        // Validar Código de Barras
+        if (!producto.getCodigoBarras().equalsIgnoreCase(dto.getCodigoBarras())
+                && productoRepository.existsByCodigoBarras(dto.getCodigoBarras())) {
+            throw new BusinessException("Ya existe un producto con el Código de Barras: " + dto.getCodigoBarras(),
+                    HttpStatus.CONFLICT);
+        }
+
+        // Actualizar campos (Menos stock, ese se mueve por movimientos)
+        producto.setNombre(dto.getNombre());
+        producto.setDescripcion(dto.getDescripcion());
+        producto.setSku(dto.getSku());
+        producto.setCodigoBarras(dto.getCodigoBarras());
+        producto.setPrecioVenta(dto.getPrecioVenta());
+        producto.setCostoPromedio(dto.getCostoPromedio());
+        producto.setStockMinimo(dto.getStockMinimo());
+
+        // Actualizar categoría
+        Categoria categoria = categoriaRepository.findById(dto.getCategoriaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada"));
+        producto.setCategoria(categoria);
+
+        return productoRepository.save(producto);
+    }
+
+    @Transactional
+    public void eliminarProducto(Long id) {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
+
+        // Soft Delete
+        producto.setActivo(false);
+        productoRepository.save(producto);
+    }
+
     private Usuario obtenerUsuarioActual() {
         String username = userProvider.getCurrentUser();
         return usuarioRepository.findByUsername(username)

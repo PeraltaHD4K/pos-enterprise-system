@@ -15,19 +15,26 @@ export class CategoryList implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   categorias: Categoria[] = [];
+  isLoading = true;
 
   ngOnInit(): void {
     this.cargarCategorias();
   }
 
   cargarCategorias() {
+    this.isLoading = true;
     // Nos suscribimos y guardamos los datos en el array local
     this.categoryService.getAll().subscribe({
       next: (data) => {
         this.categorias = data;
+        this.isLoading = false;
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Error al cargar categorías', err)
+      error: (err) => {
+        console.error('Error al cargar categorías', err)
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
