@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface Rol {
   id: number;
@@ -27,7 +28,7 @@ export interface UsuarioRegistro {
 })
 export class User {
   private http = inject(HttpClient);
-  private apiURL = 'http://localhost:8080/api/v1/usuarios';
+  private apiURL = `${environment.apiUrl}/usuarios`;
 
   getUsuarios(): Observable<Usuario[]> {
     return this.http.get<Usuario[]>(this.apiURL);

@@ -4,6 +4,7 @@ import { User, UsuarioRegistro } from '../../../core/services/user';
 import { RolService, Rol } from '../../../core/services/rol';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-create-user',
@@ -21,7 +22,7 @@ export class CreateUser implements OnInit {
   private userService = inject(User);
 
   form!: FormGroup;
-  roles: Rol[] = []; // Aquí usamos la Interfaz Rol
+  roles$: Observable<Rol[]> | undefined; // Aquí usamos la Interfaz Rol
 
   ngOnInit(): void {
     // 1. Validaciones del formulario
@@ -33,17 +34,7 @@ export class CreateUser implements OnInit {
     });
 
     // 2. Cargar roles al iniciar
-    this.cargarRoles();
-  }
-
-  cargarRoles() {
-    this.rolService.getRoles().subscribe({
-      next: (data) => {
-        this.roles = data;
-        console.log('Roles cargados:', this.roles); // Debug para ver si llegan
-      },
-      error: (err) => console.error('Error cargando roles', err)
-    });
+    this.roles$ = this.rolService.getRoles();
   }
 
   onSubmit() {

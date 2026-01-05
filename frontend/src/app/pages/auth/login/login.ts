@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; // Para usar ngModel
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -24,7 +25,7 @@ export class Login {
     console.log('Intentando loguear con:', this.loginData);
 
     // URL de tu Backend (Ajusta la ruta exacta según tu Controller)
-    const url = 'http://localhost:8080/api/v1/auth/login';
+    const url = `${environment.apiUrl}/auth/login`;
 
     this.http.post(url, this.loginData).subscribe({
       next: (response: any) => {
