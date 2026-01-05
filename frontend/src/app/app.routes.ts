@@ -11,6 +11,8 @@ import { ProductForm } from './pages/inventory/products/product-form/product-for
 import { StockAdjustment } from './pages/inventory/products/stock-adjustment/stock-adjustment';
 import { SupplierList } from './pages/purchases/suppliers/supplier-list/supplier-list';
 import { SupplierForm } from './pages/purchases/suppliers/supplier-form/supplier-form';
+import { PurchaseList } from './pages/purchases/purchase-list/purchase-list';
+import { PurchaseForm } from './pages/purchases/purchase-form/purchase-form';
 
 export const routes: Routes = [
     { path: '', redirectTo: 'login', pathMatch: 'full' }, // Redirigir raíz a login
@@ -78,6 +80,21 @@ export const routes: Routes = [
     {
         path: 'purchases/suppliers/edit/:id',
         component: SupplierForm,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'purchases/list',
+        component: PurchaseList,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'purchases/create',
+        component: PurchaseForm,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'purchases/view/:id', // Solo lectura o confirmar recepción
+        component: PurchaseForm,
         canActivate: [authGuard]
     }
 ];

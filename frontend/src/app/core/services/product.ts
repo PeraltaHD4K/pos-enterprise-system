@@ -28,6 +28,7 @@ export interface ProductoRequest {
   costoPromedio: number;
   stockMinimo: number;
   categoriaId: number; // Solo el ID, no el objeto
+  ultimoCostoCompra?: number;
 }
 
 export interface AjusteStockRequest {
