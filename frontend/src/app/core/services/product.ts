@@ -30,6 +30,12 @@ export interface ProductoRequest {
   categoriaId: number; // Solo el ID, no el objeto
 }
 
+export interface AjusteStockRequest {
+  cantidad: number; // Puede ser positivo (entrada) o negativo (salida)
+  motivo: string;
+  autorizacion?: any; // Opcional por ahora
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -67,5 +73,9 @@ export class Product {
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  updateStock(id: number, data: AjusteStockRequest): Observable<Producto> {
+    return this.http.patch<Producto>(`${this.apiUrl}/${id}/stock`, data);
   }
 }

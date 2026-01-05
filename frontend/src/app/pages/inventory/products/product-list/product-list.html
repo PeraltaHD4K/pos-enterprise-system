@@ -50,6 +50,11 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-right text-sm font-medium space-x-2">
+                                <a [routerLink]="['/inventory/products/stock', p.id]"
+                                    class="text-green-600 hover:text-green-900 cursor-pointer font-bold"
+                                    title="Ajustar Stock">
+                                    Stock
+                                </a>
                                 <a [routerLink]="['/inventory/products/edit', p.id]"
                                     class="text-indigo-600 hover:text-indigo-900 cursor-pointer">Editar</a>
                                 <button (click)="borrar(p.id)" class="text-red-600 hover:text-red-900">Borrar</button>

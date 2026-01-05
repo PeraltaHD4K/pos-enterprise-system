@@ -8,6 +8,7 @@ import { CategoryList } from './pages/inventory/categories/category-list/categor
 import { CategoryForm } from './pages/inventory/categories/category-form/category-form';
 import { ProductList } from './pages/inventory/products/product-list/product-list';
 import { ProductForm } from './pages/inventory/products/product-form/product-form';
+import { StockAdjustment } from './pages/inventory/products/stock-adjustment/stock-adjustment';
 
 export const routes: Routes = [
     { path: '', redirectTo: 'login', pathMatch: 'full' }, // Redirigir raíz a login
@@ -55,6 +56,11 @@ export const routes: Routes = [
     {
         path: 'inventory/products/edit/:id',
         component: ProductForm,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'inventory/products/stock/:id', // Recibe el ID del producto
+        component: StockAdjustment,
         canActivate: [authGuard]
     }
 ];

@@ -74,7 +74,7 @@ public class ProductoService {
     }
 
     public List<Producto> listarTodos() {
-        return productoRepository.findAll();
+        return productoRepository.findByActivoTrue();
     }
 
     @Transactional

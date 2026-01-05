@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 import com.diegoperalta.pos.modules.inventario.domain.Producto;
 
 public interface ProductoRepository extends JpaRepository<Producto, Long> {
+    List<Producto> findByActivoTrue();
+
     @Query("SELECT p FROM Producto p JOIN FETCH p.categoria WHERE " +
             "(LOWER(p.nombre) LIKE LOWER(CONCAT('%', :query, '%'))) OR " +
             "(LOWER(p.sku) LIKE LOWER(CONCAT('%', :query, '%'))) OR " +
