@@ -32,4 +32,7 @@ public class Categoria {
     private String nombre;
 
     private String descripcion;
+
+    @Column(columnDefinition = "boolean default true")
+    private Boolean activo = true;
 }

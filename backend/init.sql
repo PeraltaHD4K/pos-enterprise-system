@@ -50,7 +50,9 @@ CREATE TABLE configuracion (
 CREATE TABLE categorias (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    descripcion TEXT
+    descripcion TEXT,
+    activo BOOLEAN DEFAULT TRUE,
+    fecha_creacion TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE proveedores (
