@@ -80,7 +80,14 @@ public class VentaService {
                         HttpStatus.BAD_REQUEST));
 
         // 3. Obtener Cliente
-        Cliente cliente = clienteRepository.findById(dto.getClienteId())
+        Long idClienteParaBuscar = dto.getClienteId();
+
+        if (idClienteParaBuscar == null) {
+            // Si no viene cliente, usamos el ID 1 (Público en General creado por el Seeder)
+            idClienteParaBuscar = 1L;
+        }
+
+        Cliente cliente = clienteRepository.findById(idClienteParaBuscar)
                 .orElseThrow(
                         () -> new ResourceNotFoundException("Cliente no encontrado con ID: " + dto.getClienteId()));
 

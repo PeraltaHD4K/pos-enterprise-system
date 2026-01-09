@@ -13,6 +13,7 @@ import { SupplierList } from './pages/purchases/suppliers/supplier-list/supplier
 import { SupplierForm } from './pages/purchases/suppliers/supplier-form/supplier-form';
 import { PurchaseList } from './pages/purchases/purchase-list/purchase-list';
 import { PurchaseForm } from './pages/purchases/purchase-form/purchase-form';
+import { Pos } from './pages/pos/pos';
 
 export const routes: Routes = [
     { path: '', redirectTo: 'login', pathMatch: 'full' }, // Redirigir raíz a login
@@ -95,6 +96,11 @@ export const routes: Routes = [
     {
         path: 'purchases/view/:id', // Solo lectura o confirmar recepción
         component: PurchaseForm,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'pos',
+        component: Pos,
         canActivate: [authGuard]
     }
 ];

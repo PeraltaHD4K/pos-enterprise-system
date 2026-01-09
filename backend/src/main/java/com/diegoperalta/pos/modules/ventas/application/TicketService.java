@@ -17,7 +17,7 @@ public class TicketService {
     private VentaRepository ventaRepository;
 
     private static final int ANCHO_TICKET = 32;
-    private static final String LINEA_DIVISORIA = "--------------------------------\\n";
+    private static final String LINEA_DIVISORIA = "--------------------------------\n";
 
     @Transactional
     public String generarContenidoTicket(String folio) {

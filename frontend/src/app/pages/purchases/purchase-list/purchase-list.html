@@ -58,7 +58,7 @@
                                 {{ c.total | currency:'USD' }}
                             </td>
                             <td class="px-6 py-4 text-center text-xs text-gray-500">
-                                {{ c.usuario?.username || 'Sistema' }}
+                                {{ c.usuario.username || 'Sistema' }}
                             </td>
                             <td class="px-6 py-4 text-right text-sm font-medium space-x-2">
                                 <button *ngIf="c.estado === 'PENDIENTE'" (click)="confirmar(c.id)"
