@@ -50,6 +50,10 @@ export class Pos implements OnInit {
   showTicketModal = false;
   ticketContent: string = '';
 
+  showCloseModal = false;
+  montoCierre: number | null = null;
+  resumenCierre: SesionCaja | null = null;
+
   // FORMULARIO DE APERTURA (Solo pide Saldo Inicial)
   formApertura: FormGroup = this.fb.group({
     saldoInicial: [0, [Validators.required, Validators.min(0)]]
@@ -92,7 +96,7 @@ export class Pos implements OnInit {
     this.cashRegisterService.abrir({ saldoInicial: saldo }).subscribe({
       next: (nuevaSesion) => {
         this.sesionActual = nuevaSesion;
-        this.isLoading = false;
+        this.cargarProductos();
         this.cdr.detectChanges();
         alert('✅ Caja abierta correctamente. ¡Buen turno!');
       },
@@ -111,10 +115,16 @@ export class Pos implements OnInit {
     this.productService.getAll().subscribe({
       next: (data) => {
         this.allProducts = data.filter(p => p.activo && p.stockActual > 0);
-        this.filteredProducts = this.allProducts;
+        this.searchTerm = '';
+        this.filteredProducts = [...this.allProducts];
+        this.isLoading = false;
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Error cargando productos', err)
+      error: (err) => {
+        console.error('Error cargando productos', err);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -290,5 +300,52 @@ export class Pos implements OnInit {
       printWindow.document.close();
       printWindow.print();
     }
+  }
+
+  iniciarCierreTurno() {
+    this.showCloseModal = true;
+    this.montoCierre = null;
+  }
+
+  confirmarCierre() {
+    if (this.montoCierre === null || this.montoCierre < 0) {
+      alert('Por favor ingresa el monto total de efectivo en caja.');
+      return;
+    }
+
+    if (!confirm('¿Estás seguro de cerrar el turno? Ya no podrás vender.')) {
+      return;
+    }
+
+    this.isLoading = true;
+
+    // Llamamos al endpoint /caja/cerrar
+    this.cashRegisterService.cerrar({ saldoFinalReal: this.montoCierre }).subscribe({
+      next: (sesionCerrada) => {
+        this.isLoading = false;
+        this.sesionActual = null; // Esto ocultará el POS automáticamente
+        this.resumenCierre = sesionCerrada; // Guardamos el resultado para mostrarlo
+        this.showCloseModal = false; // Cerramos el modal de input
+
+        // Forzamos la detección de cambios para mostrar la pantalla de resumen
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Error al cerrar caja: ' + err.error?.message);
+        this.isLoading = false;
+      }
+    });
+  }
+
+  // Botón "Salir" o "Nuevo Turno" después del resumen
+  finalizarDia() {
+    this.resumenCierre = null;
+    // Recargamos estado para volver a la pantalla de "Apertura" (Candado)
+    this.verificarEstadoCaja();
+  }
+
+  cancelarCierre() {
+    this.showCloseModal = false;
   }
 }
