@@ -5,6 +5,7 @@ import { CashRegister, SesionCaja } from '../../core/services/cash-register';
 import { Product, Producto } from '../../core/services/product';
 import { Sale, VentaRequest } from '../../core/services/sale';
 import { Router } from '@angular/router';
+import { Auth } from '../../core/services/auth';
 
 interface CartItem {
   producto: Producto;
@@ -26,12 +27,15 @@ export class Pos implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private authService = inject(Auth);
 
   @ViewChild('searchInput') searchInput!: ElementRef;
 
   // ESTADO DEL COMPONENTE
   isLoading = true;
   sesionActual: SesionCaja | null = null; // Si es null, mostramos pantalla de apertura
+
+  username: string = '';
 
   // ESTADO DEL POS (VENTA)
   allProducts: Producto[] = [];
@@ -60,6 +64,7 @@ export class Pos implements OnInit {
   });
 
   ngOnInit(): void {
+    this.username = this.authService.getUsername() || 'Usuario';
     this.verificarEstadoCaja();
   }
 
@@ -347,5 +352,9 @@ export class Pos implements OnInit {
 
   cancelarCierre() {
     this.showCloseModal = false;
+  }
+
+  logout() {
+    this.authService.logout();
   }
 }

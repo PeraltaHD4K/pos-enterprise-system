@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { Login } from './pages/auth/login/login';
 import { Dashboard } from './pages/dashboard/dashboard';
 import { authGuard } from './core/guards/auth-guard';
+import { roleGuard } from './core/guards/role-guard';
 import { Users } from './pages/users/users';
 import { CreateUser } from './pages/users/create-user/create-user';
 import { CategoryList } from './pages/inventory/categories/category-list/category-list';
@@ -21,82 +22,98 @@ export const routes: Routes = [
     {
         path: 'dashboard',
         component: Dashboard,
-        canActivate: [authGuard]
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'GERENTE'] }
     },
     {
         path: 'users',
         component: Users,
-        canActivate: [authGuard]
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN'] }
     },
     {
         path: 'users/create',
         component: CreateUser,
-        canActivate: [authGuard]
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN'] }
     },
     {
         path: 'inventory/categories',
         component: CategoryList,
-        canActivate: [authGuard]
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'GERENTE'] }
     },
     {
         path: 'inventory/categories/create',
         component: CategoryForm,
-        canActivate: [authGuard]
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'GERENTE'] }
     },
     {
         path: 'inventory/categories/edit/:id',
         component: CategoryForm,
-        canActivate: [authGuard]
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'GERENTE'] }
     },
     {
         path: 'inventory/products',
         component: ProductList,
-        canActivate: [authGuard]
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'GERENTE'] }
     },
     {
         path: 'inventory/products/create',
         component: ProductForm,
-        canActivate: [authGuard]
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'GERENTE'] }
     },
     {
         path: 'inventory/products/edit/:id',
         component: ProductForm,
-        canActivate: [authGuard]
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'GERENTE'] }
     },
     {
         path: 'inventory/products/stock/:id', // Recibe el ID del producto
         component: StockAdjustment,
-        canActivate: [authGuard]
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'GERENTE'] }
     },
     {
         path: 'purchases/suppliers',
         component: SupplierList,
-        canActivate: [authGuard]
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'GERENTE'] }
     },
     {
         path: 'purchases/suppliers/create',
         component: SupplierForm,
-        canActivate: [authGuard]
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'GERENTE'] }
     },
     {
         path: 'purchases/suppliers/edit/:id',
         component: SupplierForm,
-        canActivate: [authGuard]
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'GERENTE'] }
     },
     {
         path: 'purchases/list',
         component: PurchaseList,
-        canActivate: [authGuard]
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'GERENTE'] }
     },
     {
         path: 'purchases/create',
         component: PurchaseForm,
-        canActivate: [authGuard]
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'GERENTE'] }
     },
     {
         path: 'purchases/view/:id', // Solo lectura o confirmar recepción
         component: PurchaseForm,
-        canActivate: [authGuard]
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'GERENTE'] }
     },
     {
         path: 'pos',

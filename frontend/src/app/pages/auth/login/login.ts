@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; // Para usar ngModel
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../../../environments/environment';
+import { Auth } from '../../../core/services/auth';
 
 @Component({
   selector: 'app-login',
@@ -13,34 +14,50 @@ import { environment } from '../../../../environments/environment';
   styleUrls: ['./login.css']
 })
 export class Login {
-  // Objeto para guardar los datos del formulario
-  loginData = {
-    username: '', // Ojo: Asegúrate si tu backend espera 'username' o 'email'
-    password: ''
-  };
+  private authService = inject(Auth);
+  private router = inject(Router);
+  username = '';
+  password = '';
 
-  constructor(private http: HttpClient, private router: Router) { }
+  // Variable para mostrar spinner de carga
+  isLoading = false;
 
-  onSubmit() {
-    console.log('Intentando loguear con:', this.loginData);
+  onLogin() {
+    // Validación simple
+    if (!this.username || !this.password) {
+      alert('Por favor ingresa usuario y contraseña');
+      return;
+    }
 
-    // URL de tu Backend (Ajusta la ruta exacta según tu Controller)
-    const url = `${environment.apiUrl}/auth/login`;
+    this.isLoading = true;
 
-    this.http.post(url, this.loginData).subscribe({
-      next: (response: any) => {
-        console.log('¡Login Exitoso!', response);
-        // 1. Guardar el token en el navegador
-        if (response.token) {
-          localStorage.setItem('auth_token', response.token);
+    // Preparamos el objeto que pide el servicio
+    const credentials = {
+      username: this.username,
+      password: this.password
+    };
+
+    // Llamamos al AuthService
+    this.authService.login(credentials).subscribe({
+      next: () => {
+        this.isLoading = false;
+
+        // --- LÓGICA DE REDIRECCIÓN POR ROL ---
+        const role = this.authService.getRole();
+
+        // Si es CAJERO -> directo a vender
+        if (role === 'CAJERO' || role === 'ROLE_CAJERO') {
+          this.router.navigate(['/pos']);
         }
-
-        // 2. Redirigir al Dashboard
-        this.router.navigate(['/dashboard']);
+        // Si es ADMIN o GERENTE -> al dashboard
+        else {
+          this.router.navigate(['/dashboard']);
+        }
       },
-      error: (error) => {
-        console.error('Error de Login:', error);
-        alert('Credenciales incorrectas o error de servidor.');
+      error: (err) => {
+        console.error(err);
+        this.isLoading = false;
+        alert('❌ Credenciales incorrectas o error de conexión');
       }
     });
   }
