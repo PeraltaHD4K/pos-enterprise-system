@@ -1,0 +1,69 @@
+<div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col gap-4">
+
+    <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
+
+        <div class="bg-gray-100 p-1 rounded-lg flex text-xs font-bold">
+            <button (click)="setMode('DIA')" class="px-4 py-2 rounded-md transition-all"
+                [ngClass]="mode === 'DIA' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'">
+                Día Único
+            </button>
+            <button (click)="setMode('RANGO')" class="px-4 py-2 rounded-md transition-all"
+                [ngClass]="mode === 'RANGO' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'">
+                Rango Fechas
+            </button>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-3">
+
+            <ng-container *ngIf="mode === 'DIA'">
+                <div class="flex gap-2">
+                    <button (click)="setQuickOption('HOY')"
+                        class="px-3 py-1 bg-gray-50 hover:bg-gray-100 text-xs font-bold rounded border text-gray-600">Hoy</button>
+                    <button (click)="setQuickOption('AYER')"
+                        class="px-3 py-1 bg-gray-50 hover:bg-gray-100 text-xs font-bold rounded border text-gray-600">Ayer</button>
+                </div>
+                <input type="date" [(ngModel)]="fechaUnica" [max]="today" [min]="minDate" (change)="checkAndApply()"
+                    class="bg-gray-50 border-gray-300 rounded-lg text-sm font-bold text-gray-700 focus:ring-indigo-500 cursor-pointer"
+                    [class.border-red-500]="errorMessage">
+            </ng-container>
+
+            <ng-container *ngIf="mode === 'RANGO'">
+                <div class="flex gap-2">
+                    <button (click)="setQuickOption('SEMANA')"
+                        class="px-3 py-1 bg-gray-50 hover:bg-gray-100 text-xs font-bold rounded border text-gray-600">7
+                        Días</button>
+                    <button (click)="setQuickOption('MES')"
+                        class="px-3 py-1 bg-gray-50 hover:bg-gray-100 text-xs font-bold rounded border text-gray-600">Mes</button>
+                </div>
+                <div class="flex items-center bg-gray-50 rounded-lg p-1 border border-gray-300"
+                    [class.border-red-500]="errorMessage">
+                    <input type="date" [(ngModel)]="fechaInicio" [max]="today" [min]="minDate"
+                        (change)="checkAndApply()"
+                        class="bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 w-32 cursor-pointer p-1">
+                    <span class="text-gray-400 mx-1">➜</span>
+                    <input type="date" [(ngModel)]="fechaFin" [max]="today" [min]="minDate" (change)="checkAndApply()"
+                        class="bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 w-32 cursor-pointer p-1">
+                </div>
+            </ng-container>
+
+            <button (click)="checkAndApply()"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg shadow-sm transition-colors ml-2"
+                title="Aplicar Filtros">
+                🔄
+            </button>
+        </div>
+    </div>
+
+    <div class="flex justify-between items-center text-sm px-1">
+
+        <div
+            class="flex items-center gap-2 text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+            <span>👁️</span>
+            <span class="font-bold">{{ rangoActivoLabel }}</span>
+        </div>
+
+        <div *ngIf="errorMessage" class="text-red-600 font-bold animate-pulse flex items-center gap-1">
+            <span>⚠️</span> {{ errorMessage }}
+        </div>
+    </div>
+</div>

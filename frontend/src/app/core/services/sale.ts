@@ -1,7 +1,30 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
+
+export interface PuntoGrafica {
+  etiqueta: string;
+  totalVentas: number;
+  ganancia: number;
+  cantidadVentas: number;
+}
+
+export interface ReporteGanancias {
+  totalVentas: number;
+  costoVentas: number;
+  gananciaBruta: number;
+  margenPorcentaje: number;
+  totalTransacciones: number;
+  ticketPromedio: number;
+  grafica: PuntoGrafica[];
+}
+
+export interface ProductoTop {
+  nombreProducto: string;
+  cantidadVendida: number;
+  totalDineroGenerado: number;
+}
 
 export interface ItemVentaRequest {
   productoId: number;
@@ -46,5 +69,21 @@ export class Sale {
 
   getMisVentasHoy(): Observable<VentaResponse[]> {
     return this.http.get<VentaResponse[]>(`${this.apiUrl}/mis-ventas-hoy`);
+  }
+
+  obtenerReporteGanancias(inicio?: string, fin?: string): Observable<ReporteGanancias> {
+    let params = new HttpParams();
+    if (inicio) params = params.set('fechaInicio', inicio);
+    if (fin) params = params.set('fechaFin', fin);
+
+    return this.http.get<ReporteGanancias>(`${this.apiUrl}/reporte/ganancias`, { params });
+  }
+
+  obtenerTopProductos(inicio?: string, fin?: string): Observable<ProductoTop[]> {
+    let params = new HttpParams();
+    if (inicio) params = params.set('fechaInicio', inicio);
+    if (fin) params = params.set('fechaFin', fin);
+
+    return this.http.get<ProductoTop[]>(`${this.apiUrl}/reportes/top-productos`, { params });
   }
 }

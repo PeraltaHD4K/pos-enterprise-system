@@ -1,0 +1,11 @@
+<div
+    class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
+    <div>
+        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">{{ title }}</p>
+        <p class="text-2xl font-black text-gray-900 mt-1">{{ value }}</p>
+        <p *ngIf="subtext" class="text-xs mt-1" [ngClass]="subtextColor">{{ subtext }}</p>
+    </div>
+    <div class="p-3 rounded-full" [ngClass]="iconBgColor">
+        <span class="text-2xl">{{ icon }}</span>
+    </div>
+</div>
