@@ -2,7 +2,9 @@ package com.diegoperalta.pos.modules.ventas.application;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -208,6 +210,38 @@ public class VentaService {
         venta.setEstado("CANCELADA");
 
         return ventaRepository.save(venta);
+    }
+
+    public List<VentaResumenDTO> obtenerVentasDelDiaUsuarioActual() {
+        // 1. Obtener el usuario autenticado (Cajero)
+        Usuario usuario = obtenerUsuarioActual();
+
+        // 2. Definir rango de HOY (00:00 a 23:59)
+        LocalDateTime inicioDia = LocalDate.now().atStartOfDay();
+        LocalDateTime finDia = LocalDate.now().atTime(LocalTime.MAX);
+
+        // 3. Consultar repositorio
+        List<Venta> ventas = ventaRepository.findByUsuarioIdAndFechaBetweenOrderByFechaDesc(
+                usuario.getId(),
+                inicioDia,
+                finDia);
+
+        // 4. Convertir a DTO (Reutilizamos lógica o mapeamos manualmente)
+        return ventas.stream().map(venta -> {
+            VentaResumenDTO dto = new VentaResumenDTO();
+            dto.setId(venta.getId());
+            dto.setFolio(venta.getFolio());
+            dto.setFecha(venta.getFecha());
+            dto.setTotalVenta(venta.getTotalVenta());
+            dto.setEstado(venta.getEstado());
+            dto.setNombreVendedor(usuario.getUsername());
+
+            if (venta.getCliente() != null) {
+                dto.setNombreCliente(venta.getCliente().getNombre());
+            }
+            // No es necesario nombreVendedor porque soy yo mismo
+            return dto;
+        }).toList();
     }
 
     @Transactional(readOnly = true)

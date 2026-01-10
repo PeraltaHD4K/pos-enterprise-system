@@ -43,4 +43,8 @@ export class Sale {
   cancelarVenta(folio: string, autorizacion: { usuarioAdmin: string, passwordAdmin: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/${folio}/cancelar`, autorizacion);
   }
+
+  getMisVentasHoy(): Observable<VentaResponse[]> {
+    return this.http.get<VentaResponse[]>(`${this.apiUrl}/mis-ventas-hoy`);
+  }
 }

@@ -37,6 +37,11 @@ export class Pos implements OnInit {
 
   username: string = '';
 
+  // VARIABLES PARA HISTORIAL
+  showHistoryModal = false;
+  historialVentas: any[] = [];
+  isLoadingHistory = false;
+
   // ESTADO DEL POS (VENTA)
   allProducts: Producto[] = [];
   filteredProducts: Producto[] = [];
@@ -305,6 +310,35 @@ export class Pos implements OnInit {
       printWindow.document.close();
       printWindow.print();
     }
+  }
+
+  abrirHistorial() {
+    this.showHistoryModal = true;
+    this.isLoadingHistory = true;
+
+    this.saleService.getMisVentasHoy().subscribe({
+      next: (data) => {
+        this.historialVentas = data;
+        this.isLoadingHistory = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error(err);
+        this.isLoadingHistory = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  cerrarHistorial() {
+    this.showHistoryModal = false;
+  }
+
+  // Reutilizamos tu método de imprimir
+  reImprimirTicket(folio: string) {
+    this.obtenerTicket(folio); // Esto ya abre el modal del ticket
+    // Opcional: cerraría el historial para ver el ticket
+    // this.showHistoryModal = false; 
   }
 
   iniciarCierreTurno() {

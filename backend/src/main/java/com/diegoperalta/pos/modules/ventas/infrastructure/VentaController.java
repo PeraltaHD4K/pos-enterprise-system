@@ -106,4 +106,10 @@ public class VentaController {
 
         return ResponseEntity.ok(ventaCancelada);
     }
+
+    @GetMapping("/mis-ventas-hoy")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")
+    public ResponseEntity<List<VentaResumenDTO>> getMisVentasHoy() {
+        return ResponseEntity.ok(ventaService.obtenerVentasDelDiaUsuarioActual());
+    }
 }

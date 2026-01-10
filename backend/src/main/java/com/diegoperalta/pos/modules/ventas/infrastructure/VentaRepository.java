@@ -75,4 +75,7 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
                         "JOIN FETCH d.producto " +
                         "WHERE v.folio = :folio")
         Optional<Venta> findByFolioConDetalles(@Param("folio") String folio);
+
+        List<Venta> findByUsuarioIdAndFechaBetweenOrderByFechaDesc(Long usuarioId, LocalDateTime inicio,
+                        LocalDateTime fin);
 }
