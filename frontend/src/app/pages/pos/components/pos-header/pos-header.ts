@@ -16,4 +16,5 @@ export class PosHeader {
   @Output() onLogout = new EventEmitter<void>();
   @Output() onOpenHistory = new EventEmitter<void>();
   @Output() onCloseShift = new EventEmitter<void>();
+  @Output() onOpenMovements = new EventEmitter<void>();
 }

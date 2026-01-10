@@ -1,7 +1,8 @@
 <div class="flex flex-col h-screen bg-gray-100 font-sans">
 
     <app-pos-header [sesionActual]="sesionActual" [username]="username" (onLogout)="logout()"
-        (onOpenHistory)="abrirHistorial()" (onCloseShift)="iniciarCierreTurno()"> </app-pos-header>
+        (onOpenHistory)="abrirHistorial()" (onCloseShift)="iniciarCierreTurno()" (onOpenMovements)="abrirMovimientos()">
+    </app-pos-header>
 
     <main class="flex-1 overflow-hidden relative flex flex-col">
 
@@ -52,5 +53,9 @@
 
     <app-pos-summary-modal [resumen]="resumenCierre" (onFinish)="finalizarDia()">
     </app-pos-summary-modal>
+
+    <app-pos-movement-modal [isOpen]="showMovementModal" [isProcessing]="isProcessingMovement"
+        (onClose)="showMovementModal = false" (onConfirm)="onRegistrarMovimiento($event)">
+    </app-pos-movement-modal>
 
 </div>

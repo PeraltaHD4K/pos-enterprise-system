@@ -16,6 +16,7 @@ import { PosTicketModal } from './components/pos-ticket-modal/pos-ticket-modal';
 import { PosCheckoutModal } from './components/pos-checkout-modal/pos-checkout-modal';
 import { PosCloseModal } from './components/pos-close-modal/pos-close-modal';
 import { PosSummaryModal } from './components/pos-summary-modal/pos-summary-modal';
+import { PosMovementModal } from './components/pos-movement-modal/pos-movement-modal';
 
 @Component({
   selector: 'app-pos',
@@ -32,6 +33,7 @@ import { PosSummaryModal } from './components/pos-summary-modal/pos-summary-moda
     PosCheckoutModal,
     PosCloseModal,
     PosSummaryModal,
+    PosMovementModal,
   ],
   templateUrl: './pos.html',
   styleUrl: './pos.css',
@@ -71,6 +73,9 @@ export class Pos implements OnInit {
 
   showCloseModal = false;
   resumenCierre: SesionCaja | null = null;
+
+  showMovementModal = false;
+  isProcessingMovement = false;
 
   // Formulario de apertura
   formApertura: FormGroup = this.fb.group({
@@ -119,6 +124,30 @@ export class Pos implements OnInit {
         console.error(err);
         alert('Error: ' + err.error?.message);
         this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  abrirMovimientos() {
+    this.showMovementModal = true;
+  }
+
+  onRegistrarMovimiento(datos: { monto: number, tipo: 'INGRESO' | 'RETIRO', motivo: string }) {
+    this.isProcessingMovement = true;
+
+    this.cashRegisterService.registrarMovimiento(datos).subscribe({
+      next: () => {
+        alert(`✅ ${datos.tipo} registrado correctamente.`);
+        this.showMovementModal = false;
+        this.isProcessingMovement = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        // Tu backend devuelve mensajes de error útiles (ej. "Saldo insuficiente")
+        const msg = err.error?.message || 'Error al registrar movimiento';
+        alert('❌ ' + msg);
+        this.isProcessingMovement = false;
         this.cdr.detectChanges();
       }
     });
