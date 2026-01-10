@@ -375,6 +375,17 @@
                                         class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1 rounded-md border border-indigo-100 hover:bg-indigo-100 transition-colors">
                                         🖨️ Ticket
                                     </button>
+                                    <button *ngIf="venta.estado !== 'CANCELADA'"
+                                        (click)="solicitarCancelacion(venta.folio)"
+                                        class="text-red-600 hover:text-red-900 bg-red-50 px-3 py-1 rounded-md border border-red-100 hover:bg-red-100 transition-colors"
+                                        title="Requiere autorización">
+                                        🚫 Cancelar
+                                    </button>
+
+                                    <span *ngIf="venta.estado === 'CANCELADA'"
+                                        class="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded">
+                                        CANCELADA
+                                    </span>
                                 </td>
                             </tr>
                         </tbody>
@@ -385,6 +396,54 @@
                     <button type="button" (click)="cerrarHistorial()"
                         class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:text-sm">
                         Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="showAuthModal" class="fixed inset-0 z-[80] overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 text-center">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-90 transition-opacity" (click)="cerrarAuthModal()"></div>
+
+            <div
+                class="inline-block bg-white rounded-lg text-left overflow-hidden shadow-2xl transform transition-all align-middle sm:max-w-sm w-full border-2 border-red-500">
+
+                <div class="bg-red-600 px-4 py-3 text-white flex justify-between items-center">
+                    <h3 class="text-lg font-bold flex items-center gap-2">
+                        🛡️ Autorización Requerida
+                    </h3>
+                    <button (click)="cerrarAuthModal()" class="text-red-100 hover:text-white">&times;</button>
+                </div>
+
+                <div class="p-6 bg-white">
+                    <p class="text-gray-600 text-sm mb-4">
+                        Esta acción es sensible. Se requiere la aprobación de un <b>Administrador</b> o <b>Gerente</b>.
+                    </p>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase">Usuario Supervisor</label>
+                            <input type="text" [(ngModel)]="supervisorUser"
+                                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 mt-1 p-2 border">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase">Contraseña</label>
+                            <input type="password" [(ngModel)]="supervisorPass"
+                                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 mt-1 p-2 border">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 px-4 py-3 flex flex-row-reverse gap-2">
+                    <button (click)="confirmarCancelacion()" [disabled]="isProcessingCancel"
+                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none disabled:bg-gray-400 sm:text-sm">
+                        {{ isProcessingCancel ? 'Verificando...' : 'Autorizar Cancelación' }}
+                    </button>
+                    <button (click)="cerrarAuthModal()"
+                        class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:text-sm">
+                        Cancelar
                     </button>
                 </div>
             </div>

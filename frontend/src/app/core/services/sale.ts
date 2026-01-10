@@ -40,8 +40,8 @@ export class Sale {
     return this.http.get(`${this.apiUrl}/ticket/${folio}`, { responseType: 'text' });
   }
 
-  cancelarVenta(folio: string, autorizacion: { usuarioAdmin: string, passwordAdmin: string }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${folio}/cancelar`, autorizacion);
+  cancelarVenta(folio: string, credencialesSupervisor: { usernameSupervisor: string, passwordSupervisor: string }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${folio}/cancelar`, credencialesSupervisor);
   }
 
   getMisVentasHoy(): Observable<VentaResponse[]> {

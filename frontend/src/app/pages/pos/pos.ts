@@ -63,6 +63,13 @@ export class Pos implements OnInit {
   montoCierre: number | null = null;
   resumenCierre: SesionCaja | null = null;
 
+  // VARIABLES PARA CANCELACIÓN
+  showAuthModal = false;
+  folioACancelar: string | null = null;
+  supervisorUser = '';
+  supervisorPass = '';
+  isProcessingCancel = false;
+
   // FORMULARIO DE APERTURA (Solo pide Saldo Inicial)
   formApertura: FormGroup = this.fb.group({
     saldoInicial: [0, [Validators.required, Validators.min(0)]]
@@ -339,6 +346,52 @@ export class Pos implements OnInit {
     this.obtenerTicket(folio); // Esto ya abre el modal del ticket
     // Opcional: cerraría el historial para ver el ticket
     // this.showHistoryModal = false; 
+  }
+
+  // 1. El usuario hace clic en el botón rojo "Cancelar" en la tabla
+  solicitarCancelacion(folio: string) {
+    this.folioACancelar = folio;
+    this.supervisorUser = '';
+    this.supervisorPass = '';
+    this.showAuthModal = true; // Abre el modal de password
+  }
+
+  // 2. El gerente escribe su clave y da "Confirmar"
+  confirmarCancelacion() {
+    if (!this.folioACancelar || !this.supervisorUser || !this.supervisorPass) {
+      alert('Debes ingresar usuario y contraseña del supervisor');
+      return;
+    }
+
+    this.isProcessingCancel = true;
+
+    const credenciales = {
+      usernameSupervisor: this.supervisorUser,
+      passwordSupervisor: this.supervisorPass
+    };
+
+    this.saleService.cancelarVenta(this.folioACancelar, credenciales).subscribe({
+      next: (ventaCancelada) => {
+        alert(`✅ Venta ${ventaCancelada.folio} cancelada correctamente`);
+        this.cerrarAuthModal();
+        this.abrirHistorial(); // Recargamos la tabla para ver el cambio de estado
+        this.isProcessingCancel = false;
+      },
+      error: (err) => {
+        console.error(err);
+        this.isProcessingCancel = false;
+        // Mensaje amigable si falla (ej. contraseña incorrecta)
+        const msg = err.error?.message || 'Error al cancelar. Verifica las credenciales.';
+        alert('❌ ' + msg);
+      }
+    });
+  }
+
+  cerrarAuthModal() {
+    this.showAuthModal = false;
+    this.folioACancelar = null;
+    this.supervisorUser = '';
+    this.supervisorPass = '';
   }
 
   iniciarCierreTurno() {
