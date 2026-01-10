@@ -1,0 +1,63 @@
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Sale } from '../../../../core/services/sale';
+
+@Component({
+  selector: 'app-pos-history-modal',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './pos-history-modal.html',
+  styleUrl: './pos-history-modal.css',
+})
+export class PosHistoryModal {
+  @Input() isOpen = false;
+  @Input() ventas: any[] = [];
+  @Input() isLoading = false;
+
+  @Output() onClose = new EventEmitter<void>();
+  @Output() onReprint = new EventEmitter<string>();
+  @Output() onCancelSuccess = new EventEmitter<void>(); // Para recargar tabla
+
+  private saleService = inject(Sale);
+
+  // Lógica interna de autorización
+  showAuthModal = false;
+  folioACancelar: string | null = null;
+  supervisorUser = '';
+  supervisorPass = '';
+  isProcessing = false;
+
+  solicitarCancelacion(folio: string) {
+    this.folioACancelar = folio;
+    this.supervisorUser = '';
+    this.supervisorPass = '';
+    this.showAuthModal = true;
+  }
+
+  cerrarAuthModal() {
+    this.showAuthModal = false;
+  }
+
+  confirmarCancelacion() {
+    if (!this.folioACancelar || !this.supervisorUser || !this.supervisorPass) {
+      alert('Datos incompletos');
+      return;
+    }
+    this.isProcessing = true;
+    const creds = { usernameSupervisor: this.supervisorUser, passwordSupervisor: this.supervisorPass };
+
+    this.saleService.cancelarVenta(this.folioACancelar, creds).subscribe({
+      next: (res) => {
+        alert('✅ Venta Cancelada');
+        this.isProcessing = false;
+        this.cerrarAuthModal();
+        this.onCancelSuccess.emit(); // Avisamos al padre para que recargue la lista
+      },
+      error: (err) => {
+        this.isProcessing = false;
+        alert('❌ Error: ' + (err.error?.mensaje || 'Credenciales incorrectas'));
+      }
+    });
+  }
+}

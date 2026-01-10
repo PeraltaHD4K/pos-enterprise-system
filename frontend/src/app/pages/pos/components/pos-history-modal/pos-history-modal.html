@@ -1,0 +1,79 @@
+<div *ngIf="isOpen" class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" (click)="onClose.emit()"></div>
+
+        <div
+            class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl w-full">
+
+            <div class="bg-white px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">📜 Ventas del Día</h3>
+                <button (click)="onClose.emit()"
+                    class="text-gray-400 hover:text-gray-600 text-2xl font-bold">&times;</button>
+            </div>
+
+            <div class="bg-white p-0 overflow-y-auto max-h-[60vh]">
+                <div *ngIf="isLoading" class="p-8 text-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                    <p class="mt-2 text-gray-500">Cargando ventas...</p>
+                </div>
+
+                <table *ngIf="!isLoading && ventas.length > 0" class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hora</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Folio</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr *ngFor="let venta of ventas" class="hover:bg-gray-50">
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ venta.fecha | date:'shortTime' }}</td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 font-mono">{{ venta.folio }}</td>
+                            <td class="px-6 py-4 text-sm font-bold text-green-600">{{ venta.totalVenta | currency:'USD'
+                                }}</td>
+                            <td class="px-6 py-4 text-right text-sm font-medium space-x-2">
+                                <button (click)="onReprint.emit(venta.folio)"
+                                    class="text-indigo-600 bg-indigo-50 px-2 py-1 rounded border border-indigo-100 hover:bg-indigo-100">🖨️
+                                    Ticket</button>
+                                <button *ngIf="venta.estado !== 'CANCELADA'" (click)="solicitarCancelacion(venta.folio)"
+                                    class="text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100 hover:bg-red-100">🚫
+                                    Cancelar</button>
+                                <span *ngIf="venta.estado === 'CANCELADA'"
+                                    class="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded">CANCELADA</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="showAuthModal" class="fixed inset-0 z-[80] overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 text-center">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-90" (click)="cerrarAuthModal()"></div>
+        <div
+            class="inline-block bg-white rounded-lg text-left overflow-hidden shadow-2xl transform transition-all align-middle sm:max-w-sm w-full border-2 border-red-500 z-[90] relative">
+            <div class="bg-red-600 px-4 py-3 text-white flex justify-between items-center">
+                <h3 class="text-lg font-bold">🛡️ Autorización</h3>
+                <button (click)="cerrarAuthModal()" class="text-red-100 hover:text-white">&times;</button>
+            </div>
+            <div class="p-6 bg-white space-y-4">
+                <p class="text-gray-600 text-sm">Se requiere gerente para cancelar.</p>
+                <input type="text" [(ngModel)]="supervisorUser" placeholder="Usuario Supervisor"
+                    class="w-full border p-2 rounded">
+                <input type="password" [(ngModel)]="supervisorPass" placeholder="Contraseña"
+                    class="w-full border p-2 rounded">
+            </div>
+            <div class="bg-gray-50 px-4 py-3 flex flex-row-reverse gap-2">
+                <button (click)="confirmarCancelacion()" [disabled]="isProcessing"
+                    class="bg-red-600 text-white px-4 py-2 rounded w-full">
+                    {{ isProcessing ? '...' : 'Autorizar' }}
+                </button>
+                <button (click)="cerrarAuthModal()"
+                    class="bg-white border text-gray-700 px-4 py-2 rounded w-full">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>

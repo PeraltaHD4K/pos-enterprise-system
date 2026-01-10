@@ -1,0 +1,31 @@
+<div *ngIf="resumen" class="fixed inset-0 z-[60] bg-gray-100 flex flex-col justify-center items-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden">
+        <div class="bg-green-600 p-6 text-center">
+            <h2 class="text-3xl font-bold text-white">Turno Cerrado</h2>
+            <p class="text-green-100 mt-1">{{ resumen.fechaCierre | date:'medium' }}</p>
+        </div>
+        <div class="p-8 space-y-6">
+            <div class="grid grid-cols-2 gap-4 text-center">
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <p class="text-xs text-gray-500 uppercase">Sistema</p>
+                    <p class="text-xl font-bold text-gray-800">{{ resumen.saldoFinalCalculado | currency:'USD' }}</p>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg border-2 border-indigo-100">
+                    <p class="text-xs text-gray-500 uppercase">Reportado</p>
+                    <p class="text-xl font-bold text-indigo-700">{{ resumen.saldoFinalReal | currency:'USD' }}</p>
+                </div>
+            </div>
+            <div class="text-center p-4 rounded-lg"
+                [ngClass]="{'bg-green-100 text-green-800': (resumen.diferencia || 0) >= 0, 'bg-red-100 text-red-800': (resumen.diferencia || 0) < 0}">
+                <p class="text-sm font-bold uppercase mb-1">Diferencia</p>
+                <p class="text-4xl font-black">{{ (resumen.diferencia || 0) | currency:'USD' }}</p>
+                <p class="text-xs mt-2" *ngIf="(resumen.diferencia || 0) == 0">✨ Caja Perfecta ✨</p>
+                <p class="text-xs mt-2" *ngIf="(resumen.diferencia || 0) < 0">⚠️ Falta dinero</p>
+                <p class="text-xs mt-2" *ngIf="(resumen.diferencia || 0) > 0">⚠️ Sobra dinero</p>
+            </div>
+            <button (click)="onFinish.emit()"
+                class="w-full bg-gray-900 text-white py-4 rounded-lg font-bold text-lg hover:bg-black transition-colors">Salir
+                y Finalizar</button>
+        </div>
+    </div>
+</div>

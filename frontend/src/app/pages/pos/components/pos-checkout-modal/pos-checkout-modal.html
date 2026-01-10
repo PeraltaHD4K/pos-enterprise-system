@@ -1,0 +1,43 @@
+<div *ngIf="isOpen" class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-75" (click)="onClose.emit()"></div>
+
+        <div
+            class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="text-center">
+                    <h3 class="text-3xl font-bold text-gray-900">Cobrar Venta</h3>
+                    <div class="mt-4">
+                        <p class="text-gray-500 text-lg">Total a Pagar:</p>
+                        <p class="text-5xl font-black text-indigo-600 my-2">{{ total | currency:'USD' }}</p>
+                    </div>
+
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium text-gray-700 text-left mb-1">Efectivo Recibido
+                            ($)</label>
+                        <input type="number" [(ngModel)]="montoPagado" (ngModelChange)="calcularCambio()"
+                            class="block w-full sm:text-3xl border-gray-300 rounded-md p-3 text-center font-bold focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="0.00" autofocus>
+
+                        <div class="mt-4 p-4 bg-gray-100 rounded-lg flex justify-between items-center"
+                            [ngClass]="{'bg-green-100': cambio >= 0, 'bg-red-100': cambio < 0}">
+                            <span class="font-bold text-gray-700">CAMBIO:</span>
+                            <span class="text-2xl font-bold"
+                                [ngClass]="{'text-green-700': cambio >= 0, 'text-red-700': cambio < 0}">{{ (cambio > 0 ?
+                                cambio : 0) | currency:'USD' }}</span>
+                        </div>
+                        <p *ngIf="cambio < 0" class="text-red-500 text-sm mt-1 font-bold">⚠️ Falta dinero</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
+                <button (click)="confirmar()" [disabled]="!montoPagado || cambio < 0 || isProcessing"
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 sm:w-auto disabled:bg-gray-400">
+                    {{ isProcessing ? 'Procesando...' : 'Confirmar Cobro' }}
+                </button>
+                <button (click)="onClose.emit()"
+                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:w-auto">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>

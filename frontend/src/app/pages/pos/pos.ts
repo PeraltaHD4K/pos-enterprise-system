@@ -1,22 +1,38 @@
-import { Component, inject, OnInit, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+
 import { CashRegister, SesionCaja } from '../../core/services/cash-register';
 import { Product, Producto } from '../../core/services/product';
 import { Sale, VentaRequest } from '../../core/services/sale';
-import { Router } from '@angular/router';
 import { Auth } from '../../core/services/auth';
 
-interface CartItem {
-  producto: Producto;
-  cantidad: number;
-  subtotal: number;
-}
+import { PosHeader } from './components/pos-header/pos-header';
+import { PosProductList } from './components/pos-product-list/pos-product-list';
+import { PosCart, CartItem } from './components/pos-cart/pos-cart';
+import { PosHistoryModal } from './components/pos-history-modal/pos-history-modal';
+import { PosTicketModal } from './components/pos-ticket-modal/pos-ticket-modal';
+import { PosCheckoutModal } from './components/pos-checkout-modal/pos-checkout-modal';
+import { PosCloseModal } from './components/pos-close-modal/pos-close-modal';
+import { PosSummaryModal } from './components/pos-summary-modal/pos-summary-modal';
 
 @Component({
   selector: 'app-pos',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    PosHeader,
+    PosProductList,
+    PosCart,
+    PosHistoryModal,
+    PosTicketModal,
+    PosCheckoutModal,
+    PosCloseModal,
+    PosSummaryModal,
+  ],
   templateUrl: './pos.html',
   styleUrl: './pos.css',
 })
@@ -25,52 +41,38 @@ export class Pos implements OnInit {
   private productService = inject(Product);
   private saleService = inject(Sale);
   private fb = inject(FormBuilder);
-  private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private authService = inject(Auth);
 
-  @ViewChild('searchInput') searchInput!: ElementRef;
-
-  // ESTADO DEL COMPONENTE
+  // Estado general
   isLoading = true;
-  sesionActual: SesionCaja | null = null; // Si es null, mostramos pantalla de apertura
-
+  sesionActual: SesionCaja | null = null;
   username: string = '';
 
-  // VARIABLES PARA HISTORIAL
-  showHistoryModal = false;
-  historialVentas: any[] = [];
-  isLoadingHistory = false;
-
-  // ESTADO DEL POS (VENTA)
+  // Estado Productos
   allProducts: Producto[] = [];
   filteredProducts: Producto[] = [];
   searchTerm: string = '';
 
+  // Estado Carrito
   cart: CartItem[] = [];
   total: number = 0;
 
-  // ESTADO DEL COBRO (MODAL)
-  showCheckoutModal = false;
-  montoPagado: number | null = null;
-  cambio: number = 0;
-  isProcessingSale = false;
+  // Estado modales
+  showHistoryModal = false;
+  historialVentas: any[] = [];
+  isLoadingHistory = false;
 
   showTicketModal = false;
   ticketContent: string = '';
 
+  showCheckoutModal = false;
+  isProcessingSale = false;
+
   showCloseModal = false;
-  montoCierre: number | null = null;
   resumenCierre: SesionCaja | null = null;
 
-  // VARIABLES PARA CANCELACIÓN
-  showAuthModal = false;
-  folioACancelar: string | null = null;
-  supervisorUser = '';
-  supervisorPass = '';
-  isProcessingCancel = false;
-
-  // FORMULARIO DE APERTURA (Solo pide Saldo Inicial)
+  // Formulario de apertura
   formApertura: FormGroup = this.fb.group({
     saldoInicial: [0, [Validators.required, Validators.min(0)]]
   });
@@ -80,23 +82,20 @@ export class Pos implements OnInit {
     this.verificarEstadoCaja();
   }
 
+  // --- 1. GESTION DE CAJA ---
   verificarEstadoCaja() {
     this.isLoading = true;
     this.cashRegisterService.getEstado().subscribe({
       next: (sesion) => {
-        // Si el backend devuelve 204 No Content, 'sesion' podría ser null
-        // Si es null (204 No Content), significa caja CERRADA
         this.sesionActual = sesion || null;
         if (this.sesionActual) {
-          this.cargarProductos(); // Si hay caja, cargamos catálogo
+          this.cargarProductos();
         }
-        this.isLoading = false;
 
+        this.isLoading = false;
         this.cdr.detectChanges();
       },
-      error: (err) => {
-        // Si hay error (ej. 403), asumimos cerrada o manejamos error
-        console.error('Error verificando caja', err);
+      error: () => {
         this.sesionActual = null;
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -106,7 +105,6 @@ export class Pos implements OnInit {
 
   abrirCaja() {
     if (this.formApertura.invalid) return;
-
     const saldo = this.formApertura.value.saldoInicial;
 
     this.isLoading = true;
@@ -114,12 +112,12 @@ export class Pos implements OnInit {
       next: (nuevaSesion) => {
         this.sesionActual = nuevaSesion;
         this.cargarProductos();
-        this.cdr.detectChanges();
         alert('✅ Caja abierta correctamente. ¡Buen turno!');
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error(err);
-        alert('Error al abrir caja: ' + (err.error?.message || 'Intente de nuevo'));
+        alert('Error: ' + err.error?.message);
         this.isLoading = false;
         this.cdr.detectChanges();
       }
@@ -127,7 +125,6 @@ export class Pos implements OnInit {
   }
 
   // --- 2. CATÁLOGO Y BÚSQUEDA ---
-
   cargarProductos() {
     this.productService.getAll().subscribe({
       next: (data) => {
@@ -147,16 +144,13 @@ export class Pos implements OnInit {
 
   onSearch(term: string) {
     this.searchTerm = term;
-
     if (!term) {
       this.filteredProducts = this.allProducts;
       return;
     }
 
     const lower = term.toLowerCase();
-
     this.filteredProducts = this.allProducts.filter(p => {
-      // Validación segura: Si el campo es null, usamos cadena vacía ''
       const nombre = (p.nombre || '').toLowerCase();
       const codigo = (p.codigoBarras || '').toLowerCase();
       const sku = (p.sku || '').toLowerCase();
@@ -167,21 +161,18 @@ export class Pos implements OnInit {
     // Lógica de "Escaner Exacto" (Auto-agregar si es código de barras único)
     if (this.filteredProducts.length === 1) {
       const p = this.filteredProducts[0];
-      // Si lo que escribí es EXACTAMENTE el código o SKU, lo agrego y limpio
       if (p.codigoBarras === term || p.sku === term) {
         this.addToCart(p);
         this.searchTerm = '';
         this.filteredProducts = this.allProducts;
-        this.cdr.detectChanges(); // <-- Importante actualizar aquí también
+        this.cdr.detectChanges();
       }
     }
   }
 
   // --- 3. CARRITO DE COMPRAS ---
-
   addToCart(product: Producto) {
     const existing = this.cart.find(item => item.producto.id === product.id);
-
     if (existing) {
       existing.cantidad++;
       existing.subtotal = existing.cantidad * existing.producto.precioVenta;
@@ -193,33 +184,22 @@ export class Pos implements OnInit {
       });
     }
     this.calculateTotal();
-
-    // Regresar foco al buscador para seguir escaneando rápido
-    setTimeout(() => this.searchInput?.nativeElement.focus(), 100);
   }
 
-  updateQuantity(index: number, delta: number) {
-    const item = this.cart[index];
-    const newQuantity = item.cantidad + delta;
+  updateQuantity(event: { index: number, delta: number }) {
+    const item = this.cart[event.index];
+    const newQuantity = item.cantidad + event.delta;
 
     if (newQuantity <= 0) {
-      this.removeFromCart(index);
-      return;
+      this.cart.splice(event.index, 1);
+    } else {
+      if (newQuantity > item.producto.stockActual) {
+        alert('⚠️ Stock insuficiente');
+        return;
+      }
+      item.cantidad = newQuantity;
+      item.subtotal = item.cantidad * item.producto.precioVenta;
     }
-
-    // Validar Stock (Opcional visualmente, el backend valida final)
-    if (newQuantity > item.producto.stockActual) {
-      alert('⚠️ Stock insuficiente');
-      return;
-    }
-
-    item.cantidad = newQuantity;
-    item.subtotal = item.cantidad * item.producto.precioVenta;
-    this.calculateTotal();
-  }
-
-  removeFromCart(index: number) {
-    this.cart.splice(index, 1);
     this.calculateTotal();
   }
 
@@ -228,27 +208,11 @@ export class Pos implements OnInit {
   }
 
   // --- 4. COBRO Y FINALIZACIÓN ---
-
   abrirModalCobro() {
-    if (this.cart.length === 0) return;
     this.showCheckoutModal = true;
-    this.montoPagado = null;
-    this.cambio = 0;
-    setTimeout(() => document.getElementById('inputPago')?.focus(), 100);
   }
 
-  calcularCambio() {
-    if (this.montoPagado !== null) {
-      this.cambio = this.montoPagado - this.total;
-    }
-  }
-
-  procesarVenta() {
-    if (!this.montoPagado || this.montoPagado < this.total) {
-      alert('El pago es insuficiente');
-      return;
-    }
-
+  onProcesarVenta(datosPago: { montoPagado: number, metodoPago: 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA' }) {
     this.isProcessingSale = true;
 
     const payload: VentaRequest = {
@@ -256,39 +220,30 @@ export class Pos implements OnInit {
         productoId: i.producto.id,
         cantidad: i.cantidad
       })),
-      metodoPago: 'EFECTIVO', // Por ahora fijo, luego puedes poner un select
-      montoPagado: this.montoPagado
+      metodoPago: datosPago.metodoPago,
+      montoPagado: datosPago.montoPagado
     };
 
     this.saleService.registrarVenta(payload).subscribe({
       next: (res) => {
         this.obtenerTicket(res.folio);
-
         // Limpiar todo
         this.cart = [];
         this.total = 0;
-        this.montoPagado = null;
-        this.cambio = 0;
-        this.searchTerm = '';
         this.showCheckoutModal = false;
         this.isProcessingSale = false;
-        this.filteredProducts = this.allProducts;
-
-        // Recargar productos para actualizar stocks visuales
         this.cargarProductos();
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error(err);
-        alert('❌ Error al procesar venta: ' + (err.error?.message || 'Error desconocido'));
+        alert('Error: ' + err.error?.message);
         this.isProcessingSale = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
-  cerrarModal() {
-    this.showCheckoutModal = false;
-  }
-
+  // --- 5. TICKET ---
   obtenerTicket(folio: string) {
     this.saleService.obtenerTicket(folio).subscribe({
       next: (textoTicket) => {
@@ -300,29 +255,10 @@ export class Pos implements OnInit {
     });
   }
 
-  cerrarTicket() {
-    this.showTicketModal = false;
-    this.ticketContent = '';
-  }
-
-  imprimirTicket() {
-    // Truco simple para imprimir: Abre una ventana nueva, escribe el ticket e imprime
-    const printWindow = window.open('', '', 'height=600,width=400');
-    if (printWindow) {
-      printWindow.document.write('<html><head><title>Ticket</title>');
-      printWindow.document.write('<style>body{font-family: monospace; white-space: pre; font-size: 12px;}</style>');
-      printWindow.document.write('</head><body>');
-      printWindow.document.write(this.ticketContent);
-      printWindow.document.write('</body></html>');
-      printWindow.document.close();
-      printWindow.print();
-    }
-  }
-
+  // --- 6. HISTORIAL ---
   abrirHistorial() {
     this.showHistoryModal = true;
     this.isLoadingHistory = true;
-
     this.saleService.getMisVentasHoy().subscribe({
       next: (data) => {
         this.historialVentas = data;
@@ -337,70 +273,17 @@ export class Pos implements OnInit {
     });
   }
 
-  cerrarHistorial() {
-    this.showHistoryModal = false;
-  }
-
-  // Reutilizamos tu método de imprimir
-  reImprimirTicket(folio: string) {
-    this.obtenerTicket(folio); // Esto ya abre el modal del ticket
-    // Opcional: cerraría el historial para ver el ticket
-    // this.showHistoryModal = false; 
-  }
-
-  // 1. El usuario hace clic en el botón rojo "Cancelar" en la tabla
-  solicitarCancelacion(folio: string) {
-    this.folioACancelar = folio;
-    this.supervisorUser = '';
-    this.supervisorPass = '';
-    this.showAuthModal = true; // Abre el modal de password
-  }
-
-  // 2. El gerente escribe su clave y da "Confirmar"
-  confirmarCancelacion() {
-    if (!this.folioACancelar || !this.supervisorUser || !this.supervisorPass) {
-      alert('Debes ingresar usuario y contraseña del supervisor');
-      return;
-    }
-
-    this.isProcessingCancel = true;
-
-    const credenciales = {
-      usernameSupervisor: this.supervisorUser,
-      passwordSupervisor: this.supervisorPass
-    };
-
-    this.saleService.cancelarVenta(this.folioACancelar, credenciales).subscribe({
-      next: (ventaCancelada) => {
-        alert(`✅ Venta ${ventaCancelada.folio} cancelada correctamente`);
-        this.cerrarAuthModal();
-        this.abrirHistorial(); // Recargamos la tabla para ver el cambio de estado
-        this.isProcessingCancel = false;
-      },
-      error: (err) => {
-        console.error(err);
-        this.isProcessingCancel = false;
-        // Mensaje amigable si falla (ej. contraseña incorrecta)
-        const msg = err.error?.message || 'Error al cancelar. Verifica las credenciales.';
-        alert('❌ ' + msg);
-      }
-    });
-  }
-
-  cerrarAuthModal() {
-    this.showAuthModal = false;
-    this.folioACancelar = null;
-    this.supervisorUser = '';
-    this.supervisorPass = '';
-  }
-
+  // --- 7. CIERRE ---
   iniciarCierreTurno() {
     this.showCloseModal = true;
-    this.montoCierre = null;
   }
 
-  confirmarCierre() {
-    if (this.montoCierre === null || this.montoCierre < 0) {
+  cancelarCierre() {
+    this.showCloseModal = false;
+  }
+
+  confirmarCierre(montoCierre: number) {
+    if (montoCierre === null || montoCierre < 0) {
       alert('Por favor ingresa el monto total de efectivo en caja.');
       return;
     }
@@ -410,35 +293,26 @@ export class Pos implements OnInit {
     }
 
     this.isLoading = true;
-
-    // Llamamos al endpoint /caja/cerrar
-    this.cashRegisterService.cerrar({ saldoFinalReal: this.montoCierre }).subscribe({
+    this.cashRegisterService.cerrar({ saldoFinalReal: montoCierre }).subscribe({
       next: (sesionCerrada) => {
         this.isLoading = false;
-        this.sesionActual = null; // Esto ocultará el POS automáticamente
-        this.resumenCierre = sesionCerrada; // Guardamos el resultado para mostrarlo
-        this.showCloseModal = false; // Cerramos el modal de input
-
-        // Forzamos la detección de cambios para mostrar la pantalla de resumen
+        this.sesionActual = null;
+        this.resumenCierre = sesionCerrada;
+        this.showCloseModal = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.error(err);
         alert('Error al cerrar caja: ' + err.error?.message);
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
-  // Botón "Salir" o "Nuevo Turno" después del resumen
   finalizarDia() {
     this.resumenCierre = null;
-    // Recargamos estado para volver a la pantalla de "Apertura" (Candado)
     this.verificarEstadoCaja();
-  }
-
-  cancelarCierre() {
-    this.showCloseModal = false;
   }
 
   logout() {

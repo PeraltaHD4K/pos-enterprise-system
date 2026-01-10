@@ -1,0 +1,43 @@
+<div class="w-96 bg-white shadow-xl flex flex-col z-20 h-full border-l border-gray-200">
+    <div class="bg-indigo-900 text-white p-4 shadow-md">
+        <h2 class="text-lg font-bold flex items-center gap-2"><span>🛒</span> Ticket de Venta</h2>
+        <p class="text-indigo-200 text-xs mt-1">{{ cart.length }} Artículos agregados</p>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-2 space-y-2 bg-gray-50">
+        <div *ngFor="let item of cart; let i = index"
+            class="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center group">
+            <div class="flex-1">
+                <div class="text-sm font-medium text-gray-900">{{ item.producto.nombre }}</div>
+                <div class="text-xs text-gray-500">{{ item.producto.precioVenta | currency:'USD' }} x {{ item.cantidad
+                    }}</div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-sm font-bold text-gray-900">{{ item.subtotal | currency:'USD' }}</div>
+                <div class="flex items-center bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                    <button (click)="onUpdateQuantity.emit({index: i, delta: -1})"
+                        class="px-2 py-1 hover:bg-red-100 text-red-600 font-bold">-</button>
+                    <button (click)="onUpdateQuantity.emit({index: i, delta: 1})"
+                        class="px-2 py-1 hover:bg-green-100 text-green-600 font-bold">+</button>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="cart.length === 0"
+            class="h-full flex flex-col items-center justify-center text-gray-400 opacity-50">
+            <p class="text-sm">Escanea productos para comenzar</p>
+        </div>
+    </div>
+
+    <div class="bg-white p-4 border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-gray-500 font-medium text-lg">TOTAL</span>
+            <span class="text-4xl font-black text-indigo-900">{{ total | currency:'USD' }}</span>
+        </div>
+
+        <button (click)="onCheckout.emit()" [disabled]="cart.length === 0"
+            class="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-xl shadow-lg hover:bg-green-700 active:transform active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all flex justify-center items-center gap-2">
+            <span>PAGAR</span> <span class="text-2xl">➔</span>
+        </button>
+    </div>
+</div>
