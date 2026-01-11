@@ -1,12 +1,14 @@
 package com.diegoperalta.pos.modules.ventas.application;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.diegoperalta.pos.common.exception.ResourceNotFoundException;
+import com.diegoperalta.pos.modules.configuracion.application.ConfiguracionService;
 import com.diegoperalta.pos.modules.ventas.domain.DetalleVenta;
 import com.diegoperalta.pos.modules.ventas.domain.Venta;
 import com.diegoperalta.pos.modules.ventas.infrastructure.VentaRepository;
@@ -16,6 +18,9 @@ public class TicketService {
     @Autowired
     private VentaRepository ventaRepository;
 
+    @Autowired
+    private ConfiguracionService configService;
+
     private static final int ANCHO_TICKET = 32;
     private static final String LINEA_DIVISORIA = "--------------------------------\n";
 
@@ -24,11 +29,15 @@ public class TicketService {
         Venta venta = ventaRepository.findByFolioConDetalles(folio)
                 .orElseThrow(() -> new ResourceNotFoundException("Venta no encontrada: " + folio));
 
+        Map<String, String> config = configService.obtenerConfiguracionCompleta();
+
         StringBuilder ticket = new StringBuilder();
 
-        centrarTexto(ticket, "MI TIENDA POS");
-        centrarTexto(ticket, "Sucursal: Centro");
-        centrarTexto(ticket, "RFC XXXXXXXXXXXXXX");
+        centrarTexto(ticket, config.getOrDefault("NOMBRE_TIENDA", "MI TIENDA POS"));
+        if (config.containsKey("DIRECCION")) {
+            centrarTexto(ticket, config.get("DIRECCION"));
+        }
+        centrarTexto(ticket, "RFC: " + config.getOrDefault("RFC", "XAXX010101000"));
         ticket.append("\n");
 
         ticket.append("Folio: ").append(venta.getFolio()).append("\n");
@@ -69,7 +78,7 @@ public class TicketService {
         alinearDerecha(ticket, cambioStr);
 
         ticket.append("\n");
-        centrarTexto(ticket, "¡GRACIAS POR SU COMPRA!");
+        centrarTexto(ticket, config.getOrDefault("TICKET_FOOTER", "¡Gracias por su compra!"));
         ticket.append("\n\n\n");
 
         return ticket.toString();

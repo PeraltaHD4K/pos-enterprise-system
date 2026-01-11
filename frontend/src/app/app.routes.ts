@@ -138,6 +138,12 @@ export const routes: Routes = [
         data: { roles: ['ADMIN', 'GERENTE'] } // Cajero quizás solo ve, no edita? Ajusta según prefieras
     },
     {
+        path: 'settings',
+        loadComponent: () => import('./pages/settings/settings').then(m => m.Settings),
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN'] }
+    },
+    {
         path: '**',
         redirectTo: 'login'
     }

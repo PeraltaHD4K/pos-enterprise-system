@@ -4,6 +4,20 @@ import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
 import { Categoria } from './category';
 
+export interface MovimientoInventario {
+  id: number;
+  tipoMovimiento: string; // VENTA, COMPRA, AJUSTE, etc.
+  cantidad: number;
+  stockAnterior: number;
+  stockResultante: number;
+  motivo?: string;
+  referencia?: string;
+  fecha: string; // LocalDateTime viene como string ISO
+  usuario: {
+    username: string;
+  };
+}
+
 export interface Producto {
   id: number;
   sku: string;
@@ -43,6 +57,11 @@ export interface AjusteStockRequest {
 export class Product {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/inventario/productos`;
+
+  getKardex(productoId: number): Observable<MovimientoInventario[]> {
+    // Apunta al nuevo controller que creamos
+    return this.http.get<MovimientoInventario[]>(`${environment.apiUrl}/inventario/movimientos/producto/${productoId}`);
+  }
 
   // Listar todos
   getAll(): Observable<Producto[]> {

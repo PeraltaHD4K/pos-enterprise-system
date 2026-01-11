@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Product, Producto } from '../../../../core/services/product';
+import { Product, Producto, MovimientoInventario } from '../../../../core/services/product';
 
 @Component({
   selector: 'app-product-list',
@@ -16,6 +16,11 @@ export class ProductList implements OnInit {
 
   productos: Producto[] = [];
   isLoading = true;
+
+  showKardexModal = false;
+  selectedProduct: Producto | null = null;
+  movimientos: MovimientoInventario[] = [];
+  isLoadingKardex = false;
 
   ngOnInit(): void {
     this.cargarProductos();
@@ -49,5 +54,33 @@ export class ProductList implements OnInit {
         error: (err) => alert('Error al eliminar producto')
       });
     }
+  }
+
+  abrirKardex(producto: Producto) {
+    this.selectedProduct = producto;
+    this.showKardexModal = true;
+    this.movimientos = []; // Limpiar anterior
+    this.isLoadingKardex = true;
+    this.cdr.detectChanges(); // Actualizar para mostrar modal vacío
+
+    this.productService.getKardex(producto.id).subscribe({
+      next: (data) => {
+        this.movimientos = data;
+        this.isLoadingKardex = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error cargando kardex', err);
+        alert('No se pudo cargar el historial');
+        this.isLoadingKardex = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  cerrarKardex() {
+    this.showKardexModal = false;
+    this.selectedProduct = null;
+    this.cdr.detectChanges();
   }
 }
