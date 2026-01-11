@@ -24,15 +24,37 @@
             </div>
         </div>
 
-        <div *ngIf="sesionActual" class="flex-1 flex overflow-hidden">
+        <div *ngIf="sesionActual" class="flex-1 flex flex-col overflow-hidden">
 
-            <app-pos-product-list class="flex-1 min-w-0 h-full flex flex-col" [products]="filteredProducts"
-                [searchTerm]="searchTerm" (onSearch)="onSearch($event)" (onProductSelect)="addToCart($event)">
-            </app-pos-product-list>
+            <div
+                class="bg-white px-4 py-2 border-b border-gray-200 shadow-sm flex justify-between items-center shrink-0 z-20">
 
-            <app-pos-cart class="h-full flex flex-col" [cart]="cart" [total]="total"
-                (onUpdateQuantity)="updateQuantity($event)" (onCheckout)="abrirModalCobro()">
-            </app-pos-cart>
+                <div class="w-full max-w-md">
+                    <app-pos-customer-selector (customerSelected)="onClienteSeleccionado($event)">
+                    </app-pos-customer-selector>
+                </div>
+
+                <div *ngIf="clienteActual" class="flex items-center gap-2 animate-fade-in">
+                    <span class="text-sm text-gray-500">Cliente:</span>
+                    <span class="font-bold text-gray-800">{{ clienteActual.nombre }}</span>
+                    <span
+                        class="bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full border border-yellow-200">
+                        🌟 {{ clienteActual.puntosFidelidad || 0 }} pts
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex-1 flex overflow-hidden">
+
+                <app-pos-product-list class="flex-1 min-w-0 h-full flex flex-col" [products]="filteredProducts"
+                    [searchTerm]="searchTerm" (onSearch)="onSearch($event)" (onProductSelect)="addToCart($event)">
+                </app-pos-product-list>
+
+                <app-pos-cart class="h-full flex flex-col border-l border-gray-200" [cart]="cart" [total]="total"
+                    (onUpdateQuantity)="updateQuantity($event)" (onCheckout)="abrirModalCobro()">
+                </app-pos-cart>
+
+            </div>
 
         </div>
     </main>

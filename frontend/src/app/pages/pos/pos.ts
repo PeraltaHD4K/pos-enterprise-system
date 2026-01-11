@@ -7,6 +7,7 @@ import { CashRegister, SesionCaja } from '../../core/services/cash-register';
 import { Product, Producto } from '../../core/services/product';
 import { Sale, VentaRequest } from '../../core/services/sale';
 import { Auth } from '../../core/services/auth';
+import { Cliente } from '../../core/services/client';
 
 import { PosHeader } from './components/pos-header/pos-header';
 import { PosProductList } from './components/pos-product-list/pos-product-list';
@@ -17,6 +18,7 @@ import { PosCheckoutModal } from './components/pos-checkout-modal/pos-checkout-m
 import { PosCloseModal } from './components/pos-close-modal/pos-close-modal';
 import { PosSummaryModal } from './components/pos-summary-modal/pos-summary-modal';
 import { PosMovementModal } from './components/pos-movement-modal/pos-movement-modal';
+import { PosCustomerSelector } from './components/pos-customer-selector/pos-customer-selector';
 
 @Component({
   selector: 'app-pos',
@@ -34,6 +36,7 @@ import { PosMovementModal } from './components/pos-movement-modal/pos-movement-m
     PosCloseModal,
     PosSummaryModal,
     PosMovementModal,
+    PosCustomerSelector,
   ],
   templateUrl: './pos.html',
   styleUrl: './pos.css',
@@ -76,6 +79,10 @@ export class Pos implements OnInit {
 
   showMovementModal = false;
   isProcessingMovement = false;
+
+  clienteActual: Cliente | null = null;
+
+  @ViewChild(PosCustomerSelector) customerSelector!: PosCustomerSelector;
 
   // Formulario de apertura
   formApertura: FormGroup = this.fb.group({
@@ -241,6 +248,10 @@ export class Pos implements OnInit {
     this.showCheckoutModal = true;
   }
 
+  onClienteSeleccionado(cliente: Cliente | null) {
+    this.clienteActual = cliente;
+  }
+
   onProcesarVenta(datosPago: { montoPagado: number, metodoPago: 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA' }) {
     this.isProcessingSale = true;
 
@@ -250,7 +261,8 @@ export class Pos implements OnInit {
         cantidad: i.cantidad
       })),
       metodoPago: datosPago.metodoPago,
-      montoPagado: datosPago.montoPagado
+      montoPagado: datosPago.montoPagado,
+      clienteId: this.clienteActual ? this.clienteActual.id : 1
     };
 
     this.saleService.registrarVenta(payload).subscribe({
@@ -259,6 +271,10 @@ export class Pos implements OnInit {
         // Limpiar todo
         this.cart = [];
         this.total = 0;
+        this.clienteActual = null;
+        if (this.customerSelector) {
+          this.customerSelector.clear();
+        }
         this.showCheckoutModal = false;
         this.isProcessingSale = false;
         this.cargarProductos();
