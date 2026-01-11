@@ -120,6 +120,24 @@ export const routes: Routes = [
         canActivate: [authGuard]
     },
     {
+        path: 'customers',
+        loadComponent: () => import('./pages/customers/customer-list/customer-list').then(m => m.CustomerList),
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'GERENTE', 'CAJERO'] }
+    },
+    {
+        path: 'customers/create',
+        loadComponent: () => import('./pages/customers/customer-form/customer-form').then(m => m.CustomerForm),
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'GERENTE', 'CAJERO'] }
+    },
+    {
+        path: 'customers/edit/:id',
+        loadComponent: () => import('./pages/customers/customer-form/customer-form').then(m => m.CustomerForm),
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'GERENTE'] } // Cajero quizás solo ve, no edita? Ajusta según prefieras
+    },
+    {
         path: '**',
         redirectTo: 'login'
     }
