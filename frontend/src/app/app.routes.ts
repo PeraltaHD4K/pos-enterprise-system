@@ -31,6 +31,12 @@ export const routes: Routes = [
         data: { roles: ['ADMIN'] }
     },
     {
+        path: 'users/edit/:id',
+        loadComponent: () => import('./pages/users/create-user/create-user').then(m => m.CreateUser),
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN'] }
+    },
+    {
         path: 'inventory/categories',
         loadComponent: () => import('./pages/inventory/categories/category-list/category-list').then(m => m.CategoryList),
         canActivate: [authGuard, roleGuard],

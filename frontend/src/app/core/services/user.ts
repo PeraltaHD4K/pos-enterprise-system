@@ -23,6 +23,13 @@ export interface UsuarioRegistro {
   rolId: number;
 }
 
+export interface UsuarioEdicion {
+  nombreCompleto: string;
+  username: string;
+  rolId: number;
+  password?: string; // Opcional
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -36,5 +43,17 @@ export class User {
 
   crearUsuario(usuario: UsuarioRegistro): Observable<Usuario> {
     return this.http.post<Usuario>(this.apiURL, usuario);
+  }
+
+  getUsuario(id: number): Observable<Usuario> {
+    return this.http.get<Usuario>(`${this.apiURL}/${id}`);
+  }
+
+  actualizarUsuario(id: number, usuario: UsuarioEdicion): Observable<Usuario> {
+    return this.http.put<Usuario>(`${this.apiURL}/${id}`, usuario);
+  }
+
+  toggleEstado(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiURL}/${id}`);
   }
 }
