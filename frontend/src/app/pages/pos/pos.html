@@ -1,16 +1,17 @@
 <div class="flex flex-col h-screen bg-gray-100 font-sans">
 
-    <app-pos-header [sesionActual]="sesionActual" [username]="username" (onLogout)="logout()"
+    <app-pos-header [sesionActual]="sessionService.session()" [username]="username" (onLogout)="logout()"
         (onOpenHistory)="abrirHistorial()" (onCloseShift)="iniciarCierreTurno()" (onOpenMovements)="abrirMovimientos()">
     </app-pos-header>
 
     <main class="flex-1 overflow-hidden relative flex flex-col">
 
-        <div *ngIf="isLoading" class="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-80">
+        <div *ngIf="sessionService.isLoading()"
+            class="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-80">
             <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div>
         </div>
 
-        <div *ngIf="!sesionActual && !isLoading"
+        <div *ngIf="!sessionService.session() && !sessionService.isLoading()"
             class="flex-1 flex flex-col justify-center items-center p-4 bg-gray-100">
             <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full text-center border-t-8 border-indigo-600">
                 <h1 class="text-2xl font-bold text-gray-800 mb-2">Apertura de Turno</h1>
@@ -24,7 +25,7 @@
             </div>
         </div>
 
-        <div *ngIf="sesionActual" class="flex-1 flex flex-col overflow-hidden">
+        <div *ngIf="sessionService.session()" class="flex-1 flex flex-col overflow-hidden">
 
             <div
                 class="bg-white px-4 py-2 border-b border-gray-200 shadow-sm flex justify-between items-center shrink-0 z-20">
@@ -34,24 +35,25 @@
                     </app-pos-customer-selector>
                 </div>
 
-                <div *ngIf="clienteActual" class="flex items-center gap-2 animate-fade-in">
+                <div *ngIf="cartService.client()" class="flex items-center gap-2 animate-fade-in">
                     <span class="text-sm text-gray-500">Cliente:</span>
-                    <span class="font-bold text-gray-800">{{ clienteActual.nombre }}</span>
+                    <span class="font-bold text-gray-800">{{ cartService.client()?.nombre }}</span>
                     <span
                         class="bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full border border-yellow-200">
-                        🌟 {{ clienteActual.puntosFidelidad || 0 }} pts
+                        🌟 {{ cartService.client()?.puntosFidelidad || 0 }} pts
                     </span>
                 </div>
             </div>
 
             <div class="flex-1 flex overflow-hidden">
 
-                <app-pos-product-list class="flex-1 min-w-0 h-full flex flex-col" [products]="filteredProducts"
+                <app-pos-product-list class="flex-1 min-w-0 h-full flex flex-col" [products]="catalogService.products()"
                     [searchTerm]="searchTerm" (onSearch)="onSearch($event)" (onProductSelect)="addToCart($event)">
                 </app-pos-product-list>
 
-                <app-pos-cart class="h-full flex flex-col border-l border-gray-200" [cart]="cart" [total]="total"
-                    (onUpdateQuantity)="updateQuantity($event)" (onCheckout)="abrirModalCobro()">
+                <app-pos-cart class="h-full flex flex-col border-l border-gray-200" [cart]="cartService.items()"
+                    [total]="cartService.total()" (onUpdateQuantity)="updateQuantity($event)"
+                    (onCheckout)="abrirModalCobro()">
                 </app-pos-cart>
 
             </div>
@@ -66,11 +68,11 @@
     <app-pos-ticket-modal [isOpen]="showTicketModal" [content]="ticketContent" (onClose)="showTicketModal = false">
     </app-pos-ticket-modal>
 
-    <app-pos-checkout-modal [isOpen]="showCheckoutModal" [total]="total" [isProcessing]="isProcessingSale"
+    <app-pos-checkout-modal [isOpen]="showCheckoutModal" [total]="cartService.total()" [isProcessing]="isProcessingSale"
         (onClose)="showCheckoutModal = false" (onConfirm)="onProcesarVenta($event)">
     </app-pos-checkout-modal>
 
-    <app-pos-close-modal [isOpen]="showCloseModal" [isLoading]="isLoading" (onClose)="cancelarCierre()"
+    <app-pos-close-modal [isOpen]="showCloseModal" [isLoading]="sessionService.isLoading()" (onClose)="cancelarCierre()"
         (onConfirm)="confirmarCierre($event)"> </app-pos-close-modal>
 
     <app-pos-summary-modal [resumen]="resumenCierre" (onFinish)="finalizarDia()">

@@ -1,17 +1,19 @@
 import { Component, inject, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
 
 import { CashRegister, SesionCaja } from '../../core/services/cash-register';
 import { Product, Producto } from '../../core/services/product';
-import { Sale, VentaRequest } from '../../core/services/sale';
+import { Sale } from '../../core/services/sale';
 import { Auth } from '../../core/services/auth';
 import { Cliente } from '../../core/services/client';
+import { PosCartService } from './services/pos-cart';
+import { PosCatalog } from './services/pos-catalog';
+import { PosSession } from './services/pos-session';
 
 import { PosHeader } from './components/pos-header/pos-header';
 import { PosProductList } from './components/pos-product-list/pos-product-list';
-import { PosCart, CartItem } from './components/pos-cart/pos-cart';
+import { PosCart } from './components/pos-cart/pos-cart';
 import { PosHistoryModal } from './components/pos-history-modal/pos-history-modal';
 import { PosTicketModal } from './components/pos-ticket-modal/pos-ticket-modal';
 import { PosCheckoutModal } from './components/pos-checkout-modal/pos-checkout-modal';
@@ -49,19 +51,15 @@ export class Pos implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private authService = inject(Auth);
 
+  public cartService = inject(PosCartService);
+  public catalogService = inject(PosCatalog);
+  public sessionService = inject(PosSession);
+
   // Estado general
-  isLoading = true;
-  sesionActual: SesionCaja | null = null;
   username: string = '';
 
   // Estado Productos
-  allProducts: Producto[] = [];
-  filteredProducts: Producto[] = [];
   searchTerm: string = '';
-
-  // Estado Carrito
-  cart: CartItem[] = [];
-  total: number = 0;
 
   // Estado modales
   showHistoryModal = false;
@@ -80,8 +78,6 @@ export class Pos implements OnInit {
   showMovementModal = false;
   isProcessingMovement = false;
 
-  clienteActual: Cliente | null = null;
-
   @ViewChild(PosCustomerSelector) customerSelector!: PosCustomerSelector;
 
   // Formulario de apertura
@@ -92,25 +88,14 @@ export class Pos implements OnInit {
   ngOnInit(): void {
     this.username = this.authService.getUsername() || 'Usuario';
     this.verificarEstadoCaja();
+    this.cartService.clear();
   }
 
   // --- 1. GESTION DE CAJA ---
   verificarEstadoCaja() {
-    this.isLoading = true;
-    this.cashRegisterService.getEstado().subscribe({
-      next: (sesion) => {
-        this.sesionActual = sesion || null;
-        if (this.sesionActual) {
-          this.cargarProductos();
-        }
-
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.sesionActual = null;
-        this.isLoading = false;
-        this.cdr.detectChanges();
+    this.sessionService.loadSession().subscribe((sesion) => {
+      if (sesion) {
+        this.catalogService.loadProducts();
       }
     });
   }
@@ -119,19 +104,14 @@ export class Pos implements OnInit {
     if (this.formApertura.invalid) return;
     const saldo = this.formApertura.value.saldoInicial;
 
-    this.isLoading = true;
-    this.cashRegisterService.abrir({ saldoInicial: saldo }).subscribe({
-      next: (nuevaSesion) => {
-        this.sesionActual = nuevaSesion;
-        this.cargarProductos();
+    this.sessionService.openSession(saldo).subscribe({
+      next: () => {
+        this.catalogService.loadProducts();
         alert('✅ Caja abierta correctamente. ¡Buen turno!');
-        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error(err);
         alert('Error: ' + err.error?.message);
-        this.isLoading = false;
-        this.cdr.detectChanges();
       }
     });
   }
@@ -143,15 +123,14 @@ export class Pos implements OnInit {
   onRegistrarMovimiento(datos: { monto: number, tipo: 'INGRESO' | 'RETIRO', motivo: string }) {
     this.isProcessingMovement = true;
 
-    this.cashRegisterService.registrarMovimiento(datos).subscribe({
+    this.sessionService.registerMovement(datos).subscribe({
       next: () => {
         alert(`✅ ${datos.tipo} registrado correctamente.`);
         this.showMovementModal = false;
         this.isProcessingMovement = false;
-        this.cdr.detectChanges();
+        this.cdr.detectChanges(); // Aquí sí porque cerramos modal manual
       },
       error: (err) => {
-        // Tu backend devuelve mensajes de error útiles (ej. "Saldo insuficiente")
         const msg = err.error?.message || 'Error al registrar movimiento';
         alert('❌ ' + msg);
         this.isProcessingMovement = false;
@@ -161,86 +140,27 @@ export class Pos implements OnInit {
   }
 
   // --- 2. CATÁLOGO Y BÚSQUEDA ---
-  cargarProductos() {
-    this.productService.getAll().subscribe({
-      next: (data) => {
-        this.allProducts = data.filter(p => p.activo && p.stockActual > 0);
-        this.searchTerm = '';
-        this.filteredProducts = [...this.allProducts];
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Error cargando productos', err);
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      }
-    });
-  }
 
   onSearch(term: string) {
     this.searchTerm = term;
-    if (!term) {
-      this.filteredProducts = this.allProducts;
-      return;
-    }
 
-    const lower = term.toLowerCase();
-    this.filteredProducts = this.allProducts.filter(p => {
-      const nombre = (p.nombre || '').toLowerCase();
-      const codigo = (p.codigoBarras || '').toLowerCase();
-      const sku = (p.sku || '').toLowerCase();
+    this.catalogService.search(term);
 
-      return nombre.includes(lower) || codigo.includes(lower) || sku.includes(lower);
-    });
-
-    // Lógica de "Escaner Exacto" (Auto-agregar si es código de barras único)
-    if (this.filteredProducts.length === 1) {
-      const p = this.filteredProducts[0];
-      if (p.codigoBarras === term || p.sku === term) {
-        this.addToCart(p);
-        this.searchTerm = '';
-        this.filteredProducts = this.allProducts;
-        this.cdr.detectChanges();
-      }
+    const match = this.catalogService.checkExactMatch(term);
+    if (match) {
+      this.cartService.addItem(match);
+      this.searchTerm = '';
+      this.catalogService.search('');
     }
   }
 
   // --- 3. CARRITO DE COMPRAS ---
   addToCart(product: Producto) {
-    const existing = this.cart.find(item => item.producto.id === product.id);
-    if (existing) {
-      existing.cantidad++;
-      existing.subtotal = existing.cantidad * existing.producto.precioVenta;
-    } else {
-      this.cart.push({
-        producto: product,
-        cantidad: 1,
-        subtotal: product.precioVenta
-      });
-    }
-    this.calculateTotal();
+    this.cartService.addItem(product);
   }
 
   updateQuantity(event: { index: number, delta: number }) {
-    const item = this.cart[event.index];
-    const newQuantity = item.cantidad + event.delta;
-
-    if (newQuantity <= 0) {
-      this.cart.splice(event.index, 1);
-    } else {
-      if (newQuantity > item.producto.stockActual) {
-        alert('⚠️ Stock insuficiente');
-        return;
-      }
-      item.cantidad = newQuantity;
-      item.subtotal = item.cantidad * item.producto.precioVenta;
-    }
-    this.calculateTotal();
-  }
-
-  calculateTotal() {
-    this.total = this.cart.reduce((acc, item) => acc + item.subtotal, 0);
+    this.cartService.updateQuantity(event.index, event.delta);
   }
 
   // --- 4. COBRO Y FINALIZACIÓN ---
@@ -249,35 +169,22 @@ export class Pos implements OnInit {
   }
 
   onClienteSeleccionado(cliente: Cliente | null) {
-    this.clienteActual = cliente;
+    this.cartService.setClient(cliente);
   }
 
   onProcesarVenta(datosPago: { montoPagado: number, metodoPago: 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA' }) {
     this.isProcessingSale = true;
 
-    const payload: VentaRequest = {
-      items: this.cart.map(i => ({
-        productoId: i.producto.id,
-        cantidad: i.cantidad
-      })),
-      metodoPago: datosPago.metodoPago,
-      montoPagado: datosPago.montoPagado,
-      clienteId: this.clienteActual ? this.clienteActual.id : 1
-    };
-
-    this.saleService.registrarVenta(payload).subscribe({
+    this.cartService.checkout(datosPago.metodoPago, datosPago.montoPagado).subscribe({
       next: (res) => {
         this.obtenerTicket(res.folio);
-        // Limpiar todo
-        this.cart = [];
-        this.total = 0;
-        this.clienteActual = null;
         if (this.customerSelector) {
           this.customerSelector.clear();
         }
+
         this.showCheckoutModal = false;
         this.isProcessingSale = false;
-        this.cargarProductos();
+        this.catalogService.refresh();
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -337,21 +244,14 @@ export class Pos implements OnInit {
       return;
     }
 
-    this.isLoading = true;
-    this.cashRegisterService.cerrar({ saldoFinalReal: montoCierre }).subscribe({
+    this.sessionService.closeSession(montoCierre).subscribe({
       next: (sesionCerrada) => {
-        this.isLoading = false;
-        this.sesionActual = null;
         this.resumenCierre = sesionCerrada;
         this.showCloseModal = false;
+        // La sesión ya se puso en null dentro del servicio
         this.cdr.detectChanges();
       },
-      error: (err) => {
-        console.error(err);
-        alert('Error al cerrar caja: ' + err.error?.message);
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      }
+      error: (err) => alert('Error al cerrar caja: ' + err.error?.message)
     });
   }
 

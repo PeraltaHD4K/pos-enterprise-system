@@ -1,12 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Producto } from '../../../../core/services/product';
-
-export interface CartItem {
-  producto: Producto;
-  cantidad: number;
-  subtotal: number;
-}
+import { CartItem } from '../../services/pos-cart';
 
 @Component({
   selector: 'app-pos-cart',
