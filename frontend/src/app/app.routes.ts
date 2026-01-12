@@ -152,7 +152,11 @@ export const routes: Routes = [
         ]
     },
     {
+        path: 'forbidden',
+        loadComponent: () => import('./pages/forbidden/forbidden').then(m => m.Forbidden)
+    },
+    {
         path: '**',
-        redirectTo: 'login'
+        loadComponent: () => import('./pages/not-found/not-found').then(m => m.NotFound)
     }
 ];
