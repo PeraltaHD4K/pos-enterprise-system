@@ -44,8 +44,6 @@ import { PosCustomerSelector } from './components/pos-customer-selector/pos-cust
   styleUrl: './pos.css',
 })
 export class Pos implements OnInit {
-  private cashRegisterService = inject(CashRegister);
-  private productService = inject(Product);
   private saleService = inject(Sale);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
@@ -160,7 +158,35 @@ export class Pos implements OnInit {
   }
 
   updateQuantity(event: { index: number, delta: number }) {
-    this.cartService.updateQuantity(event.index, event.delta);
+    const currentItem = this.cartService.items()[event.index];
+    if (!currentItem) return;
+
+    // Calculamos la NUEVA CANTIDAD TOTAL
+    const newQuantity = currentItem.cantidad + event.delta;
+
+    // Llamamos al servicio con el total
+    this.cartService.updateQuantity(event.index, newQuantity);
+  }
+
+  onEditQuantity(item: any) { // Puedes importar CartItem si quieres tipado estricto
+    // Buscamos el índice real en el carrito actual
+    const index = this.cartService.items().findIndex(i => i.producto.id === item.producto.id);
+    if (index === -1) return;
+
+    // Prompt simple (rápido y funcional)
+    const input = prompt(`Ingresa la cantidad para: ${item.producto.nombre}`, item.cantidad.toString());
+
+    if (input !== null) {
+      const newQty = parseInt(input, 10);
+
+      if (!isNaN(newQty)) {
+        this.cartService.updateQuantity(index, newQty);
+      }
+    }
+  }
+
+  removeItem(index: number) {
+    this.cartService.removeItem(index);
   }
 
   // --- 4. COBRO Y FINALIZACIÓN ---
@@ -225,6 +251,11 @@ export class Pos implements OnInit {
     });
   }
 
+  onVentaCancelada() {
+    this.abrirHistorial();
+    this.catalogService.refresh();
+  }
+
   // --- 7. CIERRE ---
   iniciarCierreTurno() {
     this.showCloseModal = true;
@@ -248,6 +279,7 @@ export class Pos implements OnInit {
       next: (sesionCerrada) => {
         this.resumenCierre = sesionCerrada;
         this.showCloseModal = false;
+        this.formApertura.reset({ saldoInicial: 0 });
         // La sesión ya se puso en null dentro del servicio
         this.cdr.detectChanges();
       },

@@ -53,6 +53,7 @@
 
                 <app-pos-cart class="h-full flex flex-col border-l border-gray-200" [cart]="cartService.items()"
                     [total]="cartService.total()" (onUpdateQuantity)="updateQuantity($event)"
+                    (onEditQuantity)="onEditQuantity($event)" (onRemoveItem)="removeItem($event)"
                     (onCheckout)="abrirModalCobro()">
                 </app-pos-cart>
 
@@ -62,7 +63,7 @@
     </main>
 
     <app-pos-history-modal [isOpen]="showHistoryModal" [ventas]="historialVentas" [isLoading]="isLoadingHistory"
-        (onClose)="showHistoryModal = false" (onReprint)="obtenerTicket($event)" (onCancelSuccess)="abrirHistorial()">
+        (onClose)="showHistoryModal = false" (onReprint)="obtenerTicket($event)" (onCancelSuccess)="onVentaCancelada()">
     </app-pos-history-modal>
 
     <app-pos-ticket-modal [isOpen]="showTicketModal" [content]="ticketContent" (onClose)="showTicketModal = false">

@@ -69,4 +69,8 @@ export class CashRegister {
   listarMovimientos(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/movimientos`);
   }
+
+  obtenerTicketCierre(idSesion: number): Observable<string> {
+    return this.http.get(`${this.apiUrl}/ticket-cierre/${idSesion}`, { responseType: 'text' });
+  }
 }

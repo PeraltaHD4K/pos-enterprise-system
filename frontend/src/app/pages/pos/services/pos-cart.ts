@@ -34,57 +34,66 @@ export class PosCartService {
   // === 3. ACTIONS (Métodos que modifican el estado) ===
 
   addItem(producto: Producto) {
-    const currentItems = this.items();
-    const existingIndex = currentItems.findIndex(i => i.producto.id === producto.id);
+    if (producto.stockActual < 1) {
+      // Opcional: Mostrar alerta aquí o dejar que la UI maneje el visual (gris)
+      return;
+    }
 
-    if (existingIndex >= 0) {
-      // Si ya existe, aumentamos cantidad
-      this.updateQuantity(existingIndex, currentItems[existingIndex].cantidad + 1);
-    } else {
-      // Si es nuevo, lo agregamos (Validando stock inicial)
-      if (producto.stockActual < 1) {
-        alert('⚠️ Stock insuficiente'); // Idealmente usar Toast aquí después
-        return;
-      }
+    this.items.update(items => {
+      const index = items.findIndex(i => i.producto.id === producto.id);
 
-      // IMPORTANTE: En Signals siempre creamos un NUEVO array (inmutabilidad)
-      this.items.update(items => [
-        ...items,
-        {
+      if (index >= 0) {
+        // Si ya existe, verificamos si podemos sumar 1 más
+        const currentItem = items[index];
+        if (currentItem.cantidad + 1 > producto.stockActual) {
+          alert('⚠️ Stock insuficiente');
+          return items; // Retornamos sin cambios
+        }
+
+        // Creamos copia segura para inmutabilidad
+        const updated = [...items];
+        updated[index] = {
+          ...currentItem,
+          cantidad: currentItem.cantidad + 1,
+          subtotal: (currentItem.cantidad + 1) * producto.precioVenta
+        };
+        return updated;
+      } else {
+        // Si es nuevo
+        return [...items, {
           producto,
           cantidad: 1,
           subtotal: producto.precioVenta
-        }
-      ]);
-    }
+        }];
+      }
+    });
   }
 
   updateQuantity(index: number, newQuantity: number) {
     this.items.update(items => {
       const item = items[index];
 
-      // 1. Validaciones
+      // 1. Si baja a 0 o menos, eliminar
       if (newQuantity <= 0) {
-        // Si baja a 0, lo sacamos (filter)
         return items.filter((_, i) => i !== index);
       }
 
+      // 2. Validación de Stock con Ajuste (Clamping)
+      // Si el usuario pide 50 y hay 10, le ponemos 10 y avisamos.
       if (newQuantity > item.producto.stockActual) {
-        alert('⚠️ Stock insuficiente (Máx: ' + item.producto.stockActual + ')');
-        return items; // Retornamos el mismo estado sin cambios
+        alert(`⚠️ Stock insuficiente. Máximo disponible: ${item.producto.stockActual}`);
+        newQuantity = item.producto.stockActual; // Ajustamos al máximo posible
       }
 
-      // 2. Actualización inmutable
-      // Creamos copia del array
-      const updatedItems = [...items];
-      // Creamos copia del item modificado
-      updatedItems[index] = {
+      // 3. Actualización inmutable
+      const updated = [...items];
+      updated[index] = {
         ...item,
         cantidad: newQuantity,
         subtotal: newQuantity * item.producto.precioVenta
       };
 
-      return updatedItems;
+      return updated;
     });
   }
 

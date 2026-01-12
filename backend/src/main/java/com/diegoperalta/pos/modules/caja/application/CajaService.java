@@ -2,6 +2,7 @@ package com.diegoperalta.pos.modules.caja.application;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -179,6 +180,76 @@ public class CajaService {
                 .orElseThrow(() -> new BusinessException("No hay sesión abierta.", HttpStatus.BAD_REQUEST));
 
         return movimientoCajaRepository.listarPorSesionConUsuario(sesion);
+    }
+
+    @Transactional(readOnly = true)
+    public String generarTicketCorteZ(Long sesionId) {
+        SesionCaja sesion = sesionCajaRepository.findById(sesionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Sesión no encontrada"));
+
+        // Recalculamos los totales históricos para mostrarlos en el papel
+        BigDecimal ventasEfectivo = ventaRepository.sumarVentasEfectivo(sesion);
+        BigDecimal ventasOtros = ventaRepository.sumarVentasOtrosMetodos(sesion);
+        BigDecimal ingresos = movimientoCajaRepository.sumarPorSesionYTipo(sesion, "INGRESO");
+        BigDecimal retiros = movimientoCajaRepository.sumarPorSesionYTipo(sesion, "RETIRO");
+
+        // Construcción del Ticket
+        StringBuilder sb = new StringBuilder();
+        String lineaDiv = "--------------------------------\n";
+        DateTimeFormatter fechaFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+        // 1. Cabecera
+        centrarTexto(sb, "CORTE DE CAJA (Z)");
+        sb.append(lineaDiv);
+        sb.append("Cajero: ").append(sesion.getUsuario().getUsername()).append("\n");
+        sb.append("Inicio: ").append(sesion.getFechaApertura().format(fechaFmt)).append("\n");
+        if (sesion.getFechaCierre() != null) {
+            sb.append("Fin:    ").append(sesion.getFechaCierre().format(fechaFmt)).append("\n");
+        }
+        sb.append(lineaDiv);
+
+        // 2. Balance de Efectivo
+        alinearDerecha(sb, "Saldo Inicial: $" + sesion.getSaldoInicial());
+        alinearDerecha(sb, "(+) Ventas Efec: $" + ventasEfectivo);
+        alinearDerecha(sb, "(+) Ingresos:    $" + ingresos);
+        alinearDerecha(sb, "(-) Retiros:     $" + retiros);
+        sb.append(lineaDiv);
+        alinearDerecha(sb, "(=) ESPERADO:    $" + sesion.getSaldoFinalCalculado());
+        alinearDerecha(sb, "    REAL:        $" + sesion.getSaldoFinalReal());
+        sb.append(lineaDiv);
+
+        // 3. Diferencia
+        BigDecimal diferencia = sesion.getDiferencia();
+        String etiquetaDif = diferencia.compareTo(BigDecimal.ZERO) >= 0 ? "SOBRANTE" : "FALTANTE";
+        alinearDerecha(sb, etiquetaDif + ": $" + diferencia);
+
+        // 4. Otros Métodos
+        sb.append("\n");
+        centrarTexto(sb, "OTROS METODOS DE PAGO");
+        sb.append(lineaDiv);
+        alinearDerecha(sb, "Tarj/Transf:     $" + ventasOtros);
+
+        sb.append("\n\n\n");
+
+        return sb.toString();
+    }
+
+    // Métodos auxiliares de formato (Copiados de TicketService para autonomía del
+    // módulo)
+    private void centrarTexto(StringBuilder sb, String texto) {
+        int ancho = 32;
+        int espacios = (ancho - texto.length()) / 2;
+        for (int i = 0; i < espacios; i++)
+            sb.append(" ");
+        sb.append(texto).append("\n");
+    }
+
+    private void alinearDerecha(StringBuilder sb, String texto) {
+        int ancho = 32;
+        int espacios = ancho - texto.length();
+        for (int i = 0; i < espacios; i++)
+            sb.append(" ");
+        sb.append(texto).append("\n");
     }
 
     private Usuario obtenerUsuarioActual() {

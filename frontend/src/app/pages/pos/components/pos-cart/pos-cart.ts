@@ -16,4 +16,6 @@ export class PosCart {
 
   @Output() onUpdateQuantity = new EventEmitter<{ index: number, delta: number }>();
   @Output() onCheckout = new EventEmitter<void>();
+  @Output() onEditQuantity = new EventEmitter<CartItem>();
+  @Output() onRemoveItem = new EventEmitter<number>();
 }
