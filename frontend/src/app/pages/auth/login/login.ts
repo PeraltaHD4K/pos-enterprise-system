@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../../../environments/environment';
 import { Auth } from '../../../core/services/auth';
+import { ToastService } from '../../../core/services/toast';
 
 @Component({
   selector: 'app-login',
@@ -16,6 +17,7 @@ import { Auth } from '../../../core/services/auth';
 export class Login {
   private authService = inject(Auth);
   private router = inject(Router);
+  private toastService = inject(ToastService);
   username = '';
   password = '';
 
@@ -25,7 +27,7 @@ export class Login {
   onLogin() {
     // Validación simple
     if (!this.username || !this.password) {
-      alert('Por favor ingresa usuario y contraseña');
+      this.toastService.warning('Por favor ingresa usuario y contraseña', 'Datos Incompletos');
       return;
     }
 
@@ -57,7 +59,7 @@ export class Login {
       error: (err) => {
         console.error(err);
         this.isLoading = false;
-        alert('❌ Credenciales incorrectas o error de conexión');
+        this.toastService.error('Credenciales incorrectas o error de conexión', 'Error de Acceso');
       }
     });
   }

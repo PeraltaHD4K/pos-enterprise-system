@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output, inject, signal } from '@angular
 import { CommonModule } from '@angular/common';
 import { SesionCaja, CashRegister } from '../../../../core/services/cash-register';
 import { PosPrinter } from '../../services/pos-printer';
+import { ToastService } from '../../../../core/services/toast';
 
 @Component({
   selector: 'app-pos-summary-modal',
@@ -16,6 +17,7 @@ export class PosSummaryModal {
 
   private cashRegisterService = inject(CashRegister);
   private printerService = inject(PosPrinter); // 👈 Inyección
+  private toastService = inject(ToastService);
 
   isPrinting = signal(false);
 
@@ -35,7 +37,7 @@ export class PosSummaryModal {
       },
       error: (err) => {
         console.error(err);
-        alert('Error al generar el ticket');
+        this.toastService.error('Error al generar el ticket', 'Error');
         this.isPrinting.set(false);
       }
     });

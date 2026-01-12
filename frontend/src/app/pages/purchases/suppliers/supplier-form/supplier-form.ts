@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { Supplier, ProveedorRequest } from '../../../../core/services/supplier';
+import { ToastService } from '../../../../core/services/toast';
 
 @Component({
   selector: 'app-supplier-form',
@@ -16,6 +17,7 @@ export class SupplierForm implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private supplierService = inject(Supplier);
+  private toastService = inject(ToastService);
 
   form: FormGroup = this.fb.group({
     empresa: ['', [Validators.required, Validators.minLength(3)]],
@@ -55,13 +57,19 @@ export class SupplierForm implements OnInit {
 
     if (this.isEditMode && this.currentId) {
       this.supplierService.update(this.currentId, data).subscribe({
-        next: () => this.router.navigate(['/purchases/suppliers']),
-        error: (err) => alert('Error al actualizar')
+        next: () => {
+          this.toastService.success('Proveedor actualizado', 'Éxito');
+          this.router.navigate(['/purchases/suppliers']);
+        },
+        error: (err) => this.toastService.error('Error al actualizar', 'Error')
       });
     } else {
       this.supplierService.create(data).subscribe({
-        next: () => this.router.navigate(['/purchases/suppliers']),
-        error: (err) => alert('Error al crear')
+        next: () => {
+          this.toastService.success('Proveedor creado', 'Éxito');
+          this.router.navigate(['/purchases/suppliers']);
+        },
+        error: (err) => this.toastService.error('Error al crear', 'Error')
       });
     }
   }

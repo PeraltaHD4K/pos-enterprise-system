@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Category, CategoriaRequest } from '../../../../core/services/category';
+import { ToastService } from '../../../../core/services/toast';
 
 @Component({
   selector: 'app-category-form',
@@ -16,6 +17,7 @@ export class CategoryForm implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute); // Para leer la URL
   private categoryService = inject(Category);
+  private toastService = inject(ToastService);
 
   form: FormGroup = this.fb.group({
     nombre: ['', [Validators.required, Validators.minLength(3)]],
@@ -48,7 +50,7 @@ export class CategoryForm implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        alert('Error al cargar la categoría');
+        this.toastService.error('Error al cargar la categoría', 'Error de Carga');
         this.router.navigate(['/inventory/categories']);
       }
     });
@@ -65,14 +67,20 @@ export class CategoryForm implements OnInit {
     if (this.isEditMode && this.currentId) {
       // MODO EDICIÓN: PUT
       this.categoryService.update(this.currentId, data).subscribe({
-        next: () => this.router.navigate(['/inventory/categories']),
-        error: (err) => alert('Error al actualizar: ' + (err.error?.message || 'Error desconocido'))
+        next: () => {
+          this.toastService.success('Categoría actualizada', 'Éxito');
+          this.router.navigate(['/inventory/categories']);
+        },
+        error: (err) => this.toastService.error(err.error?.message || 'Error desconocido', 'Error al Actualizar')
       });
     } else {
       // MODO CREACIÓN: POST
       this.categoryService.create(data).subscribe({
-        next: () => this.router.navigate(['/inventory/categories']),
-        error: (err) => alert('Error al crear: ' + (err.error?.message || 'Error desconocido'))
+        next: () => {
+          this.toastService.success('Categoría creada', 'Éxito');
+          this.router.navigate(['/inventory/categories']);
+        },
+        error: (err) => this.toastService.error(err.error?.message || 'Error desconocido', 'Error al Crear')
       });
     }
   }

@@ -2,6 +2,7 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Category, Categoria } from '../../../../core/services/category';
+import { ToastService } from '../../../../core/services/toast';
 
 @Component({
   selector: 'app-category-list',
@@ -13,6 +14,7 @@ import { Category, Categoria } from '../../../../core/services/category';
 export class CategoryList implements OnInit {
   private categoryService = inject(Category);
   private cdr = inject(ChangeDetectorRef);
+  private toastService = inject(ToastService);
 
   categorias: Categoria[] = [];
   isLoading = true;
@@ -31,7 +33,8 @@ export class CategoryList implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Error al cargar categorías', err)
+        console.error('Error al cargar categorías', err);
+        this.toastService.error('Error al cargar categorías', 'Error de Carga');
         this.isLoading = false;
         this.cdr.detectChanges();
       }
@@ -46,7 +49,10 @@ export class CategoryList implements OnInit {
           this.categorias = this.categorias.filter(cat => cat.id !== id);
           this.cdr.detectChanges();
         },
-        error: (err) => alert('Error al eliminar')
+        error: (err) => {
+          this.toastService.error('Error al eliminar categoría', 'Error');
+          console.error('Error al eliminar categoría', err);
+        }
       });
     }
   }

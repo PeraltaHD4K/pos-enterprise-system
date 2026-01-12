@@ -1,6 +1,7 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ToastService } from '../../../../core/services/toast';
 
 @Component({
   selector: 'app-pos-close-modal',
@@ -17,9 +18,11 @@ export class PosCloseModal {
 
   montoCierre: number | null = null;
 
+  private toastService = inject(ToastService);
+
   confirmar() {
     if (this.montoCierre === null || this.montoCierre < 0) {
-      alert('Ingresa un monto válido');
+      this.toastService.error('Ingresa un monto válido', 'Error');
       return;
     }
     // Enviamos el monto al padre

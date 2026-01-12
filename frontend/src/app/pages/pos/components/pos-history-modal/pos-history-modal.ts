@@ -2,6 +2,7 @@ import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Sale } from '../../../../core/services/sale';
+import { ToastService } from '../../../../core/services/toast';
 
 @Component({
   selector: 'app-pos-history-modal',
@@ -20,6 +21,7 @@ export class PosHistoryModal {
   @Output() onCancelSuccess = new EventEmitter<void>(); // Para recargar tabla
 
   private saleService = inject(Sale);
+  private toastService = inject(ToastService);
 
   // Lógica interna de autorización
   showAuthModal = false;
@@ -41,22 +43,23 @@ export class PosHistoryModal {
 
   confirmarCancelacion() {
     if (!this.folioACancelar || !this.supervisorUser || !this.supervisorPass) {
-      alert('Datos incompletos');
+      this.toastService.warning('Datos incompletos', 'Atención');
       return;
     }
+
     this.isProcessing = true;
     const creds = { usernameSupervisor: this.supervisorUser, passwordSupervisor: this.supervisorPass };
 
     this.saleService.cancelarVenta(this.folioACancelar, creds).subscribe({
       next: (res) => {
-        alert('✅ Venta Cancelada');
+        this.toastService.success('Venta Cancelada', 'Éxito');
         this.isProcessing = false;
         this.cerrarAuthModal();
         this.onCancelSuccess.emit(); // Avisamos al padre para que recargue la lista
       },
       error: (err) => {
         this.isProcessing = false;
-        alert('❌ Error: ' + (err.error?.mensaje || 'Credenciales incorrectas'));
+        this.toastService.error(err.error?.mensaje || 'Credenciales incorrectas', 'Error');
       }
     });
   }

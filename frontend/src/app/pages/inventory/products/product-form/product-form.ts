@@ -5,6 +5,7 @@ import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { Product, ProductoRequest } from '../../../../core/services/product';
 import { Category, Categoria } from '../../../../core/services/category';
 import { Observable } from 'rxjs';
+import { ToastService } from '../../../../core/services/toast';
 
 @Component({
   selector: 'app-product-form',
@@ -20,6 +21,7 @@ export class ProductForm implements OnInit {
 
   private productService = inject(Product);
   private categoryService = inject(Category); // <--- Necesario para el dropdown
+  private toastService = inject(ToastService);
 
   form: FormGroup = this.fb.group({
     sku: ['', Validators.required],
@@ -65,7 +67,7 @@ export class ProductForm implements OnInit {
         });
       },
       error: () => {
-        alert('Error al cargar producto');
+        this.toastService.error('Error al cargar producto', 'Error de Carga');
         this.router.navigate(['/inventory/products']);
       }
     });
@@ -81,13 +83,19 @@ export class ProductForm implements OnInit {
 
     if (this.isEditMode && this.currentId) {
       this.productService.update(this.currentId, data).subscribe({
-        next: () => this.router.navigate(['/inventory/products']),
-        error: (err) => alert('Error al actualizar: ' + (err.error?.message || 'Error desconocido'))
+        next: () => {
+          this.toastService.success('Producto actualizado', 'Éxito');
+          this.router.navigate(['/inventory/products']);
+        },
+        error: (err) => this.toastService.error(err.error?.message || 'Error desconocido', 'Error al Actualizar')
       });
     } else {
       this.productService.create(data).subscribe({
-        next: () => this.router.navigate(['/inventory/products']),
-        error: (err) => alert('Error al crear: ' + (err.error?.message || 'Error desconocido'))
+        next: () => {
+          this.toastService.success('Producto creado', 'Éxito');
+          this.router.navigate(['/inventory/products']);
+        },
+        error: (err) => this.toastService.error(err.error?.message || 'Error desconocido', 'Error al Crear')
       });
     }
   }

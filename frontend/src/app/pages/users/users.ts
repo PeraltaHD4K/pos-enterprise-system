@@ -2,6 +2,7 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { User, Usuario } from '../../core/services/user';
+import { ToastService } from '../../core/services/toast';
 
 @Component({
   selector: 'app-users',
@@ -13,6 +14,7 @@ import { User, Usuario } from '../../core/services/user';
 export class Users implements OnInit {
   private userService = inject(User);
   private cdr = inject(ChangeDetectorRef);
+  private toastService = inject(ToastService);
 
   usuarios: Usuario[] = [];
   isLoading = true;
@@ -47,12 +49,12 @@ export class Users implements OnInit {
     this.userService.toggleEstado(usuario.id).subscribe({
       next: () => {
         // Todo salió bien, no hacemos nada porque ya lo actualizamos visualmente
-        console.log('Estado actualizado correctamente');
+        this.toastService.success('Estado actualizado correctamente', 'Éxito');
       },
       error: (err) => {
         // Si falló, revertimos el cambio visual y avisamos
         usuario.activo = estadoOriginal;
-        alert('Error al cambiar estado: ' + (err.error?.message || 'Error desconocido'));
+        this.toastService.error(err.error?.message || 'Error desconocido', 'Error al cambiar estado');
         this.cdr.detectChanges();
       }
     });

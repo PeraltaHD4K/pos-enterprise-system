@@ -2,6 +2,7 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Product, Producto, MovimientoInventario } from '../../../../core/services/product';
+import { ToastService } from '../../../../core/services/toast';
 
 @Component({
   selector: 'app-product-list',
@@ -13,6 +14,7 @@ import { Product, Producto, MovimientoInventario } from '../../../../core/servic
 export class ProductList implements OnInit {
   private productService = inject(Product);
   private cdr = inject(ChangeDetectorRef);
+  private toastService = inject(ToastService);
 
   productos: Producto[] = [];
   isLoading = true;
@@ -37,6 +39,7 @@ export class ProductList implements OnInit {
       },
       error: (err) => {
         console.error('Error al cargar productos', err);
+        this.toastService.error('Error al cargar productos', 'Error de Carga');
         this.isLoading = false;
         this.cdr.detectChanges();
       }
@@ -51,7 +54,7 @@ export class ProductList implements OnInit {
           this.productos = this.productos.filter(p => p.id !== id);
           this.cdr.detectChanges();
         },
-        error: (err) => alert('Error al eliminar producto')
+        error: (err) => this.toastService.error('Error al eliminar producto', 'Error')
       });
     }
   }
@@ -71,7 +74,7 @@ export class ProductList implements OnInit {
       },
       error: (err) => {
         console.error('Error cargando kardex', err);
-        alert('No se pudo cargar el historial');
+        this.toastService.error('No se pudo cargar el historial', 'Error');
         this.isLoadingKardex = false;
         this.cdr.detectChanges();
       }

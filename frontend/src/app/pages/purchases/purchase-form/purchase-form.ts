@@ -6,6 +6,7 @@ import { Purchase, CompraRequest } from '../../../core/services/purchase';
 import { Supplier, Proveedor } from '../../../core/services/supplier';
 import { Product, Producto } from '../../../core/services/product';
 import { Observable } from 'rxjs';
+import { ToastService } from '../../../core/services/toast';
 
 @Component({
   selector: 'app-purchase-form',
@@ -22,6 +23,7 @@ export class PurchaseForm implements OnInit {
   private purchaseService = inject(Purchase);
   private supplierService = inject(Supplier);
   private productService = inject(Product);
+  private toastService = inject(ToastService);
 
   // 1. FORMULARIO PRINCIPAL (Cabecera)
   form: FormGroup = this.fb.group({
@@ -183,7 +185,7 @@ export class PurchaseForm implements OnInit {
         }
       },
       error: () => {
-        alert('Error al cargar la compra');
+        this.toastService.error('Error al cargar la compra', 'Error de Carga');
         this.router.navigate(['/purchases/list']);
       }
     });
@@ -198,7 +200,7 @@ export class PurchaseForm implements OnInit {
     }
 
     if (this.items.length === 0) {
-      alert('Debes agregar al menos un producto.');
+      this.toastService.warning('Debes agregar al menos un producto.', 'Carrito Vacío');
       return;
     }
 
@@ -220,12 +222,12 @@ export class PurchaseForm implements OnInit {
 
     this.purchaseService.create(payload).subscribe({
       next: (res) => {
-        alert('Compra registrada. Folio interno: ' + res.id);
+        this.toastService.success('Compra registrada. Folio interno: ' + res.id, 'Éxito');
         this.router.navigate(['/purchases/list']);
       },
       error: (err) => {
         console.error(err);
-        alert('Error: ' + (err.error?.message || 'Ocurrió un error desconocido'));
+        this.toastService.error(err.error?.message || 'Ocurrió un error desconocido', 'Error al Guardar');
         this.isSubmitting = false;
       }
     });

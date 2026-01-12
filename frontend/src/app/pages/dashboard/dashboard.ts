@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Sale, ReporteGanancias, ProductoTop } from '../../core/services/sale';
 import { KpiCard } from './components/kpi-card/kpi-card';
 import { DashboardFilters, FilterData } from './components/dashboard-filters/dashboard-filters';
+import { ToastService } from '../../core/services/toast';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType, Chart, registerables } from 'chart.js';
 
@@ -19,6 +20,7 @@ Chart.register(...registerables);
 export class Dashboard {
   private saleService = inject(Sale);
   private cdr = inject(ChangeDetectorRef);
+  private toastService = inject(ToastService);
 
   isLoading = true;
   reporte: ReporteGanancias | null = null;
@@ -88,7 +90,10 @@ export class Dashboard {
         this.actualizarGrafica(data);
         this.checkLoading();
       },
-      error: () => this.isLoading = false
+      error: () => {
+        this.isLoading = false;
+        this.toastService.error('Error al cargar reporte financiero', 'Error de Carga');
+      }
     });
 
     // 2. Top Productos
@@ -96,6 +101,9 @@ export class Dashboard {
       next: (data) => {
         this.topProductos = data;
         this.checkLoading();
+      },
+      error: () => {
+        this.toastService.error('Error al cargar top productos', 'Datos Incompletos');
       }
     });
   }

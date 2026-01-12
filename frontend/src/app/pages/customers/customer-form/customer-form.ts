@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { Client } from '../../../core/services/client';
+import { ToastService } from '../../../core/services/toast';
 
 @Component({
   selector: 'app-customer-form',
@@ -16,6 +17,7 @@ export class CustomerForm implements OnInit {
   private clientService = inject(Client);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private toastService = inject(ToastService);
 
   form: FormGroup = this.fb.group({
     nombre: ['', [Validators.required, Validators.minLength(3)]],
@@ -51,7 +53,7 @@ export class CustomerForm implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        alert('Error cargando cliente');
+        this.toastService.error('Error cargando cliente', 'Error de Datos');
         this.router.navigate(['/customers']);
       }
     });
@@ -74,11 +76,12 @@ export class CustomerForm implements OnInit {
 
     request$.subscribe({
       next: () => {
+        this.toastService.success('Cliente guardado correctamente', 'Éxito');
         this.router.navigate(['/customers']);
       },
       error: (err) => {
         console.error(err);
-        alert('Error: ' + (err.error?.message || 'No se pudo guardar'));
+        this.toastService.error(err.error?.message || 'No se pudo guardar', 'Error de Guardado');
         this.isLoading.set(false);
         this.form.enable();
       }

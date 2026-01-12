@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Product, Producto, AjusteStockRequest } from '../../../../core/services/product';
+import { ToastService } from '../../../../core/services/toast';
 
 @Component({
   selector: 'app-stock-adjustment',
@@ -17,6 +18,7 @@ export class StockAdjustment implements OnInit {
   private router = inject(Router);
   private productService = inject(Product);
   private cdr = inject(ChangeDetectorRef);
+  private toastService = inject(ToastService);
 
   producto: Producto | undefined;
   isLoading = true;
@@ -42,7 +44,7 @@ export class StockAdjustment implements OnInit {
         this.cdr.detectChanges();
       },
       error: () => {
-        alert('Producto no encontrado');
+        this.toastService.error('Producto no encontrado', 'Error');
         this.isLoading = false;
         this.cdr.detectChanges();
         this.router.navigate(['/inventory/products']);
@@ -65,10 +67,10 @@ export class StockAdjustment implements OnInit {
 
     this.productService.updateStock(this.producto.id, payload).subscribe({
       next: () => {
-        alert('Stock actualizado correctamente');
+        this.toastService.success('Stock actualizado correctamente', 'Ajuste Exitoso');
         this.router.navigate(['/inventory/products']);
       },
-      error: (err) => alert('Error al ajustar stock: ' + (err.error?.message || 'Error desconocido'))
+      error: (err) => this.toastService.error(err.error?.message || 'Error desconocido', 'Error al Ajustar')
     });
   }
 }

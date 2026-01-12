@@ -2,6 +2,7 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Purchase, Compra } from '../../../core/services/purchase';
+import { ToastService } from '../../../core/services/toast';
 
 @Component({
   selector: 'app-purchase-list',
@@ -13,6 +14,7 @@ import { Purchase, Compra } from '../../../core/services/purchase';
 export class PurchaseList implements OnInit {
   private purchaseService = inject(Purchase);
   private cdr = inject(ChangeDetectorRef);
+  private toastService = inject(ToastService);
 
   compras: Compra[] = [];
   isLoading = true;
@@ -30,6 +32,7 @@ export class PurchaseList implements OnInit {
       },
       error: (err) => {
         console.error(err);
+        this.toastService.error('Error al cargar compras', 'Error de Carga');
         this.isLoading = false;
         this.cdr.detectChanges();
       }
@@ -44,12 +47,12 @@ export class PurchaseList implements OnInit {
           const index = this.compras.findIndex(c => c.id === id);
           if (index !== -1) {
             this.compras[index] = compraActualizada; // Reemplazamos con la nueva info
-            this.compras = [...this.compras]
+            this.compras = [...this.compras]; // Forzar trigger de cambio si es necesario
             this.cdr.detectChanges();
           }
-          alert('Recepción confirmada. Inventario actualizado.');
+          this.toastService.success('Recepción confirmada. Inventario actualizado.', 'Éxito');
         },
-        error: (err) => alert('Error al confirmar: ' + err.error?.message)
+        error: (err) => this.toastService.error(err.error?.message || 'Error al confirmar', 'Error')
       });
     }
   }

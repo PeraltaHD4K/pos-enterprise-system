@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { User, UsuarioRegistro, UsuarioEdicion } from '../../../core/services/user';
 import { RolService, Rol } from '../../../core/services/rol';
+import { ToastService } from '../../../core/services/toast';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -19,6 +20,7 @@ export class CreateUser implements OnInit {
   private route = inject(ActivatedRoute);
   private rolService = inject(RolService);
   private userService = inject(User);
+  private toastService = inject(ToastService);
 
   form!: FormGroup;
   roles$: Observable<Rol[]> | undefined;
@@ -64,7 +66,7 @@ export class CreateUser implements OnInit {
         });
       },
       error: () => {
-        alert('Error cargando usuario');
+        this.toastService.error('Error cargando usuario', 'Error de Datos');
         this.router.navigate(['/users']);
       }
     });
@@ -89,15 +91,21 @@ export class CreateUser implements OnInit {
       };
 
       this.userService.actualizarUsuario(this.userId, datosEdicion).subscribe({
-        next: () => this.router.navigate(['/users']),
-        error: (err) => alert('Error al actualizar: ' + (err.error?.message || ''))
+        next: () => {
+          this.toastService.success('Usuario actualizado', 'Éxito');
+          this.router.navigate(['/users']);
+        },
+        error: (err) => this.toastService.error(err.error?.message || '', 'Error al actualizar')
       });
 
     } else {
       // --- MODO CREACIÓN ---
       this.userService.crearUsuario(formValue).subscribe({
-        next: () => this.router.navigate(['/users']),
-        error: (err) => alert('Error al crear: ' + (err.error?.message || ''))
+        next: () => {
+          this.toastService.success('Usuario creado', 'Éxito');
+          this.router.navigate(['/users']);
+        },
+        error: (err) => this.toastService.error(err.error?.message || '', 'Error al crear')
       });
     }
   }

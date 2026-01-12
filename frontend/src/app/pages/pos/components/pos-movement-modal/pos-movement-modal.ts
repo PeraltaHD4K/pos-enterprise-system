@@ -1,6 +1,7 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ToastService } from '../../../../core/services/toast';
 
 @Component({
   selector: 'app-pos-movement-modal',
@@ -16,6 +17,8 @@ export class PosMovementModal {
   @Output() onClose = new EventEmitter<void>();
   @Output() onConfirm = new EventEmitter<{ monto: number, tipo: 'INGRESO' | 'RETIRO', motivo: string }>();
 
+  private toastService = inject(ToastService);
+
   // Formulario local
   monto: number | null = null;
   motivo: string = '';
@@ -23,7 +26,7 @@ export class PosMovementModal {
 
   confirmar() {
     if (!this.monto || this.monto <= 0 || !this.motivo.trim()) {
-      alert('Completa todos los campos correctamente');
+      this.toastService.warning('Completa todos los campos correctamente', 'Atención');
       return;
     }
 

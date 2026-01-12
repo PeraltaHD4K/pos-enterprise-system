@@ -2,6 +2,7 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Config } from '../../core/services/config';
+import { ToastService } from '../../core/services/toast';
 
 @Component({
   selector: 'app-settings',
@@ -14,6 +15,7 @@ export class Settings implements OnInit {
   private fb = inject(FormBuilder);
   private configService = inject(Config);
   private cdr = inject(ChangeDetectorRef);
+  private toastService = inject(ToastService);
 
   form: FormGroup = this.fb.group({
     NOMBRE_TIENDA: ['', Validators.required],
@@ -46,12 +48,12 @@ export class Settings implements OnInit {
 
     this.configService.saveConfig(this.form.value).subscribe({
       next: () => {
-        alert('✅ Configuración guardada');
+        this.toastService.success('Configuración guardada', 'Éxito');
         this.isLoading = false;
         this.cdr.detectChanges();
       },
       error: () => {
-        alert('❌ Error al guardar');
+        this.toastService.error('Error al guardar', 'Error');
         this.isLoading = false;
         this.cdr.detectChanges();
       }
