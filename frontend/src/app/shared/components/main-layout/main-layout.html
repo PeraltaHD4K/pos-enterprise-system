@@ -1,0 +1,51 @@
+<div class="flex h-screen bg-gray-100">
+
+    <aside class="w-64 bg-slate-900 text-white flex flex-col transition-all duration-300">
+
+        <div class="h-16 flex items-center justify-center border-b border-slate-700">
+            <h1 class="text-xl font-bold tracking-wider">MI NEGOCIO</h1>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1">
+
+                <li *ngFor="let item of menuItems">
+                    <a [routerLink]="item.path" routerLinkActive="bg-indigo-600 border-l-4 border-indigo-400"
+                        class="flex items-center px-6 py-3 text-gray-300 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer">
+                        <span class="mr-3">{{ item.icon }}</span>
+                        <span class="font-medium">{{ item.label }}</span>
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-slate-700 bg-slate-800">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-sm font-bold">
+                    {{ (username?.charAt(0) || 'U') | uppercase }}
+                </div>
+                <div class="text-sm">
+                    <p class="font-bold text-white leading-none">{{ username }}</p>
+                    <p class="text-xs text-slate-400 mt-1">{{ role }}</p>
+                </div>
+            </div>
+
+            <button (click)="logout()"
+                class="w-full py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded uppercase tracking-wide transition">
+                Cerrar Sesión
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-auto p-8 relative">
+        <router-outlet></router-outlet>
+
+        <button *ngIf="canAccessPos" [routerLink]="['/pos']"
+            class="fixed bottom-6 right-6 bg-green-600 hover:bg-green-700 text-white rounded-full p-4 shadow-xl z-50 flex items-center justify-center transition-transform hover:scale-105"
+            title="Ir al Punto de Venta">
+            🛒 <span class="ml-2 font-bold">POS</span>
+        </button>
+    </main>
+
+</div>
