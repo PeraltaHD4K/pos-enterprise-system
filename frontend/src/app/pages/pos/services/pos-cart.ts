@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal, effect } from '@angular/core';
 import { Sale, VentaRequest } from '../../../core/services/sale';
 import { Producto } from '../../../core/services/product';
 import { Cliente } from '../../../core/services/client';
@@ -18,13 +18,13 @@ export class PosCartService {
   private saleService = inject(Sale);
   private toastService = inject(ToastService);
 
+  private readonly STORAGE_KEY = 'pos_cart_state';
+
   // === 1. STATE (SIGNALS) ===
-  // La fuente de la verdad. Si esto cambia, todo se actualiza solo.
-  readonly items = signal<CartItem[]>([]);
+  readonly items = signal<CartItem[]>(this.loadFromStorage());
   readonly client = signal<Cliente | null>(null);
 
   // === 2. COMPUTED (Cálculos Automáticos) ===
-  // Se recalculan SOLO cuando 'items' cambia.
   readonly total = computed(() =>
     this.items().reduce((acc, item) => acc + item.subtotal, 0)
   );
@@ -32,6 +32,23 @@ export class PosCartService {
   readonly totalItems = computed(() =>
     this.items().reduce((acc, item) => acc + item.cantidad, 0)
   );
+
+  constructor() {
+    effect(() => {
+      const currentItems = this.items();
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(currentItems));
+    });
+  }
+
+  private loadFromStorage(): CartItem[] {
+    const saved = localStorage.getItem(this.STORAGE_KEY);
+    try {
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error('Error cargando carrito guardado', e);
+      return [];
+    }
+  }
 
   // === 3. ACTIONS (Métodos que modifican el estado) ===
 
@@ -129,7 +146,10 @@ export class PosCartService {
 
     return this.saleService.registrarVenta(payload).pipe(
       // Si sale bien, limpiamos el carrito automáticamente
-      tap(() => this.clear())
+      tap(() => {
+        this.clear();
+        this.toastService.success('Venta registrada correctamente', 'Venta Exitosa');
+      })
     );
   }
 }

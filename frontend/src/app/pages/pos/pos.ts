@@ -7,6 +7,7 @@ import { Product, Producto } from '../../core/services/product';
 import { Sale } from '../../core/services/sale';
 import { Auth } from '../../core/services/auth';
 import { Cliente } from '../../core/services/client';
+import { ToastService } from '../../core/services/toast';
 import { PosCartService } from './services/pos-cart';
 import { PosCatalog } from './services/pos-catalog';
 import { PosSession } from './services/pos-session';
@@ -48,6 +49,7 @@ export class Pos implements OnInit {
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
   private authService = inject(Auth);
+  private toastService = inject(ToastService);
 
   public cartService = inject(PosCartService);
   public catalogService = inject(PosCatalog);
@@ -86,7 +88,6 @@ export class Pos implements OnInit {
   ngOnInit(): void {
     this.username = this.authService.getUsername() || 'Usuario';
     this.verificarEstadoCaja();
-    this.cartService.clear();
   }
 
   // --- 1. GESTION DE CAJA ---
@@ -105,11 +106,11 @@ export class Pos implements OnInit {
     this.sessionService.openSession(saldo).subscribe({
       next: () => {
         this.catalogService.loadProducts();
-        alert('✅ Caja abierta correctamente. ¡Buen turno!');
+        this.toastService.success('Caja abierta correctamente. ¡Buen turno!', 'Turno Iniciado');
       },
       error: (err) => {
         console.error(err);
-        alert('Error: ' + err.error?.message);
+        this.toastService.error(err.error?.message || 'Error al abrir caja', 'Error');
       }
     });
   }
@@ -123,14 +124,14 @@ export class Pos implements OnInit {
 
     this.sessionService.registerMovement(datos).subscribe({
       next: () => {
-        alert(`✅ ${datos.tipo} registrado correctamente.`);
+        this.toastService.success(`${datos.tipo} registrado correctamente.`, 'Movimiento Exitoso');
         this.showMovementModal = false;
         this.isProcessingMovement = false;
         this.cdr.detectChanges(); // Aquí sí porque cerramos modal manual
       },
       error: (err) => {
         const msg = err.error?.message || 'Error al registrar movimiento';
-        alert('❌ ' + msg);
+        this.toastService.error(msg, 'Error');
         this.isProcessingMovement = false;
         this.cdr.detectChanges();
       }
@@ -214,7 +215,7 @@ export class Pos implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        alert('Error: ' + err.error?.message);
+        this.toastService.error(err.error?.message || 'Error al procesar venta', 'Error');
         this.isProcessingSale = false;
         this.cdr.detectChanges();
       }
@@ -229,7 +230,10 @@ export class Pos implements OnInit {
         this.showTicketModal = true;
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('No se pudo cargar el ticket', err)
+      error: (err) => {
+        console.error('No se pudo cargar el ticket', err);
+        this.toastService.error('No se pudo cargar la vista del ticket', 'Error de impresión');
+      }
     });
   }
 
@@ -267,7 +271,7 @@ export class Pos implements OnInit {
 
   confirmarCierre(montoCierre: number) {
     if (montoCierre === null || montoCierre < 0) {
-      alert('Por favor ingresa el monto total de efectivo en caja.');
+      this.toastService.warning('Por favor ingresa el monto total de efectivo en caja.', 'Dato Requerido');
       return;
     }
 
@@ -283,7 +287,7 @@ export class Pos implements OnInit {
         // La sesión ya se puso en null dentro del servicio
         this.cdr.detectChanges();
       },
-      error: (err) => alert('Error al cerrar caja: ' + err.error?.message)
+      error: (err) => this.toastService.error('Error al cerrar caja: ' + err.error?.message, 'Error')
     });
   }
 
@@ -294,5 +298,6 @@ export class Pos implements OnInit {
 
   logout() {
     this.authService.logout();
+    this.cartService.clear();
   }
 }
