@@ -3,6 +3,7 @@ import { Sale, VentaRequest } from '../../../core/services/sale';
 import { Producto } from '../../../core/services/product';
 import { Cliente } from '../../../core/services/client';
 import { Observable, tap } from 'rxjs';
+import { ToastService } from '../../../core/services/toast';
 
 export interface CartItem {
   producto: Producto;
@@ -15,6 +16,7 @@ export interface CartItem {
 })
 export class PosCartService {
   private saleService = inject(Sale);
+  private toastService = inject(ToastService);
 
   // === 1. STATE (SIGNALS) ===
   // La fuente de la verdad. Si esto cambia, todo se actualiza solo.
@@ -35,7 +37,7 @@ export class PosCartService {
 
   addItem(producto: Producto) {
     if (producto.stockActual < 1) {
-      // Opcional: Mostrar alerta aquí o dejar que la UI maneje el visual (gris)
+      this.toastService.error('No hay stock disponible', 'Agotado');
       return;
     }
 
@@ -46,7 +48,7 @@ export class PosCartService {
         // Si ya existe, verificamos si podemos sumar 1 más
         const currentItem = items[index];
         if (currentItem.cantidad + 1 > producto.stockActual) {
-          alert('⚠️ Stock insuficiente');
+          this.toastService.warning('Haz alcanzado el limite de stock', 'Stock Maximo');
           return items; // Retornamos sin cambios
         }
 
@@ -75,13 +77,14 @@ export class PosCartService {
 
       // 1. Si baja a 0 o menos, eliminar
       if (newQuantity <= 0) {
+        this.toastService.info('Producto eliminado del carrito');
         return items.filter((_, i) => i !== index);
       }
 
       // 2. Validación de Stock con Ajuste (Clamping)
       // Si el usuario pide 50 y hay 10, le ponemos 10 y avisamos.
       if (newQuantity > item.producto.stockActual) {
-        alert(`⚠️ Stock insuficiente. Máximo disponible: ${item.producto.stockActual}`);
+        this.toastService.warning(`Solo hay ${item.producto.stockActual} disponibles`);
         newQuantity = item.producto.stockActual; // Ajustamos al máximo posible
       }
 
