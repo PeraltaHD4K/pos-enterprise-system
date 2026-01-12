@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -22,9 +22,34 @@ export class PosCheckoutModal {
   // Lógica que antes estaba en el Padre
   montoPagado: number | null = null;
   cambio = 0;
+  metodoSeleccionado: MetodoPago = 'EFECTIVO';
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['isOpen'] && this.isOpen) {
+      this.resetModal();
+    }
+  }
+
+  seleccionarMetodo(metodo: MetodoPago) {
+    this.metodoSeleccionado = metodo;
+
+    if (metodo === 'EFECTIVO') {
+      this.montoPagado = null; // En efectivo obligamos a escribir
+      this.cambio = -this.total;
+    } else {
+      // En Tarjeta/Transferencia asumimos pago exacto
+      this.montoPagado = this.total;
+      this.cambio = 0;
+    }
+  }
 
   // Cuando cambia el input, calculamos localmente
   calcularCambio() {
+    if (this.metodoSeleccionado !== 'EFECTIVO') {
+      this.cambio = 0;
+      return;
+    }
+
     if (this.montoPagado !== null) {
       this.cambio = this.montoPagado - this.total;
     } else {
@@ -33,16 +58,22 @@ export class PosCheckoutModal {
   }
 
   confirmar() {
-    if (!this.montoPagado || this.montoPagado < this.total) return;
+    if (!this.montoPagado) return;
+
+    if (this.montoPagado < this.total && this.metodoSeleccionado === 'EFECTIVO') {
+      return;
+    }
 
     // Enviamos al padre solo los datos finales
     this.onConfirm.emit({
       montoPagado: this.montoPagado,
-      metodoPago: 'EFECTIVO'
+      metodoPago: this.metodoSeleccionado
     });
+  }
 
-    // Reseteamos para la próxima
+  resetModal() {
+    this.metodoSeleccionado = 'EFECTIVO';
     this.montoPagado = null;
-    this.cambio = 0;
+    this.cambio = -this.total;
   }
 }
