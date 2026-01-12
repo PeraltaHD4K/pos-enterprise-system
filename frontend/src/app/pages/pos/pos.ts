@@ -1,9 +1,9 @@
-import { Component, inject, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { CashRegister, SesionCaja } from '../../core/services/cash-register';
-import { Product, Producto } from '../../core/services/product';
+import { SesionCaja } from '../../core/services/cash-register';
+import { Producto } from '../../core/services/product';
 import { Sale } from '../../core/services/sale';
 import { Auth } from '../../core/services/auth';
 import { Cliente } from '../../core/services/client';
@@ -79,6 +79,7 @@ export class Pos implements OnInit {
   isProcessingMovement = false;
 
   @ViewChild(PosCustomerSelector) customerSelector!: PosCustomerSelector;
+  @ViewChild(PosProductList) productList!: PosProductList;
 
   // Formulario de apertura
   formApertura: FormGroup = this.fb.group({
@@ -299,5 +300,45 @@ export class Pos implements OnInit {
   logout() {
     this.authService.logout();
     this.cartService.clear();
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent) {
+
+    // --- F2: BUSCADOR ---
+    if (event.key === 'F2') {
+      event.preventDefault();
+      this.productList.focusInput();
+    }
+
+    // --- F12: COBRAR ---
+    if (event.key === 'F12') {
+      event.preventDefault();
+      if (this.cartService.items().length > 0 && !this.showCheckoutModal) {
+        this.abrirModalCobro();
+      }
+    }
+
+    // --- ESC: CERRAR MODALES / LIMPIAR ---
+    if (event.key === 'Escape') {
+      // 1. Cerrar modal de cobro
+      if (this.showCheckoutModal) {
+        this.showCheckoutModal = false;
+        return;
+      }
+
+      // 2. Cerrar dropdown de clientes (CORREGIDO PARA SIGNALS)
+      // Verificamos si existe el selector Y si el signal showDropdown() es true
+      if (this.customerSelector && this.customerSelector.showDropdown()) {
+        this.customerSelector.showDropdown.set(false); // ✅ Usamos .set()
+        return;
+      }
+
+      // 3. Limpiar búsqueda
+      if (this.searchTerm) {
+        this.onSearch('');
+        return;
+      }
+    }
   }
 }
