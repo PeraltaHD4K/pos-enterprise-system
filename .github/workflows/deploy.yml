@@ -1,0 +1,36 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - main  # Se ejecuta solo cuando haces push a la rama principal
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Deploy to EC2 via SSH
+      uses: appleboy/ssh-action@v1.2.4
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        port: 22
+        script: |
+          # 1. Navegar a la carpeta del proyecto
+          cd pos-enterprise-system
+          
+          # 2. Bajar los últimos cambios de GitHub
+          git pull origin main
+          
+          # 3. Reconstruir y reiniciar contenedores
+          # Usamos --build para asegurar que si cambiaste Java/Angular, se recompilen
+          docker-compose up -d --build
+          
+          # 4. Limpieza (Opcional): Borrar imágenes viejas para no llenar el disco
+          docker image prune -f
