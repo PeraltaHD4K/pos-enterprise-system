@@ -61,5 +61,14 @@ env/
 *.csv
 *.xlsx
 *.json
-!backend/src/main/resources/**/*.json  
-# Excepción: No ignorar JSONs de configuración del backend
+# --- EXCEPCIONES (Archivos que SÍ deben subir) ---
+# Backend
+!backend/src/main/resources/**/*.json
+
+# Frontend (Configuraciones vitales de Angular)
+!frontend/package.json
+!frontend/package-lock.json
+!frontend/angular.json
+!frontend/tsconfig.json
+!frontend/tsconfig.app.json
+!frontend/tsconfig.spec.json
