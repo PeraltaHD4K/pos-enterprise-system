@@ -1,0 +1,19 @@
+# --- Sistema y Git ---
+.git
+.gitignore
+.dockerignore
+.vscode
+.idea
+node_modules/
+
+# --- Archivos generados ---
+dist/
+.angular/
+
+# --- Logs y Cache ---
+npm-debug.log
+yarn-error.log
+
+# --- Seguridad ---
+.env
+Dockerfile
