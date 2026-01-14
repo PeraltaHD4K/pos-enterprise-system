@@ -18,7 +18,7 @@ export class MainLayout {
   role = this.auth.getRole();
   canAccessPos = this.auth.hasRole(['ADMIN', 'GERENTE', 'CAJERO']);
 
-  // Definición del menú
+  // Definición del menú TODO menú desplegable
   allMenuItems = [
     { label: 'Dashboard', path: '/dashboard', icon: '📊', roles: ['ADMIN', 'GERENTE'] },
     { label: 'Ventas (POS)', path: '/pos', icon: '🛒', roles: ['ADMIN', 'GERENTE', 'CAJERO'] },
