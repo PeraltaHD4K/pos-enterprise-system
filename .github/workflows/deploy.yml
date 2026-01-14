@@ -30,7 +30,7 @@ jobs:
           --document-name "AWS-RunShellScript" \
           --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
           --comment "Despliegue automático GitHub Actions" \
-          --parameters 'commands=["cd /home/ubuntu/pos-enterprise-system", "git pull origin main", "docker compose up -d --build", "docker image prune -f"]' \
+          --parameters 'commands=["runuser -l ubuntu -c \"cd /home/ubuntu/pos-enterprise-system && git pull origin main && docker compose up -d --build && docker image prune -f\""]' \
           --output text \
           --query "Command.CommandId")
 
