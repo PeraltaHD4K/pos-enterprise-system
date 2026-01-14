@@ -1,6 +1,6 @@
 package com.diegoperalta.pos.common.exception;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,7 +15,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<Map<String, Object>> manejarBusinessException(BusinessException ex) {
         Map<String, Object> respuesta = new HashMap<>();
-        respuesta.put("timestamp", LocalDateTime.now());
+        respuesta.put("timestamp", Instant.now());
         respuesta.put("mensaje", ex.getMessage());
         respuesta.put("estado", ex.getEstado().value());
         respuesta.put("error", ex.getEstado().getReasonPhrase());
@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
         ex.printStackTrace();
 
         Map<String, Object> respuesta = new HashMap<>();
-        respuesta.put("timestamp", LocalDateTime.now());
+        respuesta.put("timestamp", Instant.now());
         respuesta.put("mensaje", "Ocurrió un error interno en el servidor");
         respuesta.put("detalle", ex.getMessage()); // Quitar en producción
         respuesta.put("estado", HttpStatus.INTERNAL_SERVER_ERROR.value());

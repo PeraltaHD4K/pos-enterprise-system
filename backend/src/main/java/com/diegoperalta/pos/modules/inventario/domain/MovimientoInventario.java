@@ -1,6 +1,6 @@
 package com.diegoperalta.pos.modules.inventario.domain;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
 
@@ -65,5 +65,6 @@ public class MovimientoInventario {
     @Column(name = "referencia")
     private String referencia;
 
-    private LocalDateTime fecha = LocalDateTime.now();
+    @Column(nullable = false)
+    private Instant fecha = Instant.now();
 }

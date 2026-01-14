@@ -2,7 +2,7 @@ package com.diegoperalta.pos.modules.compras.application;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,14 +61,14 @@ public class CompraService {
         compra.setFolioFactura(dto.getFolioFactura());
         compra.setObservaciones(dto.getObservaciones());
 
-        compra.setFechaPedido(LocalDateTime.now());
+        compra.setFechaPedido(Instant.now());
         compra.setFechaEstimadaEntrega(dto.getFechaEstimadaEntrega());
 
         String estadoInicial = (dto.getEstado() != null) ? dto.getEstado() : "COMPLETADA";
         compra.setEstado(estadoInicial);
 
         if ("COMPLETADA".equals(estadoInicial)) {
-            compra.setFechaRecepcion(LocalDateTime.now());
+            compra.setFechaRecepcion(Instant.now());
         }
 
         compra.setTotal(BigDecimal.ZERO);
@@ -172,7 +172,7 @@ public class CompraService {
         }
 
         compra.setEstado("COMPLETADA");
-        compra.setFechaRecepcion(LocalDateTime.now());
+        compra.setFechaRecepcion(Instant.now());
         compra.setTotal(totalReal);
 
         return compraRepository.save(compra);

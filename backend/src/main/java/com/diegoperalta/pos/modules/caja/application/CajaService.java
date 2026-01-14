@@ -1,12 +1,15 @@
 package com.diegoperalta.pos.modules.caja.application;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+
 import com.diegoperalta.pos.modules.iam.infrastructure.security.UserProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +47,9 @@ public class CajaService {
     @Autowired
     private UserProvider userProvider;
 
+    @Value("${app.business.time-zone}")
+    private String businessTimeZone;
+
     @Transactional
     public SesionCaja abrirCaja(AperturaCajaDTO dto) {
         // 1. Obtener usuario actual
@@ -60,7 +66,7 @@ public class CajaService {
         sesion.setUsuario(usuario);
         sesion.setSaldoInicial(dto.getSaldoInicial());
         sesion.setEstado("ABIERTA");
-        sesion.setFechaApertura(LocalDateTime.now());
+        sesion.setFechaApertura(Instant.now());
 
         return sesionCajaRepository.save(sesion);
     }
@@ -101,7 +107,7 @@ public class CajaService {
         sesion.setSaldoFinalCalculado(saldoEsperado);
         sesion.setSaldoFinalReal(dto.getSaldoFinalReal());
         sesion.setDiferencia(diferencia);
-        sesion.setFechaCierre(LocalDateTime.now());
+        sesion.setFechaCierre(Instant.now());
         sesion.setEstado("CERRADA");
 
         return sesionCajaRepository.save(sesion);
@@ -196,15 +202,17 @@ public class CajaService {
         // Construcción del Ticket
         StringBuilder sb = new StringBuilder();
         String lineaDiv = "--------------------------------\n";
-        DateTimeFormatter fechaFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        // Formatter para el ticket (usaremos zona del sistema para imprimir)
+        DateTimeFormatter fechaFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+                .withZone(ZoneId.of(businessTimeZone));
 
         // 1. Cabecera
         centrarTexto(sb, "CORTE DE CAJA (Z)");
         sb.append(lineaDiv);
         sb.append("Cajero: ").append(sesion.getUsuario().getUsername()).append("\n");
-        sb.append("Inicio: ").append(sesion.getFechaApertura().format(fechaFmt)).append("\n");
+        sb.append("Inicio: ").append(fechaFmt.format(sesion.getFechaApertura())).append("\n");
         if (sesion.getFechaCierre() != null) {
-            sb.append("Fin:    ").append(sesion.getFechaCierre().format(fechaFmt)).append("\n");
+            sb.append("Fin:    ").append(fechaFmt.format(sesion.getFechaCierre())).append("\n");
         }
         sb.append(lineaDiv);
 
@@ -239,6 +247,8 @@ public class CajaService {
     private void centrarTexto(StringBuilder sb, String texto) {
         int ancho = 32;
         int espacios = (ancho - texto.length()) / 2;
+        if (espacios < 0)
+            espacios = 0;
         for (int i = 0; i < espacios; i++)
             sb.append(" ");
         sb.append(texto).append("\n");
@@ -247,6 +257,8 @@ public class CajaService {
     private void alinearDerecha(StringBuilder sb, String texto) {
         int ancho = 32;
         int espacios = ancho - texto.length();
+        if (espacios < 0)
+            espacios = 0;
         for (int i = 0; i < espacios; i++)
             sb.append(" ");
         sb.append(texto).append("\n");

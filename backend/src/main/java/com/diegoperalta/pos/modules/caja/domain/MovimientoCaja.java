@@ -1,7 +1,7 @@
 package com.diegoperalta.pos.modules.caja.domain;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
 
@@ -53,5 +53,5 @@ public class MovimientoCaja {
 
     private String motivo;
 
-    private LocalDateTime fecha = LocalDateTime.now();
+    private Instant fecha = Instant.now();
 }

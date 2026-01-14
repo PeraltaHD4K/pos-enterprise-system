@@ -20,7 +20,7 @@ import lombok.Setter;
 import lombok.ToString;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,11 +52,11 @@ public class Compra {
     @ToString.Exclude
     private Usuario usuario;
 
-    @Column(name = "fecha_pedido")
-    private LocalDateTime fechaPedido = LocalDateTime.now();
+    @Column(name = "fecha_pedido", nullable = false)
+    private Instant fechaPedido = Instant.now();
 
     @Column(name = "fecha_recepcion")
-    private LocalDateTime fechaRecepcion;
+    private Instant fechaRecepcion;
 
     @Column(name = "fecha_estimada_entrega")
     private LocalDate fechaEstimadaEntrega;

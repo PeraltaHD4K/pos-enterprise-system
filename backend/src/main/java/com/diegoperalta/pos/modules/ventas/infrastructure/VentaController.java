@@ -1,11 +1,13 @@
 package com.diegoperalta.pos.modules.ventas.infrastructure;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -40,6 +42,9 @@ public class VentaController {
     @Autowired
     private TicketService ticketService;
 
+    @Value("${app.business.time-zone:UTC}")
+    private String businessTimeZone;
+
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")
     public ResponseEntity<Venta> registrarVenta(
@@ -62,11 +67,13 @@ public class VentaController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
 
-        LocalDate inicio = (fechaInicio != null) ? fechaInicio : LocalDate.now();
-        LocalDate fin = (fechaFin != null) ? fechaFin : LocalDate.now();
+        ZoneId zoneId = ZoneId.of(businessTimeZone);
 
-        LocalDateTime start = inicio.atStartOfDay();
-        LocalDateTime end = fin.atTime(LocalTime.MAX);
+        LocalDate inicio = (fechaInicio != null) ? fechaInicio : LocalDate.now(zoneId);
+        LocalDate fin = (fechaFin != null) ? fechaFin : LocalDate.now(zoneId);
+
+        Instant start = inicio.atStartOfDay(zoneId).toInstant();
+        Instant end = fin.atTime(LocalTime.MAX).atZone(zoneId).toInstant();
 
         return ResponseEntity.ok(ventaService.generarReporteGanancias(start, end));
     }
@@ -78,11 +85,13 @@ public class VentaController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin,
             @RequestParam(defaultValue = "5") int limite) {
 
-        LocalDate inicio = (fechaInicio != null) ? fechaInicio : LocalDate.now().minusMonths(1);
-        LocalDate fin = (fechaFin != null) ? fechaFin : LocalDate.now();
+        ZoneId zoneId = ZoneId.of(businessTimeZone);
 
-        LocalDateTime start = inicio.atStartOfDay();
-        LocalDateTime end = fin.atTime(LocalTime.MAX);
+        LocalDate inicio = (fechaInicio != null) ? fechaInicio : LocalDate.now(zoneId).minusMonths(1);
+        LocalDate fin = (fechaFin != null) ? fechaFin : LocalDate.now(zoneId);
+
+        Instant start = inicio.atStartOfDay(zoneId).toInstant();
+        Instant end = fin.atTime(LocalTime.MAX).atZone(zoneId).toInstant();
 
         return ResponseEntity.ok(ventaService.obtenerTopProductos(start, end, limite));
     }

@@ -1,7 +1,7 @@
 package com.diegoperalta.pos.modules.ventas.application.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import lombok.Data;
 
@@ -9,7 +9,7 @@ import lombok.Data;
 public class VentaResumenDTO {
     private Long id;
     private String folio;
-    private LocalDateTime fecha;
+    private Instant fecha;
     private BigDecimal totalVenta;
     private String nombreCliente;
     private String nombreVendedor;

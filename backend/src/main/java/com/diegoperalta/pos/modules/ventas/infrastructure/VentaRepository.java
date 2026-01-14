@@ -1,7 +1,7 @@
 package com.diegoperalta.pos.modules.ventas.infrastructure;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,7 +40,7 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
                         "LEFT JOIN FETCH v.cliente " +
                         "WHERE v.fecha BETWEEN :inicio AND :fin " +
                         "AND v.estado = 'COMPLETADA'")
-        List<Venta> buscarVentasEnRango(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
+        List<Venta> buscarVentasEnRango(@Param("inicio") Instant inicio, @Param("fin") Instant fin);
 
         @Query("SELECT v FROM Venta v " +
                         "JOIN FETCH v.usuario " +
@@ -58,8 +58,8 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
                         "GROUP BY d.producto.nombre " +
                         "ORDER BY SUM(d.subtotal) DESC")
         List<ProductoTopDTO> encontrarTopProductos(
-                        @Param("inicio") LocalDateTime inicio,
-                        @Param("fin") LocalDateTime fin,
+                        @Param("inicio") Instant inicio,
+                        @Param("fin") Instant fin,
                         Pageable pageable);
 
         @Query(value = "SELECT v FROM Venta v " +
@@ -76,6 +76,6 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
                         "WHERE v.folio = :folio")
         Optional<Venta> findByFolioConDetalles(@Param("folio") String folio);
 
-        List<Venta> findByUsuarioIdAndFechaBetweenOrderByFechaDesc(Long usuarioId, LocalDateTime inicio,
-                        LocalDateTime fin);
+        List<Venta> findByUsuarioIdAndFechaBetweenOrderByFechaDesc(Long usuarioId, Instant inicio,
+                        Instant fin);
 }

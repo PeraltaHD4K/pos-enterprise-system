@@ -1,9 +1,11 @@
 package com.diegoperalta.pos.modules.ventas.application;
 
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,9 @@ public class TicketService {
     @Autowired
     private ConfiguracionService configService;
 
+    @Value("${app.business.time-zone:UTC}")
+    private String businessTimeZone;
+
     private static final int ANCHO_TICKET = 32;
     private static final String LINEA_DIVISORIA = "--------------------------------\n";
 
@@ -30,6 +35,11 @@ public class TicketService {
                 .orElseThrow(() -> new ResourceNotFoundException("Venta no encontrada: " + folio));
 
         Map<String, String> config = configService.obtenerConfiguracionCompleta();
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String fechaFormateada = venta.getFecha()
+                .atZone(ZoneId.of(businessTimeZone))
+                .format(formatter);
 
         StringBuilder ticket = new StringBuilder();
 
@@ -41,8 +51,7 @@ public class TicketService {
         ticket.append("\n");
 
         ticket.append("Folio: ").append(venta.getFolio()).append("\n");
-        ticket.append("Fecha: ").append(venta.getFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")))
-                .append("\n");
+        ticket.append("Fecha: ").append(fechaFormateada).append("\n");
         ticket.append("Cajero: ").append(venta.getUsuario().getUsername()).append("\n");
         ticket.append("Cliente: ").append(venta.getCliente().getNombre()).append("\n");
 
@@ -87,6 +96,9 @@ public class TicketService {
     private void centrarTexto(StringBuilder sb, String texto) {
         int espacios = (ANCHO_TICKET - texto.length()) / 2;
 
+        if (espacios < 0)
+            espacios = 0;
+
         for (int i = 0; i < espacios; i++) {
             sb.append(" ");
         }
@@ -95,6 +107,9 @@ public class TicketService {
 
     private void alinearDerecha(StringBuilder sb, String texto) {
         int espacios = ANCHO_TICKET - texto.length();
+        if (espacios < 0)
+            espacios = 0;
+
         for (int i = 0; i < espacios; i++) {
             sb.append(" ");
         }

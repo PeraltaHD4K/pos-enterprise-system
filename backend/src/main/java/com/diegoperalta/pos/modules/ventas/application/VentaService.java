@@ -3,7 +3,8 @@ package com.diegoperalta.pos.modules.ventas.application;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -70,6 +72,13 @@ public class VentaService {
 
     @Autowired
     private AutorizacionService autorizacionService;
+
+    @Value("${app.business.time-zone}")
+    private String businessTimeZone;
+
+    private ZoneId getBusinessZoneId() {
+        return ZoneId.of(businessTimeZone);
+    }
 
     @Transactional
     public Venta registrarVenta(VentaRegistroDTO dto) {
@@ -216,9 +225,16 @@ public class VentaService {
         // 1. Obtener el usuario autenticado (Cajero)
         Usuario usuario = obtenerUsuarioActual();
 
-        // 2. Definir rango de HOY (00:00 a 23:59)
-        LocalDateTime inicioDia = LocalDate.now().atStartOfDay();
-        LocalDateTime finDia = LocalDate.now().atTime(LocalTime.MAX);
+        // 2. Definir rango de HOY (00:00 a 23:59) - Usando UTC implicitamente o zona
+        // del sistema
+        // Para "HOY" del usuario, lo ideal es recibir la zona desde el front, pero por
+        // simplicidad
+        // usaremos la zona del sistema para calcular el inicio/fin relativo instant
+        ZoneId zoneId = getBusinessZoneId();
+        LocalDate hoyLocal = LocalDate.now(zoneId);
+
+        Instant inicioDia = hoyLocal.atStartOfDay(zoneId).toInstant();
+        Instant finDia = hoyLocal.atTime(LocalTime.MAX).atZone(zoneId).toInstant();
 
         // 3. Consultar repositorio
         List<Venta> ventas = ventaRepository.findByUsuarioIdAndFechaBetweenOrderByFechaDesc(
@@ -245,7 +261,7 @@ public class VentaService {
     }
 
     @Transactional(readOnly = true)
-    public ReporteGananciasDTO generarReporteGanancias(LocalDateTime inicio, LocalDateTime fin) {
+    public ReporteGananciasDTO generarReporteGanancias(Instant inicio, Instant fin) {
         List<Venta> ventas = ventaRepository.buscarVentasEnRango(inicio, fin);
 
         BigDecimal totalVenta = BigDecimal.ZERO;
@@ -293,17 +309,18 @@ public class VentaService {
         return reporte;
     }
 
-    private List<PuntoGraficaDTO> calcularDatosGrafica(List<Venta> ventas, LocalDateTime inicio, LocalDateTime fin) {
-        boolean esUnSoloDia = inicio.toLocalDate().isEqual(fin.toLocalDate());
+    private List<PuntoGraficaDTO> calcularDatosGrafica(List<Venta> ventas, Instant inicio, Instant fin) {
+        ZoneId zoneId = getBusinessZoneId(); // Agrupar visualmente por zona local
+        boolean esUnSoloDia = inicio.atZone(zoneId).toLocalDate().isEqual(fin.atZone(zoneId).toLocalDate());
 
         DateTimeFormatter formatter = esUnSoloDia
-                ? DateTimeFormatter.ofPattern("HH:00")
-                : DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                ? DateTimeFormatter.ofPattern("HH:00").withZone(zoneId)
+                : DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(zoneId);
 
         Map<String, List<Venta>> grupos = new TreeMap<>();
 
         for (Venta venta : ventas) {
-            String clave = venta.getFecha().format(formatter);
+            String clave = formatter.format(venta.getFecha());
             grupos.computeIfAbsent(clave, k -> new ArrayList<>()).add(venta);
         }
 
@@ -336,7 +353,7 @@ public class VentaService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductoTopDTO> obtenerTopProductos(LocalDateTime inicio, LocalDateTime fin, int limite) {
+    public List<ProductoTopDTO> obtenerTopProductos(Instant inicio, Instant fin, int limite) {
         Pageable pageable = PageRequest.of(0, limite);
         return ventaRepository.encontrarTopProductos(inicio, fin, pageable);
     }

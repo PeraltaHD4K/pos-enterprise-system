@@ -1,7 +1,7 @@
 package com.diegoperalta.pos.modules.ventas.domain;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,7 +59,7 @@ public class Venta {
     @ToString.Exclude
     private Usuario usuario;
 
-    private LocalDateTime fecha = LocalDateTime.now();
+    private Instant fecha = Instant.now();
 
     @Column(name = "total_venta", nullable = false)
     private BigDecimal totalVenta;

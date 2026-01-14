@@ -1,7 +1,7 @@
 package com.diegoperalta.pos.modules.caja.domain;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
 
@@ -41,10 +41,10 @@ public class SesionCaja {
     private Usuario usuario;
 
     @Column(name = "fecha_apertura")
-    private LocalDateTime fechaApertura = LocalDateTime.now();
+    private Instant fechaApertura = Instant.now();
 
     @Column(name = "fecha_cierre")
-    private LocalDateTime fechaCierre;
+    private Instant fechaCierre;
 
     @Column(name = "saldo_inicial")
     private BigDecimal saldoInicial;

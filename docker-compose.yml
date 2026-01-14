@@ -41,6 +41,8 @@ services:
             # Admin Inicial (DataSeeder)
             - ADMIN_USERNAME=${ADMIN_USER}
             - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+
+            - APP_TIME_ZONE=${APP_TIME_ZONE}
         depends_on:
             db:
                 condition: service_healthy

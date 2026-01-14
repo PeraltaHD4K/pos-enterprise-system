@@ -1,6 +1,6 @@
 package com.diegoperalta.pos.modules.iam.domain;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 
@@ -53,7 +53,7 @@ public class Usuario implements UserDetails {
     private Boolean activo = true;
 
     @Column(name = "fecha_creacion")
-    private LocalDateTime fechaCreacion = LocalDateTime.now();
+    private Instant fechaCreacion = Instant.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rol_id")
