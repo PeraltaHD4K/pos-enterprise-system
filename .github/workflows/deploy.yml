@@ -1,4 +1,4 @@
-name: Deploy to AWS EC2
+name: Deploy via AWS SSM (Zero Trust)
 
 on:
   push:
@@ -14,10 +14,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v6
 
-    - name: Get GitHub Runner IP
-      id: ip
-      run: echo "ipv4=$(curl -s https://api.ipify.org)" >> $GITHUB_OUTPUT
-
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v5.1.1
       with:
@@ -25,40 +21,31 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-2
 
-    - name: Whitelist Runner IP
+    - name: Execute Deploy Command via SSM
       run: |
-        aws ec2 authorize-security-group-ingress \
-          --group-id ${{ secrets.AWS_SG_ID }} \
-          --protocol tcp \
-          --port 22 \
-          --cidr ${{ steps.ip.outputs.ipv4 }}/32
+        echo "Iniciando despliegue en la instancia ${{ secrets.EC2_INSTANCE_ID }}..."
+        
+        # Enviamos el comando y capturamos el ID de la operación
+        COMMAND_ID=$(aws ssm send-command \
+          --document-name "AWS-RunShellScript" \
+          --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
+          --comment "Despliegue automático GitHub Actions" \
+          --parameters 'commands=["cd /home/ubuntu/pos-enterprise-system", "git pull origin main", "docker compose up -d --build", "docker image prune -f"]' \
+          --output text \
+          --query "Command.CommandId")
 
-    - name: Deploy to EC2 via SSH
-      uses: appleboy/ssh-action@v1.2.4
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USERNAME }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        port: 22
-        script: |
-          # 1. Navegar a la carpeta del proyecto
-          cd pos-enterprise-system
-          
-          # 2. Bajar los últimos cambios de GitHub
-          git pull origin main
-          
-          # 3. Reconstruir y reiniciar contenedores
-          # Usamos --build para asegurar que si cambiaste Java/Angular, se recompilen
-          docker-compose up -d --build
-          
-          # 4. Limpieza (Opcional): Borrar imágenes viejas para no llenar el disco
-          docker image prune -f
-
-    - name: Revoke Runner IP
-      if: always()
-      run: |
-        aws ec2 revoke-security-group-ingress \
-          --group-id ${{ secrets.AWS_SG_ID }} \
-          --protocol tcp \
-          --port 22 \
-          --cidr ${{ steps.ip.outputs.ipv4 }}/32
+        echo "Comando enviado con éxito. ID: $COMMAND_ID"
+        echo "Esperando confirmación de ejecución..."
+        
+        # Esperamos a que el servidor termine de procesar (Éxito o Fallo)
+        aws ssm wait command-executed \
+          --command-id "$COMMAND_ID" \
+          --instance-id "${{ secrets.EC2_INSTANCE_ID }}"
+        
+        # (Opcional) Mostramos el resultado final en el log de GitHub
+        echo "Resultado del despliegue:"
+        aws ssm get-command-invocation \
+          --command-id "$COMMAND_ID" \
+          --instance-id "${{ secrets.EC2_INSTANCE_ID }}" \
+          --query "StandardOutputContent" \
+          --output text
