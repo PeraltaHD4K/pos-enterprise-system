@@ -80,6 +80,8 @@ services:
             - DB_HOST=db
             - DB_PORT=5432
 
+            - APP_TIME_ZONE=${APP_TIME_ZONE}
+
             - INTERNAL_API_KEY=${INTERNAL_API_KEY}
         networks:
             - pos-network

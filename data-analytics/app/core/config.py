@@ -12,6 +12,8 @@ class Settings(BaseSettings):
 
     INTERNAL_API_KEY: str
 
+    APP_TIME_ZONE: str
+
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
         return (
