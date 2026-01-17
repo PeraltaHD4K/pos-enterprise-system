@@ -18,9 +18,13 @@ export interface FilterData {
 export class DashboardFilters {
   @Output() onFilterChange = new EventEmitter<FilterData>();
 
-  mode: 'DIA' | 'RANGO' = 'DIA'; // Por defecto modo Día
+  mode: 'DIA' | 'RANGO' = 'DIA';
 
-  today: string = new Date().toISOString().split('T')[0]; // Bloqueo de futuro
+  today: string = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+  })();
+
   minDate: string = '2024-01-01';
 
   // Inputs

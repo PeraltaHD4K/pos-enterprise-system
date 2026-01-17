@@ -43,9 +43,14 @@ services:
             - ADMIN_PASSWORD=${ADMIN_PASSWORD}
 
             - APP_TIME_ZONE=${APP_TIME_ZONE}
+
+            - APP_SERVICES_ANALYTICS_URL=${ANALYTICS_URL}
+            - APP_SERVICES_ANALYTICS_KEY=${INTERNAL_API_KEY}
         depends_on:
             db:
                 condition: service_healthy
+            analytics:
+                condition: service_started
         networks:
             - pos-network
 
@@ -59,6 +64,23 @@ services:
             - "80:80" # El usuario final entra por aquí
         depends_on:
             - app
+        networks:
+            - pos-network
+
+    # Servicio Analytics
+    analytics:
+        build: ./data-analytics
+        container_name: pos-analytics
+        restart: on-failure
+        environment:
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            - POSTGRES_DB=${POSTGRES_DB}
+
+            - DB_HOST=db
+            - DB_PORT=5432
+
+            - INTERNAL_API_KEY=${INTERNAL_API_KEY}
         networks:
             - pos-network
 

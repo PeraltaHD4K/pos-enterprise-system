@@ -15,6 +15,7 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -45,6 +46,7 @@ import com.diegoperalta.pos.modules.ventas.application.dto.VentaResumenDTO;
 import com.diegoperalta.pos.modules.ventas.domain.DetalleVenta;
 import com.diegoperalta.pos.modules.ventas.domain.Venta;
 import com.diegoperalta.pos.modules.ventas.infrastructure.VentaRepository;
+import com.diegoperalta.pos.modules.ventas.domain.events.VentaCompletadaEvent;
 
 @Service
 public class VentaService {
@@ -72,6 +74,9 @@ public class VentaService {
 
     @Autowired
     private AutorizacionService autorizacionService;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     @Value("${app.business.time-zone}")
     private String businessTimeZone;
@@ -165,7 +170,16 @@ public class VentaService {
         venta.setMontoPagado(montoPagado);
         venta.setCambio(cambio);
 
-        return ventaRepository.save(venta);
+        Venta ventaGuardada = ventaRepository.save(venta);
+
+        // 7. Emitir Evento
+        eventPublisher.publishEvent(new VentaCompletadaEvent(
+                ventaGuardada.getId(),
+                ventaGuardada.getFolio(),
+                ventaGuardada.getTotalVenta(),
+                ventaGuardada.getFecha()));
+
+        return ventaGuardada;
     }
 
     private Usuario obtenerUsuarioActual() {

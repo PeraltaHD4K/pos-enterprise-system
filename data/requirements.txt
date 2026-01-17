@@ -1,8 +1,0 @@
-pandas
-sqlalchemy
-psycopg2-binary
-faker
-numpy
-matplotlib
-seaborn
-ipykernel
