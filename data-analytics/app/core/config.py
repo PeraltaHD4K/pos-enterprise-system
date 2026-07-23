@@ -4,9 +4,9 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "POS Data Analytics"
 
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "admin"
-    POSTGRES_DB: str = "db_pos"    
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
     DB_HOST: str = "localhost"
     DB_PORT: str = "5432"
 

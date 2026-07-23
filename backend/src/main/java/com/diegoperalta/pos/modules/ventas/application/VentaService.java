@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -124,12 +125,23 @@ public class VentaService {
 
         BigDecimal totalAcumulado = BigDecimal.ZERO;
 
-        // 5. Procesar cada Item (Bucle)
+        // 5. Preparar productos (Batch fetch para evitar N+1)
+        List<Long> productoIds = dto.getItems().stream()
+                .map(ItemVentaDTO::getProductoId)
+                .toList();
+        List<Producto> productosEncontrados = productoRepository.findAllById(productoIds);
+        if (productosEncontrados.size() != productoIds.size()) {
+            List<Long> encontradosIds = productosEncontrados.stream().map(Producto::getId).toList();
+            List<Long> faltantes = productoIds.stream().filter(id -> !encontradosIds.contains(id)).toList();
+            throw new ResourceNotFoundException("Productos no encontrados con IDs: " + faltantes);
+        }
+        Map<Long, Producto> productosMap = productosEncontrados.stream()
+                .collect(Collectors.toMap(Producto::getId, p -> p));
+
+        // 6. Procesar cada Item (Bucle)
         for (ItemVentaDTO item : dto.getItems()) {
             // A. Buscar producto
-            Producto producto = productoRepository.findById(item.getProductoId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Producto no encontrado con ID: " + item.getProductoId()));
+            Producto producto = productosMap.get(item.getProductoId());
 
             // B. Descontar Stock (Llama a tu módulo de Inventario)
             // Esto valida si hay stock y genera el movimiento en el Kardex

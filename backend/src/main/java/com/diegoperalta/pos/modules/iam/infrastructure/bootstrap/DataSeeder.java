@@ -30,6 +30,9 @@ public class DataSeeder implements CommandLineRunner {
     @Value("${app.security.admin-username:admin}")
     private String adminUsername;
 
+    @Value("${app.security.cajero-password:cajero123}")
+    private String cajeroPassword;
+
     @Override
     public void run(String... args) throws Exception {
         cargarRoles();
@@ -78,7 +81,7 @@ public class DataSeeder implements CommandLineRunner {
 
             Usuario cajero = new Usuario();
             cajero.setUsername(cajeroUsername);
-            cajero.setPasswordHash(passwordEncoder.encode("cajero123")); // Password fija para desarrollo
+            cajero.setPasswordHash(passwordEncoder.encode(cajeroPassword)); // Password fija para desarrollo
             cajero.setRol(rolCajero);
             cajero.setNombreCompleto("Cajero Principal");
             cajero.setActivo(true);
