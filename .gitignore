@@ -75,3 +75,7 @@ env/
 
 # Agents
 .agents/
+
+# Graphify Local Cache
+graphify-out/cost.json
+graphify-out/cache/

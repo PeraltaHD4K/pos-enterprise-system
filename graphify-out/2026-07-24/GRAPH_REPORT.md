@@ -1,16 +1,16 @@
-# Graph Report - pos-enterprise-system  (2026-07-24)
+# Graph Report - pos-enterprise-system  (2026-07-23)
 
 ## Corpus Check
-- 238 files · ~41,582 words
+- 239 files · ~41,548 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1612 nodes · 3367 edges · 102 communities (82 shown, 20 thin omitted)
-- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 200 edges (avg confidence: 0.79)
+- 1605 nodes · 3331 edges · 102 communities (79 shown, 23 thin omitted)
+- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 192 edges (avg confidence: 0.79)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `03421da8`
+- Built from commit: `5aee9412`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -116,11 +116,11 @@
 - run_dev.sh
 
 ## God Nodes (most connected - your core abstractions)
-1. `Usuario` - 49 edges
-2. `BusinessException` - 41 edges
+1. `Usuario` - 47 edges
+2. `BusinessException` - 40 edges
 3. `Producto` - 38 edges
 4. `ProductoService` - 37 edges
-5. `UsuarioRepository` - 36 edges
+5. `UsuarioRepository` - 34 edges
 6. `SesionCaja` - 33 edges
 7. `VentaRepository` - 31 edges
 8. `ToastService` - 30 edges
@@ -136,8 +136,8 @@
   data-analytics/app/processing/reports/sales_report.py → data-analytics/app/processing/sales_transformer.py
 - `AWS SSM Deployment Workflow` --calls--> `Docker Compose Configuration`  [EXTRACTED]
   .github/workflows/deploy.yml → docker-compose.yml
-- `CajaService` --references--> `MovimientoCajaRepository`  [EXTRACTED]
-  backend/src/main/java/com/diegoperalta/pos/modules/caja/application/CajaService.java → backend/src/main/java/com/diegoperalta/pos/modules/caja/infrastructure/MovimientoCajaRepository.java
+- `ResourceNotFoundException` --inherits--> `BusinessException`  [EXTRACTED]
+  backend/src/main/java/com/diegoperalta/pos/common/exception/ResourceNotFoundException.java → backend/src/main/java/com/diegoperalta/pos/common/exception/BusinessException.java
 
 ## Import Cycles
 - None detected.
@@ -146,22 +146,22 @@
 - **POS Enterprise System Architecture** — docker_compose_db, docker_compose_app, docker_compose_web, docker_compose_analytics [EXTRACTED 1.00]
 - **Frontend Navigation Flow** — frontend_pages_auth_login, frontend_shared_layout, frontend_pages_dashboard, frontend_pages_pos [INFERRED 0.80]
 
-## Communities (102 total, 20 thin omitted)
+## Communities (102 total, 23 thin omitted)
 
 ### Community 0 - "Customer Management"
 Cohesion: 0.07
 Nodes (35): AllArgsConstructor, Getter, NoArgsConstructor, Setter, RolResponseDTO, RequiredArgsConstructor, Service, RolService (+27 more)
 
 ### Community 1 - "Cash Register Service"
-Cohesion: 0.12
-Nodes (21): AperturaCajaDTO, Data, CorteXDTO, Data, AllArgsConstructor, Getter, NoArgsConstructor, Setter (+13 more)
+Cohesion: 0.17
+Nodes (14): AperturaCajaDTO, Data, CorteXDTO, Data, Data, SesionCajaResponseDTO, CajaController, GetMapping (+6 more)
 
 ### Community 2 - "Sales Reports DTOs"
-Cohesion: 0.09
-Nodes (33): Data, ProveedorDTO, AllArgsConstructor, Getter, NoArgsConstructor, Setter, ProveedorResponseDTO, Proveedor (+25 more)
+Cohesion: 0.17
+Nodes (13): AllArgsConstructor, Entity, EqualsAndHashCode, Getter, NoArgsConstructor, Setter, Table, ToString (+5 more)
 
 ### Community 3 - "Sales Analytics Service"
-Cohesion: 0.09
+Cohesion: 0.10
 Nodes (14): Analytics, TicketMetrics, Injectable, ItemVentaRequest, ProductoTop, PuntoGrafica, ReporteGanancias, Sale (+6 more)
 
 ### Community 4 - "User Management"
@@ -169,24 +169,24 @@ Cohesion: 0.11
 Nodes (24): Data, UsuarioEdicionDTO, Data, UsuarioRegistroDTO, AllArgsConstructor, Getter, NoArgsConstructor, Setter (+16 more)
 
 ### Community 5 - "Authentication Service"
-Cohesion: 0.24
-Nodes (9): Service, LoginRateLimiterService, AuthController, HttpServletRequest, PostMapping, RequestMapping, RequiredArgsConstructor, ResponseEntity (+1 more)
+Cohesion: 0.05
+Nodes (45): AuthenticationService, AuthenticationManager, RequiredArgsConstructor, Service, AuthResponseDTO, AllArgsConstructor, Data, Data (+37 more)
 
 ### Community 6 - "Category Management"
-Cohesion: 0.10
-Nodes (31): CategoriaService, Categoria, RequiredArgsConstructor, Service, Transactional, CategoriaDTO, Data, CategoriaResponseDTO (+23 more)
+Cohesion: 0.09
+Nodes (32): CategoriaService, Categoria, RequiredArgsConstructor, Service, Transactional, CategoriaDTO, Data, CategoriaResponseDTO (+24 more)
 
 ### Community 7 - "Cash Register Client"
-Cohesion: 0.07
-Nodes (19): AperturaCajaRequest, CashRegister, CierreCajaRequest, CorteX, MovimientoCajaRequest, SesionCaja, Injectable, PosHeader (+11 more)
+Cohesion: 0.08
+Nodes (17): AperturaCajaRequest, CashRegister, CierreCajaRequest, CorteX, MovimientoCajaRequest, SesionCaja, Injectable, PosHeader (+9 more)
 
 ### Community 8 - "Supplier Management"
 Cohesion: 0.09
-Nodes (31): ClienteService, Cliente, RequiredArgsConstructor, Service, ClienteDTO, Data, ClienteResponseDTO, AllArgsConstructor (+23 more)
+Nodes (33): Data, ProveedorDTO, AllArgsConstructor, Getter, NoArgsConstructor, Setter, ProveedorResponseDTO, Proveedor (+25 more)
 
 ### Community 9 - "Product Entity"
-Cohesion: 0.09
-Nodes (29): Data, ProductoRegistroDTO, Data, ProductoResponseDTO, Pageable, Producto, AllArgsConstructor, Entity (+21 more)
+Cohesion: 0.07
+Nodes (37): AjusteStockDTO, Data, Data, ProductoRegistroDTO, Data, ProductoResponseDTO, Pageable, Producto (+29 more)
 
 ### Community 10 - "Angular CLI Config"
 Cohesion: 0.05
@@ -201,32 +201,32 @@ Cohesion: 0.08
 Nodes (13): App, appConfig, routes, Component, authGuard(), roleGuard(), authInterceptor(), Auth (+5 more)
 
 ### Community 13 - "Purchase Client Service"
-Cohesion: 0.08
-Nodes (15): Page, Compra, CompraRequest, DetalleCompra, ItemCompraRequest, Purchase, Injectable, Proveedor (+7 more)
+Cohesion: 0.14
+Nodes (8): Compra, CompraRequest, DetalleCompra, ItemCompraRequest, Purchase, Injectable, PurchaseList, Component
 
 ### Community 14 - "Data Repositories"
-Cohesion: 0.18
-Nodes (16): AllArgsConstructor, Entity, EqualsAndHashCode, Getter, NoArgsConstructor, Setter, Table, ToString (+8 more)
+Cohesion: 0.17
+Nodes (18): CajaService, RequiredArgsConstructor, Service, MovimientoCajaRepository, Repository, SesionCajaRepository, CurrentUserProvider, Query (+10 more)
 
 ### Community 15 - "Purchase Registration"
-Cohesion: 0.17
-Nodes (14): Query, Repository, UsuarioRepository, AjusteStockDTO, Data, RequiredArgsConstructor, Service, Transactional (+6 more)
+Cohesion: 0.09
+Nodes (31): ClienteService, Cliente, RequiredArgsConstructor, Service, ClienteDTO, Data, ClienteResponseDTO, AllArgsConstructor (+23 more)
 
 ### Community 16 - "System Configuration"
 Cohesion: 0.13
 Nodes (21): ConfiguracionService, RequiredArgsConstructor, Service, Configuracion, AllArgsConstructor, Data, Entity, NoArgsConstructor (+13 more)
 
 ### Community 17 - "User and Role Service"
-Cohesion: 0.09
-Nodes (13): Rol, RolService, Injectable, Rol, Injectable, User, Usuario, UsuarioEdicion (+5 more)
+Cohesion: 0.15
+Nodes (8): Rol, RolService, Injectable, Rol, Injectable, User, UsuarioEdicion, UsuarioRegistro
 
 ### Community 18 - "POS Interface Logic"
 Cohesion: 0.10
 Nodes (4): Pos, Component, ViewChild, HostListener
 
 ### Community 19 - "Sales Registration Service"
-Cohesion: 0.24
-Nodes (8): BusinessException, Getter, ResourceNotFoundException, Component, Override, RequiredArgsConstructor, SpringSecurityUserProvider, HttpStatus
+Cohesion: 0.11
+Nodes (18): Getter, ResourceNotFoundException, ItemVentaDTO, Data, Data, VentaRegistroDTO, ApplicationEventPublisher, RequiredArgsConstructor (+10 more)
 
 ### Community 20 - "Inventory Movement Controller"
 Cohesion: 0.13
@@ -246,31 +246,31 @@ Nodes (19): @angular/common, @angular/compiler, @angular/core, @angular/forms, @
 
 ### Community 24 - "Exception Handling"
 Cohesion: 0.17
-Nodes (16): AutorizacionService, PasswordEncoder, RequiredArgsConstructor, Service, AutorizacionDTO, Data, CurrentUserProvider, CancelarVentaUseCase (+8 more)
+Nodes (14): AutorizacionService, PasswordEncoder, RequiredArgsConstructor, Service, AutorizacionDTO, Data, Data, VentaItemResponseDTO (+6 more)
 
 ### Community 25 - "Analytics Dashboard Controller"
 Cohesion: 0.19
 Nodes (13): Data, TicketMetricsDTO, AnalyticsClient, Logger, RestClient, Service, AnalyticsController, GetMapping (+5 more)
 
 ### Community 26 - "Auth and Settings Components"
-Cohesion: 0.22
-Nodes (4): Config, Injectable, Settings, Component
+Cohesion: 0.15
+Nodes (7): Config, Injectable, Login, Component, Settings, Component, environment
 
 ### Community 27 - "Customer Selection UI"
-Cohesion: 0.07
-Nodes (14): Client, Cliente, ClienteDTO, Injectable, Login, Component, CustomerForm, Component (+6 more)
+Cohesion: 0.08
+Nodes (11): Client, Cliente, ClienteDTO, Injectable, CustomerList, Component, PosCustomerSelector, Component (+3 more)
 
 ### Community 28 - "Product and Stock Service"
-Cohesion: 0.09
-Nodes (18): AjusteStockRequest, MovimientoInventario, Producto, ProductList, Component, PosCart, Component, Input (+10 more)
+Cohesion: 0.07
+Nodes (16): Page, AjusteStockRequest, MovimientoInventario, Product, Producto, Injectable, ProductList, Component (+8 more)
 
 ### Community 29 - "Report Generation Engine"
 Cohesion: 0.22
 Nodes (8): ABC, BaseReportGenerator, Prefijo para el archivo descargado (ej: 'ventas', 'inventario')., Interface que todos los reportes deben implementar., Engine, ReportFactory, Engine, SalesReportGenerator
 
 ### Community 30 - "Product Catalog UI"
-Cohesion: 0.17
-Nodes (12): SalidaVentaInfo, Data, VentaItemResponseDTO, Data, VentaRegistroDTO, Data, VentaResponseDTO, ApplicationEventPublisher (+4 more)
+Cohesion: 0.14
+Nodes (15): AllArgsConstructor, Data, ProductoTopDTO, AllArgsConstructor, Data, PuntoGraficaDTO, Data, ReporteGananciasDTO (+7 more)
 
 ### Community 31 - "Database Schema SQL"
 Cohesion: 0.29
@@ -285,12 +285,12 @@ Cohesion: 0.29
 Nodes (9): AuthenticationConfiguration, ApplicationConfig, AuthenticationManager, AuthenticationProvider, Bean, Configuration, PasswordEncoder, RequiredArgsConstructor (+1 more)
 
 ### Community 34 - "Security Filter Chain"
-Cohesion: 0.31
-Nodes (9): GetMapping, Pageable, PostMapping, PreAuthorize, RequestMapping, RequiredArgsConstructor, ResponseEntity, RestController (+1 more)
+Cohesion: 0.29
+Nodes (10): AuthenticationProvider, Bean, Configuration, RequiredArgsConstructor, SecurityConfig, CorsConfigurationSource, EnableMethodSecurity, EnableWebSecurity (+2 more)
 
 ### Community 35 - "Customer Form UI"
-Cohesion: 0.21
-Nodes (8): CajaService, RequiredArgsConstructor, Service, SesionCaja, Transactional, CierreCajaDTO, Data, Test
+Cohesion: 0.26
+Nodes (6): BusinessException, SesionCaja, Transactional, CierreCajaDTO, Data, Test
 
 ### Community 36 - "POS Checkout Modal"
 Cohesion: 0.20
@@ -301,7 +301,7 @@ Cohesion: 0.24
 Nodes (6): BaseModel, DataFrame, TicketMetricsDTO, GOLD LAYER: Agregación final para consumo del Dashboard., SalesAnalyzer, TicketMetricsDTO
 
 ### Community 38 - "Data Processing Pipeline"
-Cohesion: 0.17
+Cohesion: 0.19
 Nodes (5): TicketBuilder, RequiredArgsConstructor, Service, Transactional, TicketService
 
 ### Community 39 - "Data Ingestion Layer"
@@ -325,24 +325,24 @@ Cohesion: 0.22
 Nodes (8): name, packageManager, prettier, overrides, printWidth, singleQuote, private, version
 
 ### Community 45 - "POS Product Search"
-Cohesion: 0.24
-Nodes (4): AttemptContext, Service, LoginAttemptService, Test
+Cohesion: 0.25
+Nodes (5): PosProductList, Component, Input, Output, ViewChild
 
 ### Community 46 - "POS Cart Service"
-Cohesion: 0.24
-Nodes (10): RequiredArgsConstructor, Service, TokenBlacklistService, AllArgsConstructor, Data, Entity, NoArgsConstructor, Table (+2 more)
+Cohesion: 0.31
+Nodes (9): GetMapping, Pageable, PostMapping, PreAuthorize, RequestMapping, RequiredArgsConstructor, ResponseEntity, RestController (+1 more)
 
 ### Community 47 - "Product Repository Queries"
-Cohesion: 0.13
-Nodes (14): AuthenticationProvider, Bean, Configuration, RequiredArgsConstructor, SecurityConfig, Override, SecurityUser, CorsConfigurationSource (+6 more)
+Cohesion: 0.23
+Nodes (4): Override, SecurityUser, GrantedAuthority, UserDetails
 
 ### Community 48 - "Toast Notifications"
-Cohesion: 0.19
-Nodes (6): ToastService, Injectable, PosCloseModal, Component, Input, Output
+Cohesion: 0.21
+Nodes (4): ToastService, Injectable, CustomerForm, Component
 
 ### Community 49 - "POS Cart Component"
-Cohesion: 0.26
-Nodes (11): AllArgsConstructor, Entity, EqualsAndHashCode, Getter, NoArgsConstructor, Setter, Table, ToString (+3 more)
+Cohesion: 0.27
+Nodes (10): AllArgsConstructor, Entity, EqualsAndHashCode, Getter, NoArgsConstructor, Setter, Table, ToString (+2 more)
 
 ### Community 50 - "Global Error Handler"
 Cohesion: 0.46
@@ -353,12 +353,12 @@ Cohesion: 0.33
 Nodes (4): BytesIO, ExcelGenerator, DataFrame, Convierte un DataFrame en un archivo Excel binario en memoria.         No guarda
 
 ### Community 52 - "User List UI"
-Cohesion: 0.21
-Nodes (8): Data, VentaResumenDTO, Pageable, RequiredArgsConstructor, Service, Transactional, VentaReporteService, Pageable
+Cohesion: 0.43
+Nodes (3): Usuario, Component, Users
 
 ### Community 53 - "POS Close Modal"
-Cohesion: 0.27
-Nodes (4): Pageable, Query, Repository, VentaRepository
+Cohesion: 0.33
+Nodes (4): PosCloseModal, Component, Input, Output
 
 ### Community 54 - "POS Movement Modal"
 Cohesion: 0.33
@@ -377,8 +377,8 @@ Cohesion: 0.53
 Nodes (4): Bean, Configuration, WebConfig, WebMvcConfigurer
 
 ### Community 58 - "Stock Adjustment DTOs"
-Cohesion: 0.31
-Nodes (5): Service, UserDetails, JwtService, Claims, SecretKey
+Cohesion: 0.22
+Nodes (4): Proveedor, ProveedorRequest, Supplier, Injectable
 
 ### Community 60 - "NPM Scripts"
 Cohesion: 0.33
@@ -389,8 +389,8 @@ Cohesion: 0.70
 Nodes (4): Configuration, OpenApiConfig, OpenAPIDefinition, SecurityScheme
 
 ### Community 62 - "Test Setup"
-Cohesion: 0.19
-Nodes (11): ItemVentaDTO, Data, ApplicationEventPublisher, BeforeEach, Cliente, ExtendWith, Producto, SesionCaja (+3 more)
+Cohesion: 0.23
+Nodes (9): ApplicationEventPublisher, BeforeEach, Cliente, ExtendWith, Producto, SesionCaja, Test, Usuario (+1 more)
 
 ### Community 63 - "Spring Boot Tests"
 Cohesion: 0.60
@@ -401,12 +401,8 @@ Cohesion: 0.50
 Nodes (5): Analytics Python Requirements, Analytics Service, Backend App Service, Postgres Database Service, Frontend Web Service
 
 ### Community 67 - "Product Form UI"
-Cohesion: 0.27
-Nodes (9): Component, HttpServletRequest, Override, RequiredArgsConstructor, UserDetailsService, JwtAuthenticationFilter, FilterChain, HttpServletResponse (+1 more)
-
-### Community 70 - "Supplier List UI"
-Cohesion: 0.33
-Nodes (9): DetalleVenta, AllArgsConstructor, Entity, EqualsAndHashCode, Getter, NoArgsConstructor, Setter, Table (+1 more)
+Cohesion: 0.29
+Nodes (7): AllArgsConstructor, Getter, NoArgsConstructor, Setter, MovimientoCajaResponseDTO, Data, NuevoMovimientoCajaDTO
 
 ### Community 71 - "Async Task Config"
 Cohesion: 0.83
@@ -434,7 +430,7 @@ Nodes (9): AllArgsConstructor, Entity, EqualsAndHashCode, Getter, NoArgsConstruc
 
 ### Community 91 - "DetalleVenta"
 Cohesion: 0.33
-Nodes (7): Data, LoginRequestDTO, AuthenticationServiceTest, AuthenticationManager, BeforeEach, ExtendWith, Usuario
+Nodes (9): DetalleVenta, AllArgsConstructor, Entity, EqualsAndHashCode, Getter, NoArgsConstructor, Setter, Table (+1 more)
 
 ### Community 92 - "SesionCaja"
 Cohesion: 0.38
@@ -448,41 +444,33 @@ Nodes (4): PosHistoryModal, Component, Input, Output
 Cohesion: 0.25
 Nodes (7): Additional Resources, Building, Code scaffolding, Development server, Frontend, Running end-to-end tests, Running unit tests
 
-### Community 96 - "PosPrinter"
-Cohesion: 0.36
-Nodes (7): AuthenticationService, AuthenticationManager, RequiredArgsConstructor, Service, AuthResponseDTO, AllArgsConstructor, Data
+### Community 95 - "SpringSecurityUserProvider.java"
+Cohesion: 0.48
+Nodes (4): Component, Override, RequiredArgsConstructor, SpringSecurityUserProvider
 
 ### Community 97 - "TotalesReporteDTO"
-Cohesion: 0.33
-Nodes (5): AllArgsConstructor, Data, PuntoGraficaDTO, Data, ReporteGananciasDTO
-
-### Community 99 - "rules/graphify.md"
 Cohesion: 0.70
 Nodes (4): AllArgsConstructor, Data, NoArgsConstructor, TotalesReporteDTO
 
-### Community 100 - "workflows/graphify.md"
-Cohesion: 0.83
-Nodes (3): AllArgsConstructor, Data, ProductoTopDTO
-
 ## Knowledge Gaps
-- **92 isolated node(s):** `configuracion`, `com.diegoperalta:pos-backend`, `Config`, `run_dev.sh script`, `$schema` (+87 more)
+- **94 isolated node(s):** `configuracion`, `com.diegoperalta:pos-backend`, `Config`, `run_dev.sh script`, `$schema` (+89 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **20 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **23 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Usuario` connect `Usuario` to `Customer Management`, `Customer Form UI`, `User Management`, `Purchase Entity`, `POS Product Search`, `Data Repositories`, `Product Repository Queries`, `Purchase Registration`, `POS Cart Component`, `Sales Registration Service`, `Inventory Movement Controller`, `Test Setup`, `DetalleVenta`, `SesionCaja`, `Product Catalog UI`?**
-  _High betweenness centrality (0.071) - this node is a cross-community bridge._
-- **Why does `BusinessException` connect `Sales Registration Service` to `Customer Form UI`, `User Management`, `Category Management`, `Supplier Management`, `Product Entity`, `Purchase Entity`, `Data Repositories`, `Purchase Registration`, `Global Error Handler`, `Exception Handling`, `Analytics Dashboard Controller`, `DetalleVenta`, `Product Catalog UI`?**
-  _High betweenness centrality (0.049) - this node is a cross-community bridge._
-- **Why does `UsuarioRepository` connect `Purchase Registration` to `PosPrinter`, `Customer Management`, `Auth Provider Configuration`, `Customer Form UI`, `User Management`, `Purchase Entity`, `POS Product Search`, `Data Repositories`, `Sales Registration Service`, `Exception Handling`, `Usuario`, `DetalleVenta`, `Test Setup`?**
-  _High betweenness centrality (0.044) - this node is a cross-community bridge._
+- **Why does `Usuario` connect `Usuario` to `Customer Management`, `Sales Reports DTOs`, `Customer Form UI`, `User Management`, `Product Entity`, `Purchase Entity`, `Data Repositories`, `Product Repository Queries`, `POS Cart Component`, `Inventory Movement Controller`, `SesionCaja`, `Test Setup`, `SpringSecurityUserProvider.java`?**
+  _High betweenness centrality (0.063) - this node is a cross-community bridge._
+- **Why does `UsuarioRepository` connect `Data Repositories` to `Customer Management`, `Auth Provider Configuration`, `User Management`, `Authentication Service`, `Product Entity`, `Purchase Entity`, `Sales Registration Service`, `Exception Handling`, `Usuario`, `Test Setup`, `SpringSecurityUserProvider.java`?**
+  _High betweenness centrality (0.051) - this node is a cross-community bridge._
+- **Why does `BusinessException` connect `Customer Form UI` to `User Management`, `Category Management`, `Product Entity`, `Purchase Entity`, `Data Repositories`, `Purchase Registration`, `Global Error Handler`, `Sales Registration Service`, `Exception Handling`, `Analytics Dashboard Controller`, `SpringSecurityUserProvider.java`?**
+  _High betweenness centrality (0.046) - this node is a cross-community bridge._
 - **What connects `configuracion`, `com.diegoperalta:pos-backend`, `Config` to the rest of the system?**
-  _92 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _94 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Customer Management` be split into smaller, more focused modules?**
   _Cohesion score 0.07265306122448979 - nodes in this community are weakly interconnected._
-- **Should `Cash Register Service` be split into smaller, more focused modules?**
-  _Cohesion score 0.11746031746031746 - nodes in this community are weakly interconnected._
-- **Should `Sales Reports DTOs` be split into smaller, more focused modules?**
-  _Cohesion score 0.08735150244584207 - nodes in this community are weakly interconnected._
+- **Should `Sales Analytics Service` be split into smaller, more focused modules?**
+  _Cohesion score 0.09788359788359788 - nodes in this community are weakly interconnected._
+- **Should `User Management` be split into smaller, more focused modules?**
+  _Cohesion score 0.10801393728222997 - nodes in this community are weakly interconnected._
