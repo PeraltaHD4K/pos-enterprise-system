@@ -1,0 +1,135 @@
+package com.diegoperalta.pos.modules.venta.infrastructure;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.diegoperalta.pos.modules.iam.application.dto.AutorizacionDTO;
+import com.diegoperalta.pos.modules.venta.application.TicketService;
+import com.diegoperalta.pos.modules.venta.application.VentaService;
+import com.diegoperalta.pos.modules.venta.application.VentaReporteService;
+import com.diegoperalta.pos.modules.venta.application.dto.ProductoTopDTO;
+import com.diegoperalta.pos.modules.venta.application.dto.ReporteGananciasDTO;
+import com.diegoperalta.pos.modules.venta.application.dto.VentaRegistroDTO;
+import com.diegoperalta.pos.modules.venta.application.dto.VentaResumenDTO;
+import com.diegoperalta.pos.modules.venta.application.dto.VentaResponseDTO;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/ventas")
+@RequiredArgsConstructor
+public class VentaController {
+
+    
+    private final VentaService ventaService;
+
+    
+    private final VentaReporteService ventaReporteService;
+
+    
+    private final TicketService ticketService;
+
+    @Value("${app.business.time-zone:UTC}")
+    private String businessTimeZone;
+
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")
+    public ResponseEntity<VentaResponseDTO> registrarVenta(
+            @Valid @RequestBody VentaRegistroDTO dto) {
+        VentaResponseDTO nuevaVenta = ventaService.registrarVenta(dto);
+        return ResponseEntity.ok(nuevaVenta);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')")
+    @GetMapping
+    public ResponseEntity<Page<VentaResumenDTO>> listarVentas(
+            @PageableDefault(size = 10, sort = "fecha") Pageable pageable) {
+        Page<VentaResumenDTO> ventas = ventaReporteService.listarVentas(pageable);
+        return ResponseEntity.ok(ventas);
+    }
+
+    @GetMapping("/reporte/ganancias")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')")
+    public ResponseEntity<ReporteGananciasDTO> obtenerReporteGanancias(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+
+        ZoneId zoneId = ZoneId.of(businessTimeZone);
+
+        LocalDate inicio = (fechaInicio != null) ? fechaInicio : LocalDate.now(zoneId);
+        LocalDate fin = (fechaFin != null) ? fechaFin : LocalDate.now(zoneId);
+
+        Instant start = inicio.atStartOfDay(zoneId).toInstant();
+        Instant end = fin.atTime(LocalTime.MAX).atZone(zoneId).toInstant();
+
+        return ResponseEntity.ok(ventaReporteService.generarReporteGanancias(start, end));
+    }
+
+    @GetMapping("/reportes/top-productos")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ProductoTopDTO>> obtenerTopProductos(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin,
+            @RequestParam(defaultValue = "5") int limite) {
+
+        ZoneId zoneId = ZoneId.of(businessTimeZone);
+
+        LocalDate inicio = (fechaInicio != null) ? fechaInicio : LocalDate.now(zoneId).minusMonths(1);
+        LocalDate fin = (fechaFin != null) ? fechaFin : LocalDate.now(zoneId);
+
+        Instant start = inicio.atStartOfDay(zoneId).toInstant();
+        Instant end = fin.atTime(LocalTime.MAX).atZone(zoneId).toInstant();
+
+        return ResponseEntity.ok(ventaReporteService.obtenerTopProductos(start, end, limite));
+    }
+
+    @GetMapping("/ticket/{folio}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")
+    public ResponseEntity<String> obtenerTicket(@PathVariable String folio) {
+        String contenidoTicket = ticketService.generarContenidoTicket(folio);
+
+        return ResponseEntity.ok()
+                .header("Content-Type", "text/plain; charset=UTF-8")
+                .body(contenidoTicket);
+    }
+
+    @PostMapping("/{folio}/cancelar")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")
+    public ResponseEntity<VentaResponseDTO> cancelarVenta(
+            @PathVariable String folio,
+            @Valid @RequestBody AutorizacionDTO autorizacionDTO) {
+        VentaResponseDTO ventaCancelada = ventaService.cancelarVenta(folio, autorizacionDTO);
+
+        return ResponseEntity.ok(ventaCancelada);
+    }
+
+    @GetMapping("/mis-ventas-hoy")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")
+    public ResponseEntity<Page<VentaResumenDTO>> getMisVentasHoy(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(ventaService.obtenerVentasDelDiaUsuarioActual(pageable));
+    }
+}

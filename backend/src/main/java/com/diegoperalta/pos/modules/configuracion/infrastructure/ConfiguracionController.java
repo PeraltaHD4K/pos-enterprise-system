@@ -12,13 +12,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.diegoperalta.pos.modules.configuracion.application.ConfiguracionService;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/config")
+@RequiredArgsConstructor
 public class ConfiguracionController {
 
-    @Autowired
-    private ConfiguracionService configService;
+    
+    private final ConfiguracionService configService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")

@@ -63,6 +63,9 @@
     </main>
 
     <app-pos-history-modal [isOpen]="showHistoryModal" [ventas]="historialVentas" [isLoading]="isLoadingHistory"
+        [currentPage]="historyCurrentPage" [totalPages]="historyTotalPages" [totalElements]="historyTotalElements"
+        [pageSize]="historyPageSize"
+        (onPageChange)="abrirHistorial($event)"
         (onClose)="showHistoryModal = false" (onReprint)="obtenerTicket($event)" (onCancelSuccess)="onVentaCancelada()">
     </app-pos-history-modal>
 

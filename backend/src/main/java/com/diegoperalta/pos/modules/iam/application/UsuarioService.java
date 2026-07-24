@@ -11,23 +11,26 @@ import com.diegoperalta.pos.common.exception.BusinessException;
 import com.diegoperalta.pos.common.exception.ResourceNotFoundException;
 import com.diegoperalta.pos.modules.iam.application.dto.UsuarioEdicionDTO;
 import com.diegoperalta.pos.modules.iam.application.dto.UsuarioRegistroDTO;
+import com.diegoperalta.pos.modules.iam.application.dto.UsuarioResponseDTO;
 import com.diegoperalta.pos.modules.iam.domain.Rol;
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.RolRepository;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class UsuarioService {
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    
+    private final UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private RolRepository rolRepository;
+    
+    private final RolRepository rolRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    
+    private final PasswordEncoder passwordEncoder;
 
-    public Usuario crearUsuario(UsuarioRegistroDTO dto) {
+    public UsuarioResponseDTO crearUsuario(UsuarioRegistroDTO dto) {
         // 1. Validar que el username no exista
         if (usuarioRepository.findByUsername(dto.getUsername()).isPresent()) {
             throw new BusinessException("El nombre de usuario ya existe", HttpStatus.CONFLICT);
@@ -45,14 +48,14 @@ public class UsuarioService {
         usuario.setRol(rol);
         usuario.setActivo(true);
 
-        return usuarioRepository.save(usuario);
+        return mapToDTO(usuarioRepository.save(usuario));
     }
 
-    public List<Usuario> listarUsuarios() {
-        return usuarioRepository.findAll();
+    public List<UsuarioResponseDTO> listarUsuarios() {
+        return usuarioRepository.findAll().stream().map(this::mapToDTO).toList();
     }
 
-    public Usuario actualizarUsuario(Long id, UsuarioEdicionDTO dto) {
+    public UsuarioResponseDTO actualizarUsuario(Long id, UsuarioEdicionDTO dto) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
@@ -77,7 +80,7 @@ public class UsuarioService {
             usuario.setRol(nuevoRol);
         }
 
-        return usuarioRepository.save(usuario);
+        return mapToDTO(usuarioRepository.save(usuario));
     }
 
     public void toggleEstadoUsuario(Long id) {
@@ -88,8 +91,19 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
-    public Usuario obtenerPorId(Long id) {
-        return usuarioRepository.findById(id)
+    public UsuarioResponseDTO obtenerPorId(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        return mapToDTO(usuario);
+    }
+
+    private UsuarioResponseDTO mapToDTO(Usuario usuario) {
+        return new UsuarioResponseDTO(
+            usuario.getId(),
+            usuario.getNombreCompleto(),
+            usuario.getUsername(),
+            usuario.getActivo(),
+            usuario.getRol() != null ? usuario.getRol().getNombre() : null
+        );
     }
 }

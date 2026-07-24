@@ -6,23 +6,25 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import com.diegoperalta.pos.modules.clientes.domain.Cliente;
-import com.diegoperalta.pos.modules.clientes.infrastructure.ClienteRepository;
+import com.diegoperalta.pos.modules.cliente.domain.Cliente;
+import com.diegoperalta.pos.modules.cliente.infrastructure.ClienteRepository;
 import com.diegoperalta.pos.modules.iam.domain.Rol;
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.RolRepository;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class DataSeeder implements CommandLineRunner {
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-    @Autowired
-    private RolRepository rolRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private ClienteRepository clienteRepository;
+    
+    private final UsuarioRepository usuarioRepository;
+    
+    private final RolRepository rolRepository;
+    
+    private final PasswordEncoder passwordEncoder;
+    
+    private final ClienteRepository clienteRepository;
 
     @Value("${app.security.admin-password:admin123}")
     private String adminPassword;
@@ -81,7 +83,7 @@ public class DataSeeder implements CommandLineRunner {
 
             Usuario cajero = new Usuario();
             cajero.setUsername(cajeroUsername);
-            cajero.setPasswordHash(passwordEncoder.encode(cajeroPassword)); // Password fija para desarrollo
+            cajero.setPasswordHash(passwordEncoder.encode(cajeroPassword)); // 🔒 Configurado via variables de entorno
             cajero.setRol(rolCajero);
             cajero.setNombreCompleto("Cajero Principal");
             cajero.setActivo(true);

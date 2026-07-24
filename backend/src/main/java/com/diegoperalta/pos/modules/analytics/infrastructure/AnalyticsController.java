@@ -12,28 +12,22 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.diegoperalta.pos.modules.analytics.application.dto.TicketMetricsDTO;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/analytics")
+@RequiredArgsConstructor
 public class AnalyticsController {
 
-    @Autowired
-    private AnalyticsClient analyticsClient;
+    
+    private final AnalyticsClient analyticsClient;
 
     @GetMapping("/dashboard/tickets")
     @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')")
     public ResponseEntity<?> getDashboardTicketMetrics(
             @RequestParam(required = false) String start,
             @RequestParam(required = false) String end) {
-        try {
-            TicketMetricsDTO metrics = analyticsClient.obtenerMetricasTickets(start, end);
-            return ResponseEntity.ok(metrics);
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(Map.of(
-                            "error", "Servicio de analítica no disponible",
-                            "details", e.getMessage()));
-        }
+        TicketMetricsDTO metrics = analyticsClient.obtenerMetricasTickets(start, end);
+        return ResponseEntity.ok(metrics);
     }
 }

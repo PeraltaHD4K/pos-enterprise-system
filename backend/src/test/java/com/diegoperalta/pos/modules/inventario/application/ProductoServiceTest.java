@@ -20,7 +20,7 @@ import com.diegoperalta.pos.modules.iam.application.AutorizacionService; // 👈
 import com.diegoperalta.pos.modules.iam.domain.Rol; // 👈 Necesario para el usuario
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
-import com.diegoperalta.pos.modules.iam.infrastructure.security.UserProvider;
+import com.diegoperalta.pos.modules.iam.application.ports.CurrentUserProvider;
 import com.diegoperalta.pos.modules.inventario.application.dto.AjusteStockDTO; // 👈 Nuevo DTO
 import com.diegoperalta.pos.modules.inventario.domain.MovimientoInventario;
 import com.diegoperalta.pos.modules.inventario.domain.Producto;
@@ -40,7 +40,7 @@ class ProductoServiceTest {
     @Mock
     private CategoriaRepository categoriaRepository;
     @Mock
-    private UserProvider userProvider;
+    private CurrentUserProvider userProvider;
     @Mock
     private AutorizacionService autorizacionService; // 👈 Mockeamos el nuevo servicio
 
@@ -83,8 +83,7 @@ class ProductoServiceTest {
         when(productoRepository.findById(idProducto)).thenReturn(Optional.of(productoMock));
 
         // Simulamos la seguridad:
-        when(userProvider.getCurrentUser()).thenReturn("admin_test");
-        when(usuarioRepository.findByUsername("admin_test")).thenReturn(Optional.of(usuarioMock));
+        when(userProvider.getCurrentUserDetails()).thenReturn(usuarioMock);
 
         // --- WHEN ---
         // Llamamos con el DTO
@@ -111,9 +110,8 @@ class ProductoServiceTest {
         dto.setMotivo("Error intencional");
 
         // --- STUBBING ---
-        when(productoRepository.findById(idProducto)).thenReturn(Optional.of(productoMock));
-        when(userProvider.getCurrentUser()).thenReturn("admin_test");
-        when(usuarioRepository.findByUsername("admin_test")).thenReturn(Optional.of(usuarioMock));
+        when(productoRepository.findById(1L)).thenReturn(Optional.of(productoMock));
+        when(userProvider.getCurrentUserDetails()).thenReturn(usuarioMock);
 
         // --- WHEN & THEN ---
         assertThrows(BusinessException.class, () -> {

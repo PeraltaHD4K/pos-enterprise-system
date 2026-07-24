@@ -7,6 +7,7 @@ import { Supplier, Proveedor } from '../../../core/services/supplier';
 import { Product, Producto } from '../../../core/services/product';
 import { Observable } from 'rxjs';
 import { ToastService } from '../../../core/services/toast';
+import { Page } from '../../../core/services/page';
 
 @Component({
   selector: 'app-purchase-form',
@@ -45,7 +46,7 @@ export class PurchaseForm implements OnInit {
   // VARIABLES DE ESTADO
   items: any[] = []; // El carrito visual
   suppliers$: Observable<Proveedor[]> | undefined;
-  products$: Observable<Producto[]> | undefined;
+  products$!: Observable<Page<Producto>>;
 
   productoSeleccionado: Producto | null = null; // Para recordar el costo histórico
   totalCalculado = 0;
@@ -55,7 +56,7 @@ export class PurchaseForm implements OnInit {
   ngOnInit(): void {
     // Cargar catálogos
     this.suppliers$ = this.supplierService.getAll();
-    this.products$ = this.productService.getAll();
+    this.products$ = this.productService.getAll(0, 1000);
 
     // Verificar si es MODO VER (Lectura)
     const id = this.route.snapshot.paramMap.get('id');
@@ -78,8 +79,8 @@ export class PurchaseForm implements OnInit {
     const id = Number(this.itemForm.get('productoId')?.value);
 
     // Buscamos el producto completo para tener su 'ultimoCostoCompra'
-    this.products$?.subscribe(lista => {
-      const encontrado = lista.find(p => p.id === id);
+    this.products$?.subscribe(page => {
+      const encontrado = page.content.find((p: Producto) => p.id === id);
       if (encontrado) {
         this.productoSeleccionado = encontrado;
         this.calcularCostoSugerido(); // Recalcular inmediatamente
@@ -118,8 +119,8 @@ export class PurchaseForm implements OnInit {
     const { productoId, cantidadPedida, unidadesPorCaja, costoTotal } = this.itemForm.value;
 
     // Volvemos a buscar el producto solo para obtener el nombre visualmente para la tabla
-    this.products$?.subscribe(lista => {
-      const prod = lista.find(p => p.id == productoId);
+    this.products$?.subscribe(page => {
+      const prod = page.content.find((p: Producto) => p.id == productoId);
 
       if (prod) {
         const nuevoItem = {

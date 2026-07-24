@@ -21,8 +21,11 @@ public class ApplicationConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        return username -> {
+            com.diegoperalta.pos.modules.iam.domain.Usuario usuario = usuarioRepository.findByUsername(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+            return new com.diegoperalta.pos.modules.iam.infrastructure.security.SecurityUser(usuario);
+        };
     }
 
     @Bean

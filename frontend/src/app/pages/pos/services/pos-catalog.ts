@@ -21,10 +21,11 @@ export class PosCatalog {
 
   loadProducts() {
     this.isLoading.set(true);
-    this.productService.getAll().subscribe({
+    // TODO: implement dynamic search or lazy loading
+    this.productService.getAll(0, 1000).subscribe({
       next: (data) => {
         // Guardamos solo productos activos y con stock
-        this.allProducts = data.filter(p => p.activo);
+        this.allProducts = data.content.filter((p: Producto) => p.activo);
         // Inicializamos la vista con todo
         this.products.set(this.allProducts);
         this.isLoading.set(false);

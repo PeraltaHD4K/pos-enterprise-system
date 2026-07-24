@@ -10,29 +10,38 @@ import org.springframework.transaction.annotation.Transactional;
 import com.diegoperalta.pos.common.exception.BusinessException;
 import com.diegoperalta.pos.common.exception.ResourceNotFoundException;
 import com.diegoperalta.pos.modules.inventario.application.dto.CategoriaDTO;
+import com.diegoperalta.pos.modules.inventario.application.dto.CategoriaResponseDTO;
 import com.diegoperalta.pos.modules.inventario.domain.Categoria;
 import com.diegoperalta.pos.modules.inventario.infrastructure.CategoriaRepository;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class CategoriaService {
 
-    @Autowired
-    private CategoriaRepository categoriaRepository;
+    
+    private final CategoriaRepository categoriaRepository;
 
     @Transactional(readOnly = true)
-    public List<Categoria> listarCategorias() {
-        return categoriaRepository.findByActivoTrue();
+    public List<CategoriaResponseDTO> listarCategorias() {
+        return categoriaRepository.findByActivoTrue().stream().map(this::mapToDTO).toList();
     }
 
     @Transactional(readOnly = true)
-    public Categoria obtenerCategoriaPorId(Long id) {
+    public CategoriaResponseDTO obtenerCategoriaPorId(Long id) {
+        Categoria categoria = obtenerEntidadCategoriaPorId(id);
+        return mapToDTO(categoria);
+    }
+
+    @Transactional(readOnly = true)
+    private Categoria obtenerEntidadCategoriaPorId(Long id) {
         return categoriaRepository.findById(id)
                 .filter(c -> Boolean.TRUE.equals(c.getActivo()))
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + id));
     }
 
     @Transactional
-    public Categoria crearCategoria(CategoriaDTO dto) {
+    public CategoriaResponseDTO crearCategoria(CategoriaDTO dto) {
         // 1. Validar nombre único
         if (categoriaRepository.existsByNombre(dto.getNombre())) {
             throw new BusinessException("Ya existe una categoría con el nombre: " + dto.getNombre(),
@@ -45,12 +54,12 @@ public class CategoriaService {
         categoria.setDescripcion(dto.getDescripcion());
         categoria.setActivo(true);
 
-        return categoriaRepository.save(categoria);
+        return mapToDTO(categoriaRepository.save(categoria));
     }
 
     @Transactional
-    public Categoria actualizarCategoria(Long id, CategoriaDTO dto) {
-        Categoria categoria = obtenerCategoriaPorId(id);
+    public CategoriaResponseDTO actualizarCategoria(Long id, CategoriaDTO dto) {
+        Categoria categoria = obtenerEntidadCategoriaPorId(id);
 
         // Validar duplicados al editar
         if (!categoria.getNombre().equalsIgnoreCase(dto.getNombre())
@@ -62,15 +71,24 @@ public class CategoriaService {
         categoria.setNombre(dto.getNombre());
         categoria.setDescripcion(dto.getDescripcion());
 
-        return categoriaRepository.save(categoria);
+        return mapToDTO(categoriaRepository.save(categoria));
     }
 
     @Transactional
     public void eliminarCategoria(Long id) {
-        Categoria categoria = obtenerCategoriaPorId(id);
+        Categoria categoria = obtenerEntidadCategoriaPorId(id);
 
         // Soft Delete
         categoria.setActivo(false);
         categoriaRepository.save(categoria);
+    }
+
+    private CategoriaResponseDTO mapToDTO(Categoria categoria) {
+        return new CategoriaResponseDTO(
+            categoria.getId(),
+            categoria.getNombre(),
+            categoria.getDescripcion(),
+            categoria.getActivo() != null ? categoria.getActivo() : false
+        );
     }
 }

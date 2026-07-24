@@ -22,6 +22,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     // Usamos UserDetailsService (Interfaz de Spring), no nuestra clase concreta
     private final UserDetailsService userDetailsService;
+    private final com.diegoperalta.pos.modules.iam.application.TokenBlacklistService tokenBlacklistService;
 
     @Override
     protected void doFilterInternal(
@@ -41,23 +42,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 2. Extraer el token
         jwt = authHeader.substring(7);
-        userEmail = jwtService.extractUsername(jwt);
-
-        // 3. Si hay usuario y no está autenticado todavía en el contexto
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-
-            // 4. Si el token es válido, configuramos la seguridad
-            if (jwtService.isTokenValid(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities());
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+        try {
+            if (tokenBlacklistService.isTokenBlacklisted(jwt)) {
+                SecurityContextHolder.clearContext();
+                throw new com.diegoperalta.pos.common.exception.BusinessException("El token ha sido invalidado", org.springframework.http.HttpStatus.UNAUTHORIZED);
             }
+
+            userEmail = jwtService.extractUsername(jwt);
+
+            // 3. Si hay usuario y no está autenticado todavía en el contexto
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+
+                // 4. Si el token es válido, configuramos la seguridad
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities());
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
+            filterChain.doFilter(request, response);
+        } catch (Exception e) {
+            // Si el token expira o es inválido, respondemos con 401 y un JSON estructurado
+            SecurityContextHolder.clearContext();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"estado\":401,\"error\":\"Unauthorized\",\"mensaje\":\"Token inválido o expirado\"}");
+            response.getWriter().flush();
         }
-        filterChain.doFilter(request, response);
     }
 }

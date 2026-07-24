@@ -70,7 +70,7 @@
                     <select formControlName="productoId" (change)="onProductoChange()"
                         class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                         <option value="">Buscar Producto...</option>
-                        <option *ngFor="let p of products$ | async" [value]="p.id">
+                        <option *ngFor="let p of (products$ | async)?.content" [value]="p.id">
                             {{ p.nombre }} (SKU: {{ p.sku }})
                         </option>
                     </select>

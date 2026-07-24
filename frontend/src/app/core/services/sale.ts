@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
+import { Page } from './page';
 
 export interface PuntoGrafica {
   etiqueta: string;
@@ -67,8 +68,9 @@ export class Sale {
     return this.http.post<any>(`${this.apiUrl}/${folio}/cancelar`, credencialesSupervisor);
   }
 
-  getMisVentasHoy(): Observable<VentaResponse[]> {
-    return this.http.get<VentaResponse[]>(`${this.apiUrl}/mis-ventas-hoy`);
+  getMisVentasHoy(page: number = 0, size: number = 10): Observable<Page<VentaResponse>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<Page<VentaResponse>>(`${this.apiUrl}/mis-ventas-hoy`, { params });
   }
 
   obtenerReporteGanancias(inicio?: string, fin?: string): Observable<ReporteGanancias> {

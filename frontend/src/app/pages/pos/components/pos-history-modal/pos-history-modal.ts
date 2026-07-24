@@ -15,8 +15,15 @@ export class PosHistoryModal {
   @Input() isOpen = false;
   @Input() ventas: any[] = [];
   @Input() isLoading = false;
+  
+  // Pagination
+  @Input() currentPage = 0;
+  @Input() totalPages = 0;
+  @Input() totalElements = 0;
+  @Input() pageSize = 10;
 
   @Output() onClose = new EventEmitter<void>();
+  @Output() onPageChange = new EventEmitter<number>();
   @Output() onReprint = new EventEmitter<string>();
   @Output() onCancelSuccess = new EventEmitter<void>(); // Para recargar tabla
 

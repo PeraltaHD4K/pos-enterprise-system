@@ -17,29 +17,33 @@ import com.diegoperalta.pos.modules.caja.application.CajaService;
 import com.diegoperalta.pos.modules.caja.application.dto.AperturaCajaDTO;
 import com.diegoperalta.pos.modules.caja.application.dto.CierreCajaDTO;
 import com.diegoperalta.pos.modules.caja.application.dto.CorteXDTO;
+import com.diegoperalta.pos.modules.caja.application.dto.MovimientoCajaResponseDTO;
 import com.diegoperalta.pos.modules.caja.application.dto.NuevoMovimientoCajaDTO;
+import com.diegoperalta.pos.modules.caja.application.dto.SesionCajaResponseDTO;
 import com.diegoperalta.pos.modules.caja.domain.MovimientoCaja;
 import com.diegoperalta.pos.modules.caja.domain.SesionCaja;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/caja")
 @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")
+@RequiredArgsConstructor
 public class CajaController {
-    @Autowired
-    private CajaService cajaService;
+    
+    private final CajaService cajaService;
 
     @PostMapping("/abrir")
-    public ResponseEntity<SesionCaja> abrirCaja(@Valid @RequestBody AperturaCajaDTO dto) {
+    public ResponseEntity<SesionCajaResponseDTO> abrirCaja(@Valid @RequestBody AperturaCajaDTO dto) {
         SesionCaja sesion = cajaService.abrirCaja(dto);
-        return ResponseEntity.ok(sesion);
+        return ResponseEntity.ok(mapToDTO(sesion));
     }
 
     @PostMapping("/cerrar")
-    public ResponseEntity<SesionCaja> cerrarCaja(@Valid @RequestBody CierreCajaDTO dto) {
+    public ResponseEntity<SesionCajaResponseDTO> cerrarCaja(@Valid @RequestBody CierreCajaDTO dto) {
         SesionCaja sesion = cajaService.cerrarCaja(dto);
-        return ResponseEntity.ok(sesion);
+        return ResponseEntity.ok(mapToDTO(sesion));
     }
 
     @GetMapping("/corte-x")
@@ -48,19 +52,19 @@ public class CajaController {
     }
 
     @GetMapping("/movimientos")
-    public ResponseEntity<List<MovimientoCaja>> listarMovimientos() {
-        return ResponseEntity.ok(cajaService.obtenerMovimientosSesionActual());
+    public ResponseEntity<List<MovimientoCajaResponseDTO>> listarMovimientos() {
+        return ResponseEntity.ok(cajaService.obtenerMovimientosSesionActual().stream().map(this::mapMovimientoToDTO).toList());
     }
 
     @PostMapping("/movimientos")
-    public ResponseEntity<MovimientoCaja> registrarMovimiento(@Valid @RequestBody NuevoMovimientoCajaDTO dto) {
-        return ResponseEntity.ok(cajaService.registrarMovimiento(dto));
+    public ResponseEntity<MovimientoCajaResponseDTO> registrarMovimiento(@Valid @RequestBody NuevoMovimientoCajaDTO dto) {
+        return ResponseEntity.ok(mapMovimientoToDTO(cajaService.registrarMovimiento(dto)));
     }
 
     @GetMapping("/estado")
-    public ResponseEntity<SesionCaja> obtenerEstadoCaja() {
+    public ResponseEntity<SesionCajaResponseDTO> obtenerEstadoCaja() {
         Optional<SesionCaja> sesion = cajaService.obtenerSesionActual();
-        return sesion.map(ResponseEntity::ok)
+        return sesion.map(this::mapToDTO).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.noContent().build());
     }
 
@@ -71,5 +75,33 @@ public class CajaController {
         return ResponseEntity.ok()
                 .header("Content-Type", "text/plain; charset=UTF-8")
                 .body(ticket);
+    }
+
+    private SesionCajaResponseDTO mapToDTO(SesionCaja s) {
+        SesionCajaResponseDTO dto = new SesionCajaResponseDTO();
+        dto.setId(s.getId());
+        if (s.getUsuario() != null) {
+            dto.setNombreUsuario(s.getUsuario().getUsername());
+        }
+        dto.setFechaApertura(s.getFechaApertura());
+        dto.setFechaCierre(s.getFechaCierre());
+        dto.setSaldoInicial(s.getSaldoInicial());
+        dto.setSaldoFinalCalculado(s.getSaldoFinalCalculado());
+        dto.setSaldoFinalReal(s.getSaldoFinalReal());
+        dto.setDiferencia(s.getDiferencia());
+        dto.setEstado(s.getEstado());
+        return dto;
+    }
+
+    private MovimientoCajaResponseDTO mapMovimientoToDTO(MovimientoCaja m) {
+        return new MovimientoCajaResponseDTO(
+            m.getId(),
+            m.getSesionCaja() != null ? m.getSesionCaja().getId() : null,
+            m.getUsuario() != null ? m.getUsuario().getUsername() : null,
+            m.getMonto(),
+            m.getTipo(),
+            m.getMotivo(),
+            m.getFecha()
+        );
     }
 }

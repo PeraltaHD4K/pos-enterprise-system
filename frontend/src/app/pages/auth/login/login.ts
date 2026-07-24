@@ -59,7 +59,8 @@ export class Login {
       error: (err) => {
         console.error(err);
         this.isLoading = false;
-        this.toastService.error('Credenciales incorrectas o error de conexión', 'Error de Acceso');
+        const mensajeError = err.error?.mensaje || 'Credenciales incorrectas o error de conexión';
+        this.toastService.error(mensajeError, 'Error de Acceso');
       }
     });
   }

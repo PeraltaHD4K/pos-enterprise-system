@@ -21,8 +21,8 @@ import com.diegoperalta.pos.modules.caja.infrastructure.MovimientoCajaRepository
 import com.diegoperalta.pos.modules.caja.infrastructure.SesionCajaRepository;
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
-import com.diegoperalta.pos.modules.iam.infrastructure.security.UserProvider;
-import com.diegoperalta.pos.modules.ventas.infrastructure.VentaRepository;
+import com.diegoperalta.pos.modules.iam.application.ports.CurrentUserProvider;
+import com.diegoperalta.pos.modules.venta.infrastructure.VentaRepository;
 
 @ExtendWith(MockitoExtension.class)
 class CajaServiceTest {
@@ -34,9 +34,9 @@ class CajaServiceTest {
     @Mock
     private VentaRepository ventaRepository;
     @Mock
-    private MovimientoCajaRepository movimientoCajaRepository; // 👈 1. ¡AGREGAR ESTE MOCK!
+    private MovimientoCajaRepository movimientoCajaRepository;
     @Mock
-    private UserProvider userProvider;
+    private CurrentUserProvider userProvider;
 
     @InjectMocks
     private CajaService cajaService;
@@ -65,13 +65,12 @@ class CajaServiceTest {
         dto.setSaldoFinalReal(new BigDecimal("700.00"));
 
         // --- STUBBING ---
-        when(userProvider.getCurrentUser()).thenReturn("cajero");
-        when(usuarioRepository.findByUsername("cajero")).thenReturn(Optional.of(usuarioMock));
+        when(userProvider.getCurrentUserDetails()).thenReturn(usuarioMock);
         when(sesionCajaRepository.findByUsuarioAndEstado(usuarioMock, "ABIERTA"))
                 .thenReturn(Optional.of(sesionAbiertaMock));
 
         // Simulamos VENTAS por $200
-        when(ventaRepository.sumarVentasPorSesion(sesionAbiertaMock))
+        when(ventaRepository.sumarVentasEfectivo(sesionAbiertaMock))
                 .thenReturn(new BigDecimal("200.00"));
 
         // 👇 2. AGREGAR ESTO: Simulamos que NO hubo movimientos extra (Ingresos/Retiros
@@ -98,8 +97,7 @@ class CajaServiceTest {
     void cerrarCaja_DeberiaLanzarError_SiNoExisteSesionAbierta() {
         CierreCajaDTO dto = new CierreCajaDTO();
 
-        when(userProvider.getCurrentUser()).thenReturn("cajero");
-        when(usuarioRepository.findByUsername("cajero")).thenReturn(Optional.of(usuarioMock));
+        when(userProvider.getCurrentUserDetails()).thenReturn(usuarioMock);
 
         when(sesionCajaRepository.findByUsuarioAndEstado(usuarioMock, "ABIERTA"))
                 .thenReturn(Optional.empty());

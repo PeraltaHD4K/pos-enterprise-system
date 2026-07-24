@@ -11,14 +11,16 @@ import com.diegoperalta.pos.common.exception.BusinessException;
 import com.diegoperalta.pos.modules.iam.application.dto.AutorizacionDTO;
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class AutorizacionService {
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    
+    private final UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Valida credenciales y permisos. Si falla, lanza excepción.
@@ -31,7 +33,7 @@ public class AutorizacionService {
         Usuario supervisor = usuarioRepository.findByUsername(dto.getUsernameSupervisor())
                 .orElseThrow(() -> new BusinessException("Usuario supervisor no encontrado", HttpStatus.FORBIDDEN));
 
-        if (!passwordEncoder.matches(dto.getPasswordSupervisor(), supervisor.getPassword())) {
+        if (!passwordEncoder.matches(dto.getPasswordSupervisor(), supervisor.getPasswordHash())) {
             throw new BusinessException("Credenciales de supervisor incorrectas", HttpStatus.FORBIDDEN);
         }
 

@@ -17,35 +17,37 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.diegoperalta.pos.modules.inventario.application.CategoriaService;
 import com.diegoperalta.pos.modules.inventario.application.dto.CategoriaDTO;
-import com.diegoperalta.pos.modules.inventario.domain.Categoria;
+import com.diegoperalta.pos.modules.inventario.application.dto.CategoriaResponseDTO;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/inventario/categorias")
+@RequiredArgsConstructor
 public class CategoriaController {
-    @Autowired
-    private CategoriaService categoriaService;
+    
+    private final CategoriaService categoriaService;
 
     @GetMapping
-    public ResponseEntity<List<Categoria>> listar() {
+    public ResponseEntity<List<CategoriaResponseDTO>> listar() {
         return ResponseEntity.ok(categoriaService.listarCategorias());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Categoria> obtener(@PathVariable Long id) {
+    public ResponseEntity<CategoriaResponseDTO> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(categoriaService.obtenerCategoriaPorId(id));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Categoria> crear(@Valid @RequestBody CategoriaDTO dto) {
+    public ResponseEntity<CategoriaResponseDTO> crear(@Valid @RequestBody CategoriaDTO dto) {
         return ResponseEntity.ok(categoriaService.crearCategoria(dto));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Categoria> actualizar(@PathVariable Long id, @Valid @RequestBody CategoriaDTO dto) {
+    public ResponseEntity<CategoriaResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody CategoriaDTO dto) {
         return ResponseEntity.ok(categoriaService.actualizarCategoria(id, dto));
     }
 

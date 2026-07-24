@@ -6,20 +6,26 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import com.diegoperalta.pos.modules.configuracion.domain.Configuracion;
 import com.diegoperalta.pos.modules.configuracion.infrastructure.ConfiguracionRepository;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class ConfiguracionService {
-    @Autowired
-    private ConfiguracionRepository repository;
+    
+    private final ConfiguracionRepository repository;
 
+    @Cacheable("configuracion_unica")
     public Configuracion getConfiguracion() {
         return repository.findById("configuracion").orElse(null);
     }
 
+    @Cacheable("configuraciones")
     public Map<String, String> obtenerConfiguracionCompleta() {
         List<Configuracion> lista = repository.findAll();
         Map<String, String> mapa = new HashMap<>();
@@ -38,6 +44,7 @@ public class ConfiguracionService {
     }
 
     // Guardar cambios masivos (Recibe un Map desde el Frontend)
+    @CacheEvict(value = {"configuracion_unica", "configuraciones"}, allEntries = true)
     public void actualizarConfiguracion(Map<String, String> nuevosValores) {
         List<Configuracion> entidades = nuevosValores.entrySet().stream()
                 .map(entry -> new Configuracion(entry.getKey(), entry.getValue()))

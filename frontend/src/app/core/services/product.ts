@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
 import { Categoria } from './category';
+import { Page } from './page';
 
 export interface MovimientoInventario {
   id: number;
@@ -63,9 +64,10 @@ export class Product {
     return this.http.get<MovimientoInventario[]>(`${environment.apiUrl}/inventario/movimientos/producto/${productoId}`);
   }
 
-  // Listar todos
-  getAll(): Observable<Producto[]> {
-    return this.http.get<Producto[]>(this.apiUrl);
+  // Listar todos con paginación
+  getAll(page: number = 0, size: number = 10): Observable<Page<Producto>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<Page<Producto>>(this.apiUrl, { params });
   }
 
   // Buscar por query (tu backend tiene /buscar?q=...)

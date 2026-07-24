@@ -10,17 +10,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.diegoperalta.pos.modules.iam.application.RolService;
-import com.diegoperalta.pos.modules.iam.domain.Rol;
+import com.diegoperalta.pos.modules.iam.application.dto.RolResponseDTO;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/roles")
+@RequiredArgsConstructor
 public class RolController {
-    @Autowired
-    private RolService rolService;
+    
+    private final RolService rolService;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<Rol>> listar() {
+    public ResponseEntity<List<RolResponseDTO>> listar() {
         return ResponseEntity.ok(rolService.listarTodos());
     }
 }

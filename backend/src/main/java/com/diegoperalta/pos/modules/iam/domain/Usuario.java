@@ -34,7 +34,7 @@ import lombok.ToString;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
 @Table(name = "usuarios")
-public class Usuario implements UserDetails {
+public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
@@ -59,42 +59,4 @@ public class Usuario implements UserDetails {
     @JoinColumn(name = "rol_id")
     @ToString.Exclude
     private Rol rol;
-
-    @Override
-    @JsonIgnore
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Convierte tu Rol (String) en una "Autoridad" que Spring entienda
-        // Spring espera el formato "ROLE_NOMBRE"
-        return List.of(new SimpleGrantedAuthority("ROLE_" + rol.getNombre()));
-    }
-
-    @Override
-    @JsonIgnore
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    @JsonIgnore
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    @JsonIgnore
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    @JsonIgnore
-    public boolean isEnabled() {
-        return this.activo; // Usamos tu campo 'activo' para bloquear acceso si es false
-    }
-
-    @Override
-    @JsonIgnore
-    public String getPassword() {
-        return this.passwordHash;
-    }
 }

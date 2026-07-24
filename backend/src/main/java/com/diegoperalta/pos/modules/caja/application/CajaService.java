@@ -10,7 +10,9 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import com.diegoperalta.pos.modules.iam.infrastructure.security.UserProvider;
+import com.diegoperalta.pos.modules.iam.application.ports.CurrentUserProvider;
+import com.diegoperalta.pos.modules.iam.domain.Usuario;
+import com.diegoperalta.pos.common.utils.TicketBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,24 +30,26 @@ import com.diegoperalta.pos.modules.caja.infrastructure.MovimientoCajaRepository
 import com.diegoperalta.pos.modules.caja.infrastructure.SesionCajaRepository;
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
-import com.diegoperalta.pos.modules.ventas.infrastructure.VentaRepository;
+import com.diegoperalta.pos.modules.venta.infrastructure.VentaRepository;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class CajaService {
-    @Autowired
-    private SesionCajaRepository sesionCajaRepository;
+    
+    private final SesionCajaRepository sesionCajaRepository;
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    
+    private final UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private VentaRepository ventaRepository;
+    
+    private final VentaRepository ventaRepository;
 
-    @Autowired
-    private MovimientoCajaRepository movimientoCajaRepository;
+    
+    private final MovimientoCajaRepository movimientoCajaRepository;
 
-    @Autowired
-    private UserProvider userProvider;
+    
+    private final CurrentUserProvider userProvider;
 
     @Value("${app.business.time-zone}")
     private String businessTimeZone;
@@ -53,7 +57,7 @@ public class CajaService {
     @Transactional
     public SesionCaja abrirCaja(AperturaCajaDTO dto) {
         // 1. Obtener usuario actual
-        Usuario usuario = obtenerUsuarioActual();
+        Usuario usuario = userProvider.getCurrentUserDetails();
 
         // 2. VALIDACIÓN: ¿Ya tiene una caja abierta?
         if (sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA").isPresent()) {
@@ -73,7 +77,7 @@ public class CajaService {
 
     @Transactional
     public SesionCaja cerrarCaja(CierreCajaDTO dto) {
-        Usuario usuario = obtenerUsuarioActual(); // El que está intentando cerrar
+        Usuario usuario = userProvider.getCurrentUserDetails(); // El que está intentando cerrar
 
         // 1. Buscar la caja abierta del usuario
         SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
@@ -115,7 +119,7 @@ public class CajaService {
 
     @Transactional(readOnly = true)
     public CorteXDTO generarCorteX() {
-        Usuario usuario = obtenerUsuarioActual();
+        Usuario usuario = userProvider.getCurrentUserDetails();
         SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
                 .orElseThrow(() -> new BusinessException("No hay sesión abierta para generar corte.",
                         HttpStatus.BAD_REQUEST));
@@ -142,7 +146,7 @@ public class CajaService {
 
     @Transactional
     public MovimientoCaja registrarMovimiento(NuevoMovimientoCajaDTO dto) {
-        Usuario usuario = obtenerUsuarioActual();
+        Usuario usuario = userProvider.getCurrentUserDetails();
 
         SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
                 .orElseThrow(() -> new BusinessException("No hay sesión abierta.", HttpStatus.BAD_REQUEST));
@@ -175,13 +179,13 @@ public class CajaService {
     }
 
     public Optional<SesionCaja> obtenerSesionActual() {
-        Usuario usuario = obtenerUsuarioActual();
+        Usuario usuario = userProvider.getCurrentUserDetails();
         return sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA");
     }
 
     @Transactional(readOnly = true)
     public List<MovimientoCaja> obtenerMovimientosSesionActual() {
-        Usuario usuario = obtenerUsuarioActual();
+        Usuario usuario = userProvider.getCurrentUserDetails();
         SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
                 .orElseThrow(() -> new BusinessException("No hay sesión abierta.", HttpStatus.BAD_REQUEST));
 
@@ -200,73 +204,45 @@ public class CajaService {
         BigDecimal retiros = movimientoCajaRepository.sumarPorSesionYTipo(sesion, "RETIRO");
 
         // Construcción del Ticket
-        StringBuilder sb = new StringBuilder();
-        String lineaDiv = "--------------------------------\n";
+        TicketBuilder tb = new TicketBuilder(32);
+        
         // Formatter para el ticket (usaremos zona del sistema para imprimir)
         DateTimeFormatter fechaFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
                 .withZone(ZoneId.of(businessTimeZone));
 
         // 1. Cabecera
-        centrarTexto(sb, "CORTE DE CAJA (Z)");
-        sb.append(lineaDiv);
-        sb.append("Cajero: ").append(sesion.getUsuario().getUsername()).append("\n");
-        sb.append("Inicio: ").append(fechaFmt.format(sesion.getFechaApertura())).append("\n");
+        tb.centrar("CORTE DE CAJA (Z)")
+          .lineaDivisoria()
+          .texto("Cajero: ").texto(sesion.getUsuario().getUsername()).saltoDeLinea()
+          .texto("Inicio: ").texto(fechaFmt.format(sesion.getFechaApertura())).saltoDeLinea();
+          
         if (sesion.getFechaCierre() != null) {
-            sb.append("Fin:    ").append(fechaFmt.format(sesion.getFechaCierre())).append("\n");
+            tb.texto("Fin:    ").texto(fechaFmt.format(sesion.getFechaCierre())).saltoDeLinea();
         }
-        sb.append(lineaDiv);
+        tb.lineaDivisoria();
 
         // 2. Balance de Efectivo
-        alinearDerecha(sb, "Saldo Inicial: $" + sesion.getSaldoInicial());
-        alinearDerecha(sb, "(+) Ventas Efec: $" + ventasEfectivo);
-        alinearDerecha(sb, "(+) Ingresos:    $" + ingresos);
-        alinearDerecha(sb, "(-) Retiros:     $" + retiros);
-        sb.append(lineaDiv);
-        alinearDerecha(sb, "(=) ESPERADO:    $" + sesion.getSaldoFinalCalculado());
-        alinearDerecha(sb, "    REAL:        $" + sesion.getSaldoFinalReal());
-        sb.append(lineaDiv);
+        tb.alinearDerecha("Saldo Inicial: $" + sesion.getSaldoInicial())
+          .alinearDerecha("(+) Ventas Efec: $" + ventasEfectivo)
+          .alinearDerecha("(+) Ingresos:    $" + ingresos)
+          .alinearDerecha("(-) Retiros:     $" + retiros)
+          .lineaDivisoria()
+          .alinearDerecha("(=) ESPERADO:    $" + sesion.getSaldoFinalCalculado())
+          .alinearDerecha("    REAL:        $" + sesion.getSaldoFinalReal())
+          .lineaDivisoria();
 
         // 3. Diferencia
         BigDecimal diferencia = sesion.getDiferencia();
         String etiquetaDif = diferencia.compareTo(BigDecimal.ZERO) >= 0 ? "SOBRANTE" : "FALTANTE";
-        alinearDerecha(sb, etiquetaDif + ": $" + diferencia);
+        tb.alinearDerecha(etiquetaDif + ": $" + diferencia);
 
         // 4. Otros Métodos
-        sb.append("\n");
-        centrarTexto(sb, "OTROS METODOS DE PAGO");
-        sb.append(lineaDiv);
-        alinearDerecha(sb, "Tarj/Transf:     $" + ventasOtros);
+        tb.saltoDeLinea()
+          .centrar("OTROS METODOS DE PAGO")
+          .lineaDivisoria()
+          .alinearDerecha("Tarj/Transf:     $" + ventasOtros)
+          .saltosDeLinea(3);
 
-        sb.append("\n\n\n");
-
-        return sb.toString();
-    }
-
-    // Métodos auxiliares de formato (Copiados de TicketService para autonomía del
-    // módulo)
-    private void centrarTexto(StringBuilder sb, String texto) {
-        int ancho = 32;
-        int espacios = (ancho - texto.length()) / 2;
-        if (espacios < 0)
-            espacios = 0;
-        for (int i = 0; i < espacios; i++)
-            sb.append(" ");
-        sb.append(texto).append("\n");
-    }
-
-    private void alinearDerecha(StringBuilder sb, String texto) {
-        int ancho = 32;
-        int espacios = ancho - texto.length();
-        if (espacios < 0)
-            espacios = 0;
-        for (int i = 0; i < espacios; i++)
-            sb.append(" ");
-        sb.append(texto).append("\n");
-    }
-
-    private Usuario obtenerUsuarioActual() {
-        String username = userProvider.getCurrentUser();
-        return usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado en la sesión actual"));
+        return tb.build();
     }
 }

@@ -17,37 +17,39 @@ import org.springframework.web.bind.annotation.RestController;
 import com.diegoperalta.pos.modules.iam.application.UsuarioService;
 import com.diegoperalta.pos.modules.iam.application.dto.UsuarioEdicionDTO;
 import com.diegoperalta.pos.modules.iam.application.dto.UsuarioRegistroDTO;
-import com.diegoperalta.pos.modules.iam.domain.Usuario;
+import com.diegoperalta.pos.modules.iam.application.dto.UsuarioResponseDTO;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/usuarios")
+@RequiredArgsConstructor
 public class UsuarioController {
-    @Autowired
-    private UsuarioService usuarioService;
+    
+    private final UsuarioService usuarioService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')") // Solo jefes ven la lista
-    public ResponseEntity<List<Usuario>> listar() {
+    public ResponseEntity<List<UsuarioResponseDTO>> listar() {
         return ResponseEntity.ok(usuarioService.listarUsuarios());
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')") // Solo el ADMIN crea empleados
-    public ResponseEntity<Usuario> crear(@Valid @RequestBody UsuarioRegistroDTO dto) {
+    public ResponseEntity<UsuarioResponseDTO> crear(@Valid @RequestBody UsuarioRegistroDTO dto) {
         return ResponseEntity.ok(usuarioService.crearUsuario(dto));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Usuario> obtener(@PathVariable Long id) {
+    public ResponseEntity<UsuarioResponseDTO> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.obtenerPorId(id));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Usuario> actualizar(@PathVariable Long id, @Valid @RequestBody UsuarioEdicionDTO dto) {
+    public ResponseEntity<UsuarioResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody UsuarioEdicionDTO dto) {
         return ResponseEntity.ok(usuarioService.actualizarUsuario(id, dto));
     }
 

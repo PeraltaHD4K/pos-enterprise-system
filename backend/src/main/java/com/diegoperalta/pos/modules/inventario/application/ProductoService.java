@@ -10,13 +10,16 @@ import com.diegoperalta.pos.common.exception.BusinessException;
 import com.diegoperalta.pos.common.exception.ResourceNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.diegoperalta.pos.modules.iam.application.AutorizacionService;
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
+import com.diegoperalta.pos.modules.iam.application.ports.CurrentUserProvider;
+import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
-import com.diegoperalta.pos.modules.iam.infrastructure.security.UserProvider;
 import com.diegoperalta.pos.modules.inventario.application.dto.AjusteStockDTO;
 import com.diegoperalta.pos.modules.inventario.application.dto.ProductoRegistroDTO;
 import com.diegoperalta.pos.modules.inventario.domain.Categoria;
@@ -25,26 +28,31 @@ import com.diegoperalta.pos.modules.inventario.domain.Producto;
 import com.diegoperalta.pos.modules.inventario.infrastructure.CategoriaRepository;
 import com.diegoperalta.pos.modules.inventario.infrastructure.MovimientoInventarioRepository;
 import com.diegoperalta.pos.modules.inventario.infrastructure.ProductoRepository;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class ProductoService {
-    @Autowired
-    private ProductoRepository productoRepository;
+    public record SalidaVentaInfo(Producto producto, Integer cantidad) {}
+    public record EntradaCompraInfo(Producto producto, Integer cantidad, BigDecimal costoCompra) {}
 
-    @Autowired
-    private CategoriaRepository categoriaRepository;
+    
+    private final ProductoRepository productoRepository;
 
-    @Autowired
-    private MovimientoInventarioRepository movimientoRepository;
+    
+    private final CategoriaRepository categoriaRepository;
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    
+    private final MovimientoInventarioRepository movimientoRepository;
 
-    @Autowired
-    private UserProvider userProvider;
+    
+    private final UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private AutorizacionService autorizacionService;
+    
+    private final CurrentUserProvider userProvider;
+
+    
+    private final AutorizacionService autorizacionService;
 
     public Producto crearProducto(ProductoRegistroDTO dto) {
         // 1. Validar que la categoría exista
@@ -73,13 +81,13 @@ public class ProductoService {
         return productoRepository.save(producto);
     }
 
-    public List<Producto> listarTodos() {
-        return productoRepository.findByActivoTrue();
+    public Page<Producto> listarTodos(Pageable pageable) {
+        return productoRepository.findByActivoTrue(pageable);
     }
 
     @Transactional
     public Producto ajustarStock(Long productoId, AjusteStockDTO dto) {
-        Usuario usuario = obtenerUsuarioActual();
+        Usuario usuario = userProvider.getCurrentUserDetails();
         boolean estaAutorizado = "ADMIN".equals(usuario.getRol().getNombre()) ||
                 "GERENTE".equals(usuario.getRol().getNombre());
 
@@ -123,84 +131,82 @@ public class ProductoService {
     }
 
     @Transactional
-    public void registrarSalidaPorVenta(Long productoId, Integer cantidad, Long ventaId) {
-        Producto producto = productoRepository.findById(productoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + productoId));
+    public void registrarSalidasPorVentaBatch(List<SalidaVentaInfo> salidas, Long ventaId, Usuario usuario) {
+        List<MovimientoInventario> movimientos = new java.util.ArrayList<>();
+        List<Producto> productosModificados = new java.util.ArrayList<>();
 
-        Usuario usuario = obtenerUsuarioActual();
+        for (SalidaVentaInfo salida : salidas) {
+            Producto producto = salida.producto();
+            Integer cantidad = salida.cantidad();
 
-        int stockActual = producto.getStockActual() == null ? 0 : producto.getStockActual();
+            int stockActual = producto.getStockActual() == null ? 0 : producto.getStockActual();
 
-        if (stockActual < cantidad) {
-            throw new BusinessException("Stock insuficiente para el producto:" + producto.getNombre()
-                    + ". Disponible: " + stockActual + ". Cantidad solicitada: " + cantidad, HttpStatus.BAD_REQUEST);
+            if (stockActual < cantidad) {
+                throw new BusinessException("Stock insuficiente para el producto:" + producto.getNombre()
+                        + ". Disponible: " + stockActual + ". Cantidad solicitada: " + cantidad, HttpStatus.BAD_REQUEST);
+            }
+
+            int nuevoStock = stockActual - cantidad;
+            producto.setStockActual(nuevoStock);
+            productosModificados.add(producto);
+
+            MovimientoInventario movimiento = new MovimientoInventario();
+            movimiento.setProducto(producto);
+            movimiento.setUsuario(usuario);
+            movimiento.setTipoMovimiento("VENTA");
+            movimiento.setCantidad(cantidad * -1);
+            movimiento.setStockAnterior(stockActual);
+            movimiento.setStockResultante(nuevoStock);
+            movimiento.setReferencia(String.valueOf(ventaId));
+
+            movimientos.add(movimiento);
         }
 
-        int nuevoStock = stockActual - cantidad;
-        producto.setStockActual(nuevoStock);
-        productoRepository.save(producto);
-
-        MovimientoInventario movimiento = new MovimientoInventario();
-        movimiento.setProducto(producto);
-        movimiento.setUsuario(usuario);
-        movimiento.setTipoMovimiento("VENTA");
-        movimiento.setCantidad(cantidad * -1);
-        movimiento.setStockAnterior(stockActual);
-        movimiento.setStockResultante(nuevoStock);
-        movimiento.setReferencia(String.valueOf(ventaId));
-
-        movimientoRepository.save(movimiento);
+        productoRepository.saveAll(productosModificados);
+        movimientoRepository.saveAll(movimientos);
     }
 
-    // Método para procesar entradas de compras y recalcular costos
     @Transactional
-    public void registrarEntradaPorCompra(Long productoId, Integer cantidad, BigDecimal costoCompra, Long compraId) {
-        Producto producto = productoRepository.findById(productoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
+    public void registrarEntradasPorCompraBatch(List<EntradaCompraInfo> entradas, Long compraId, Usuario usuario) {
+        List<MovimientoInventario> movimientos = new java.util.ArrayList<>();
+        List<Producto> productosModificados = new java.util.ArrayList<>();
 
-        // 1. Datos Actuales
-        int stockActual = producto.getStockActual() == null ? 0 : producto.getStockActual();
-        BigDecimal costoPromedioActual = producto.getCostoPromedio() == null ? BigDecimal.ZERO
-                : producto.getCostoPromedio();
+        for (EntradaCompraInfo entrada : entradas) {
+            Producto producto = entrada.producto();
+            Integer cantidad = entrada.cantidad();
+            BigDecimal costoCompra = entrada.costoCompra();
 
-        // 2. Calcular Nuevo Costo Promedio (Ponderado)
-        // Valor total del inventario actual
-        BigDecimal valorInventarioActual = costoPromedioActual.multiply(new BigDecimal(stockActual));
-        // Valor de lo que estamos comprando
-        BigDecimal valorCompraNueva = costoCompra.multiply(new BigDecimal(cantidad));
+            int stockActual = producto.getStockActual() == null ? 0 : producto.getStockActual();
+            BigDecimal costoPromedioActual = producto.getCostoPromedio() == null ? BigDecimal.ZERO : producto.getCostoPromedio();
 
-        // Nuevo total de unidades
-        int nuevoStockTotal = stockActual + cantidad;
+            BigDecimal valorInventarioActual = costoPromedioActual.multiply(new BigDecimal(stockActual));
+            BigDecimal valorCompraNueva = costoCompra.multiply(new BigDecimal(cantidad));
+            int nuevoStockTotal = stockActual + cantidad;
 
-        // Nuevo valor total / Nuevas unidades = Nuevo Costo Promedio
-        if (nuevoStockTotal > 0) {
-            BigDecimal nuevoCostoPromedio = (valorInventarioActual.add(valorCompraNueva))
-                    .divide(new BigDecimal(nuevoStockTotal), 2, java.math.RoundingMode.HALF_UP);
+            if (nuevoStockTotal > 0) {
+                BigDecimal nuevoCostoPromedio = (valorInventarioActual.add(valorCompraNueva))
+                        .divide(new BigDecimal(nuevoStockTotal), 2, java.math.RoundingMode.HALF_UP);
+                producto.setCostoPromedio(nuevoCostoPromedio);
+            }
 
-            producto.setCostoPromedio(nuevoCostoPromedio);
+            producto.setStockActual(nuevoStockTotal);
+            producto.setUltimoCostoCompra(costoCompra);
+            productosModificados.add(producto);
+
+            MovimientoInventario mov = new MovimientoInventario();
+            mov.setProducto(producto);
+            mov.setUsuario(usuario);
+            mov.setTipoMovimiento("COMPRA");
+            mov.setCantidad(cantidad);
+            mov.setStockAnterior(stockActual);
+            mov.setStockResultante(nuevoStockTotal);
+            mov.setReferencia("COMPRA #" + compraId);
+
+            movimientos.add(mov);
         }
 
-        Usuario usuario = obtenerUsuarioActual();
-
-        // 3. Actualizar Stock y Guardar
-        // (Reusamos la lógica interna, pero sin llamar a ajustarStock para no duplicar
-        // kardex si lo manejamos aparte)
-        // Aquí simplificaremos llamando directo a los setters para control fino
-        producto.setStockActual(nuevoStockTotal);
-        producto.setUltimoCostoCompra(costoCompra);
-        productoRepository.save(producto);
-
-        // 4. Registrar en Kardex
-        MovimientoInventario mov = new MovimientoInventario();
-        mov.setProducto(producto);
-        mov.setUsuario(usuario);
-        mov.setTipoMovimiento("COMPRA");
-        mov.setCantidad(cantidad);
-        mov.setStockAnterior(stockActual);
-        mov.setStockResultante(nuevoStockTotal);
-        mov.setReferencia("COMPRA #" + compraId);
-
-        movimientoRepository.save(mov);
+        productoRepository.saveAll(productosModificados);
+        movimientoRepository.saveAll(movimientos);
     }
 
     @Transactional
@@ -229,7 +235,7 @@ public class ProductoService {
 
         MovimientoInventario movimiento = new MovimientoInventario();
         movimiento.setProducto(producto);
-        movimiento.setUsuario(obtenerUsuarioActual());
+        movimiento.setUsuario(userProvider.getCurrentUserDetails());
         movimiento.setTipoMovimiento("ENTRADA");
         movimiento.setMotivo("CANCELACION_VENTA");
         movimiento.setReferencia("FOLIO: " + folioVenta);
@@ -287,11 +293,5 @@ public class ProductoService {
         // Soft Delete
         producto.setActivo(false);
         productoRepository.save(producto);
-    }
-
-    private Usuario obtenerUsuarioActual() {
-        String username = userProvider.getCurrentUser();
-        return usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado en la sesión actual"));
     }
 }

@@ -19,6 +19,12 @@ export class ProductList implements OnInit {
   productos: Producto[] = [];
   isLoading = true;
 
+  // Pagination state
+  currentPage = 0;
+  pageSize = 10;
+  totalPages = 0;
+  totalElements = 0;
+
   showKardexModal = false;
   selectedProduct: Producto | null = null;
   movimientos: MovimientoInventario[] = [];
@@ -31,9 +37,11 @@ export class ProductList implements OnInit {
   cargarProductos() {
     this.isLoading = true;
 
-    this.productService.getAll().subscribe({
+    this.productService.getAll(this.currentPage, this.pageSize).subscribe({
       next: (data) => {
-        this.productos = data;
+        this.productos = data.content;
+        this.totalPages = data.totalPages;
+        this.totalElements = data.totalElements;
         this.isLoading = false;
         this.cdr.detectChanges(); // Forzamos actualización visual
       },
@@ -44,6 +52,13 @@ export class ProductList implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  cambiarPagina(nuevaPagina: number) {
+    if (nuevaPagina >= 0 && nuevaPagina < this.totalPages) {
+      this.currentPage = nuevaPagina;
+      this.cargarProductos();
+    }
   }
 
   borrar(id: number) {

@@ -12,6 +12,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.diegoperalta.pos.modules.analytics.application.dto.TicketMetricsDTO;
+import com.diegoperalta.pos.common.exception.BusinessException;
 
 @Service
 public class AnalyticsClient {
@@ -48,10 +49,10 @@ public class AnalyticsClient {
                     .body(TicketMetricsDTO.class);
         } catch (ResourceAccessException e) {
             log.error("❌ TIMEOUT o Conexión rechazada en Analytics: {}", e.getMessage());
-            throw new RuntimeException("El servicio de analítica no está disponible en este momento.");
+            throw new BusinessException("El servicio de analítica no está disponible en este momento.", org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE);
         } catch (Exception e) {
-            log.error("❌ Error obteniendo métricas de Analytics: {}", e.getMessage());
-            throw new RuntimeException("Error interno al procesar las analíticas.");
+            log.error("Error al obtener métricas de tickets: {}", e.getMessage());
+            throw new BusinessException("Error interno al procesar las analíticas.", org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

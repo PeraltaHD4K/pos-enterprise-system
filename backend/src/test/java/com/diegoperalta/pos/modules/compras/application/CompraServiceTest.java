@@ -1,4 +1,4 @@
-package com.diegoperalta.pos.modules.compras.application;
+package com.diegoperalta.pos.modules.compra.application;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -24,16 +24,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.diegoperalta.pos.modules.compras.application.dto.CompraRegistroDTO;
-import com.diegoperalta.pos.modules.compras.application.dto.ItemCompraDTO;
-import com.diegoperalta.pos.modules.compras.domain.Compra;
-import com.diegoperalta.pos.modules.compras.domain.DetalleCompra;
-import com.diegoperalta.pos.modules.compras.domain.Proveedor;
-import com.diegoperalta.pos.modules.compras.infrastructure.CompraRepository;
-import com.diegoperalta.pos.modules.compras.infrastructure.ProveedorRepository;
+import com.diegoperalta.pos.modules.compra.application.dto.CompraRegistroDTO;
+import com.diegoperalta.pos.modules.compra.application.dto.ItemCompraDTO;
+import com.diegoperalta.pos.modules.compra.domain.Compra;
+import com.diegoperalta.pos.modules.compra.domain.DetalleCompra;
+import com.diegoperalta.pos.modules.compra.domain.Proveedor;
+import com.diegoperalta.pos.modules.compra.infrastructure.CompraRepository;
+import com.diegoperalta.pos.modules.compra.infrastructure.ProveedorRepository;
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
-import com.diegoperalta.pos.modules.iam.infrastructure.security.UserProvider;
+import com.diegoperalta.pos.modules.iam.application.ports.CurrentUserProvider;
 import com.diegoperalta.pos.modules.inventario.application.ProductoService;
 import com.diegoperalta.pos.modules.inventario.domain.Producto;
 import com.diegoperalta.pos.modules.inventario.infrastructure.ProductoRepository;
@@ -52,7 +52,7 @@ class CompraServiceTest {
     @Mock
     private ProductoService productoService;
     @Mock
-    private UserProvider userProvider;
+    private CurrentUserProvider userProvider;
 
     @InjectMocks
     private CompraService compraService;
@@ -97,10 +97,9 @@ class CompraServiceTest {
         dto.setItems(List.of(item));
 
         // --- STUBBING ---
-        when(userProvider.getCurrentUser()).thenReturn("admin");
-        when(usuarioRepository.findByUsername("admin")).thenReturn(Optional.of(usuarioMock));
         when(proveedorRepository.findById(1L)).thenReturn(Optional.of(proveedorMock));
-        when(productoRepository.findById(1L)).thenReturn(Optional.of(productoMock));
+        when(userProvider.getCurrentUserDetails()).thenReturn(usuarioMock);
+        when(productoRepository.findAllById(any())).thenReturn(List.of(productoMock));
 
         when(compraRepository.save(any(Compra.class))).thenAnswer(i -> i.getArguments()[0]);
 
@@ -113,13 +112,8 @@ class CompraServiceTest {
         // suma seguiría vivo)
         assertEquals(new BigDecimal("200.00"), resultado.getTotal());
 
-        // Verificar cálculo unitario: 200 / 10 = 20.0000
-        verify(productoService, times(1)).registrarEntradaPorCompra(
-                eq(1L),
-                eq(10),
-                eq(new BigDecimal("20.0000")),
-                isNull() // El ID es null porque aún no se guarda en BD al llamar al servicio
-        );
+        // Verificar llamada a batch
+        verify(productoService, times(1)).registrarEntradasPorCompraBatch(any(), any(), eq(usuarioMock));
     }
 
     @Test
@@ -138,10 +132,9 @@ class CompraServiceTest {
         dto.setItems(List.of(item));
 
         // --- STUBBING ---
-        when(userProvider.getCurrentUser()).thenReturn("admin");
-        when(usuarioRepository.findByUsername("admin")).thenReturn(Optional.of(usuarioMock));
+        when(userProvider.getCurrentUserDetails()).thenReturn(usuarioMock);
         when(proveedorRepository.findById(1L)).thenReturn(Optional.of(proveedorMock));
-        when(productoRepository.findById(1L)).thenReturn(Optional.of(productoMock));
+        when(productoRepository.findAllById(any())).thenReturn(List.of(productoMock));
 
         when(compraRepository.save(any(Compra.class))).thenAnswer(i -> i.getArguments()[0]);
 
@@ -154,7 +147,7 @@ class CompraServiceTest {
         assertEquals(new BigDecimal("720.00"), resultado.getTotal());
 
         // Verificar que NO tocó el inventario (porque es PENDIENTE)
-        verify(productoService, never()).registrarEntradaPorCompra(anyLong(), anyInt(), any(), any());
+        verify(productoService, never()).registrarEntradasPorCompraBatch(any(), any(), any());
     }
 
     @Test
@@ -175,10 +168,9 @@ class CompraServiceTest {
         dto.setItems(List.of(item));
 
         // --- STUBBING ---
-        when(userProvider.getCurrentUser()).thenReturn("admin");
-        when(usuarioRepository.findByUsername("admin")).thenReturn(Optional.of(usuarioMock));
+        when(userProvider.getCurrentUserDetails()).thenReturn(usuarioMock);
         when(proveedorRepository.findById(1L)).thenReturn(Optional.of(proveedorMock));
-        when(productoRepository.findById(1L)).thenReturn(Optional.of(productoMock));
+        when(productoRepository.findAllById(any())).thenReturn(List.of(productoMock));
         when(compraRepository.save(any(Compra.class))).thenAnswer(i -> i.getArguments()[0]);
 
         // --- WHEN ---
@@ -205,6 +197,7 @@ class CompraServiceTest {
 
         compraExistente.getDetalles().add(detalle);
 
+        when(userProvider.getCurrentUserDetails()).thenReturn(usuarioMock);
         when(compraRepository.findById(5L)).thenReturn(Optional.of(compraExistente));
         when(compraRepository.save(any(Compra.class))).thenAnswer(i -> i.getArguments()[0]);
 
@@ -214,12 +207,7 @@ class CompraServiceTest {
         // --- THEN ---
         assertEquals("COMPLETADA", resultado.getEstado());
 
-        // Verificar cálculo: 200 / 10 = 20.0000
-        verify(productoService).registrarEntradaPorCompra(
-                eq(1L),
-                eq(10),
-                eq(new BigDecimal("20.0000")),
-                eq(5L) // Aquí SÍ hay ID de compra porque ya existía en BD
-        );
+        // Verificar llamada a batch
+        verify(productoService, times(1)).registrarEntradasPorCompraBatch(any(), eq(5L), eq(usuarioMock));
     }
 }

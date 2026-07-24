@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 
 import { SesionCaja } from '../../core/services/cash-register';
 import { Producto } from '../../core/services/product';
-import { Sale } from '../../core/services/sale';
+import { Sale, VentaResponse } from '../../core/services/sale';
 import { Auth } from '../../core/services/auth';
 import { Cliente } from '../../core/services/client';
 import { ToastService } from '../../core/services/toast';
@@ -61,10 +61,16 @@ export class Pos implements OnInit {
   // Estado Productos
   searchTerm: string = '';
 
-  // Estado modales
+  // --- Estado Historial ---
   showHistoryModal = false;
-  historialVentas: any[] = [];
+  historialVentas: VentaResponse[] = [];
   isLoadingHistory = false;
+  
+  // Pagination estado historial
+  historyCurrentPage = 0;
+  historyPageSize = 10;
+  historyTotalPages = 0;
+  historyTotalElements = 0;
 
   showTicketModal = false;
   ticketContent: string = '';
@@ -239,12 +245,15 @@ export class Pos implements OnInit {
   }
 
   // --- 6. HISTORIAL ---
-  abrirHistorial() {
+  abrirHistorial(page: number = 0) {
     this.showHistoryModal = true;
     this.isLoadingHistory = true;
-    this.saleService.getMisVentasHoy().subscribe({
+    this.historyCurrentPage = page;
+    this.saleService.getMisVentasHoy(this.historyCurrentPage, this.historyPageSize).subscribe({
       next: (data) => {
-        this.historialVentas = data;
+        this.historialVentas = data.content;
+        this.historyTotalPages = data.totalPages;
+        this.historyTotalElements = data.totalElements;
         this.isLoadingHistory = false;
         this.cdr.detectChanges();
       },

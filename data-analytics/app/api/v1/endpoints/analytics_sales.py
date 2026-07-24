@@ -19,7 +19,7 @@ router = APIRouter(
 )
 
 @router.get("/sales/tickets", response_model=TicketMetricsDTO)
-def get_sales_metrics(
+async def get_sales_metrics(
     start_date: Optional[str] = Query(None, alias="start_date"),
     end_date: Optional[str] = Query(None, alias="end_date"),
     db_engine: Engine = Depends(get_db_engine)
@@ -31,14 +31,14 @@ def get_sales_metrics(
     try:
         # 1. Ingesta
         loader = SalesLoader(db_engine)
-        raw_df = loader.load_raw_data(start_date, end_date)
+        raw_df = await run_in_threadpool(loader.load_raw_data, start_date, end_date)
 
         # 2. Procesamiento
-        clean_df = SalesTransformer.clean_data(raw_df)
-        enriched_df = SalesTransformer.enrich_with_price_ranges(clean_df)
+        clean_df = await run_in_threadpool(SalesTransformer.clean_data, raw_df)
+        enriched_df = await run_in_threadpool(SalesTransformer.enrich_with_price_ranges, clean_df)
 
         # 3. Análisis
-        metrics = SalesAnalyzer.calculate_kpis(enriched_df)
+        metrics = await run_in_threadpool(SalesAnalyzer.calculate_kpis, enriched_df)
 
         return metrics
 
@@ -46,8 +46,10 @@ def get_sales_metrics(
         print(f"Error en Analytics Sales: {e}")
         raise HTTPException(status_code=500, detail="Error procesando analíticas de ventas")
 
+from starlette.concurrency import run_in_threadpool
+
 @router.get("/reports/export")
-def download_report(
+async def download_report(
     report_type: str = Query(..., description="Tipo de reporte (ej: SALES)"),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
@@ -61,15 +63,15 @@ def download_report(
         # 1. Delegamos a la Fábrica la creación del reporte correcto
         report_generator = ReportFactory.create_report(report_type, db_engine)
         
-        # 2. Generamos la data
+        # 2. Generamos la data de forma asíncrona para no bloquear el Event Loop principal
         filters = {"start_date": start_date, "end_date": end_date}
-        df = report_generator.generate_data(filters)
+        df = await run_in_threadpool(report_generator.generate_data, filters)
 
         if df.empty:
             raise HTTPException(status_code=404, detail="No hay datos para generar el reporte.")
 
-        # 3. Convertimos a Excel
-        excel_file = ExcelGenerator.generate_sales_report(df)
+        # 3. Convertimos a Excel de forma asíncrona
+        excel_file = await run_in_threadpool(ExcelGenerator.generate_sales_report, df)
 
         # 4. Preparamos descarga
         filename = f"{report_generator.get_filename_prefix()}_{start_date}_{end_date}.xlsx"
