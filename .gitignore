@@ -72,3 +72,6 @@ env/
 !frontend/tsconfig.json
 !frontend/tsconfig.app.json
 !frontend/tsconfig.spec.json
+
+# Agents
+.agents/
