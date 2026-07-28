@@ -16,8 +16,8 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class SpringSecurityUserProvider implements CurrentUserProvider {
-    
-    
+
+
     private final UsuarioRepository usuarioRepository;
 
     @Override

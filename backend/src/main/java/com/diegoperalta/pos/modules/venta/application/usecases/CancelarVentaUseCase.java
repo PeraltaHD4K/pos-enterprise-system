@@ -26,17 +26,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CancelarVentaUseCase {
 
-    
+
     private final AutorizacionService autorizacionService;
-    
+
     private final VentaRepository ventaRepository;
-    
+
     private final ProductoService productoService;
-    
+
     private final ClienteRepository clienteRepository;
-    
+
     private final UsuarioRepository usuarioRepository;
-    
+
     private final ProductoRepository productoRepository;
 
     @Transactional

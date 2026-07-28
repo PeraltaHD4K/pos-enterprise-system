@@ -27,7 +27,7 @@ import java.util.UUID;
 @RequestMapping("/inventario/categorias")
 @RequiredArgsConstructor
 public class CategoriaController {
-    
+
     private final CategoriaService categoriaService;
 
     @GetMapping

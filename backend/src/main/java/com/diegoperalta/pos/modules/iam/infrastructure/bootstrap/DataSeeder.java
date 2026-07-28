@@ -17,13 +17,13 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class DataSeeder implements CommandLineRunner {
-    
+
     private final UsuarioRepository usuarioRepository;
-    
+
     private final RolRepository rolRepository;
-    
+
     private final PasswordEncoder passwordEncoder;
-    
+
     private final ClienteRepository clienteRepository;
 
     @Value("${app.security.admin-password:admin123}")

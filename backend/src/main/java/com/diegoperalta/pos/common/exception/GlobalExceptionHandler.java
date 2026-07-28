@@ -39,7 +39,7 @@ public class GlobalExceptionHandler {
         respuesta.put("timestamp", Instant.now());
         respuesta.put("mensaje", "Ocurrió un error interno en el servidor");
         respuesta.put("estado", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        
+
         if (debugMode) {
             respuesta.put("detalle", ex.getMessage());
         }

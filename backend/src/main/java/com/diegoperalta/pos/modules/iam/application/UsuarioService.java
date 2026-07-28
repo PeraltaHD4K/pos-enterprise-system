@@ -22,13 +22,13 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class UsuarioService {
-    
+
     private final UsuarioRepository usuarioRepository;
 
-    
+
     private final RolRepository rolRepository;
 
-    
+
     private final PasswordEncoder passwordEncoder;
 
     public UsuarioResponseDTO crearUsuario(UsuarioRegistroDTO dto) {

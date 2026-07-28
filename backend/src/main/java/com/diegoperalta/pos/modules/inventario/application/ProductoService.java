@@ -37,22 +37,22 @@ public class ProductoService {
     public record SalidaVentaInfo(Producto producto, Integer cantidad) {}
     public record EntradaCompraInfo(Producto producto, Integer cantidad, BigDecimal costoCompra) {}
 
-    
+
     private final ProductoRepository productoRepository;
 
-    
+
     private final CategoriaRepository categoriaRepository;
 
-    
+
     private final MovimientoInventarioRepository movimientoRepository;
 
-    
+
     private final UsuarioRepository usuarioRepository;
 
-    
+
     private final CurrentUserProvider userProvider;
 
-    
+
     private final AutorizacionService autorizacionService;
 
     public Producto crearProducto(ProductoRegistroDTO dto) {

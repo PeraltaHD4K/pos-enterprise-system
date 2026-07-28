@@ -19,7 +19,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class ClienteService {
-    
+
     private final ClienteRepository clienteRepository;
 
     public List<ClienteResponseDTO> listarTodos() {

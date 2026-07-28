@@ -16,15 +16,15 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class AutorizacionService {
-    
+
     private final UsuarioRepository usuarioRepository;
 
-    
+
     private final PasswordEncoder passwordEncoder;
 
     /**
      * Valida credenciales y permisos. Si falla, lanza excepción.
-     * 
+     *
      * @param dto             Credenciales del supervisor
      * @param rolesPermitidos Lista de roles que pueden autorizar (ej. "ADMIN",
      *                        "GERENTE")

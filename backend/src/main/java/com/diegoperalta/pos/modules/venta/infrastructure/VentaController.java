@@ -41,13 +41,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class VentaController {
 
-    
+
     private final VentaService ventaService;
 
-    
+
     private final VentaReporteService ventaReporteService;
 
-    
+
     private final TicketService ticketService;
 
     @Value("${app.business.time-zone:UTC}")

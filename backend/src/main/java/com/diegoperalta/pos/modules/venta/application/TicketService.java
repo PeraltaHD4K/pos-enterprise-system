@@ -26,11 +26,11 @@ public class TicketService {
     private final VentaRepository ventaRepository;
 
     private final ConfiguracionService configService;
-    
+
     private final UsuarioRepository usuarioRepository;
-    
+
     private final ClienteRepository clienteRepository;
-    
+
     private final ProductoRepository productoRepository;
 
     @Value("${app.business.time-zone:UTC}")
@@ -57,7 +57,7 @@ public class TicketService {
         if (config.containsKey("DIRECCION")) {
             tb.centrar(config.get("DIRECCION"));
         }
-        String nombreUsuario = venta.getUsuarioId() != null 
+        String nombreUsuario = venta.getUsuarioId() != null
             ? usuarioRepository.findById(venta.getUsuarioId()).map(u -> u.getUsername()).orElse("Cajero") : "Cajero";
         String nombreCliente = venta.getClienteId() != null
             ? clienteRepository.findById(venta.getClienteId()).map(c -> c.getNombre()).orElse("Publico en General") : "Publico en General";
@@ -76,8 +76,8 @@ public class TicketService {
             String nombreProducto = detalle.getProductoId() != null
                 ? productoRepository.findById(detalle.getProductoId()).map(p -> p.getNombre()).orElse("Producto") : "Producto";
             tb.itemLista(
-                detalle.getCantidad().toString(), 
-                nombreProducto, 
+                detalle.getCantidad().toString(),
+                nombreProducto,
                 String.format("%.2f", detalle.getSubtotal())
             );
         }

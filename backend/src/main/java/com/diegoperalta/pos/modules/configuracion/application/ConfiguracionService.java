@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ConfiguracionService {
-    
+
     private final ConfiguracionRepository repository;
 
     @Cacheable("configuracion_unica")

@@ -14,9 +14,9 @@ import java.time.Instant;
 @Entity
 @Table(name = "token_blacklist")
 public class TokenBlacklist {
-    
+
     @Id
     private String token;
-    
+
     private Instant fechaExpiracion;
 }

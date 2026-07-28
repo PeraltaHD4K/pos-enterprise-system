@@ -28,7 +28,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ProveedorController {
 
-    
+
     private final ProveedorService service;
 
     @GetMapping

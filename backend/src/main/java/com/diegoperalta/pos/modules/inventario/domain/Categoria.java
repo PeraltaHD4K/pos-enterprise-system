@@ -22,7 +22,7 @@ import org.hibernate.annotations.SQLRestriction;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @SQLDelete(sql = "UPDATE categorias SET deleted = true WHERE id=?")
 @SQLRestriction("deleted = false")
 @Entity

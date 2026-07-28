@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AnalyticsController {
 
-    
+
     private final AnalyticsClient analyticsClient;
 
     @GetMapping("/dashboard/tickets")

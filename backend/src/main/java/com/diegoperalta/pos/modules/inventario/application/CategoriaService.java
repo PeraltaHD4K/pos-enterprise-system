@@ -20,7 +20,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CategoriaService {
 
-    
+
     private final CategoriaRepository categoriaRepository;
 
     @Transactional(readOnly = true)

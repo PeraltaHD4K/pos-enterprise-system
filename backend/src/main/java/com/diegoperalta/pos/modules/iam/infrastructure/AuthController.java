@@ -27,7 +27,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO request, HttpServletRequest httpServletRequest) {
         String ip = httpServletRequest.getRemoteAddr();
-        
+
         if (!rateLimiterService.isAllowed(ip)) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                     .body("Demasiados intentos fallidos. Intente de nuevo en 1 minuto.");

@@ -83,7 +83,7 @@ public class AuthenticationServiceTest {
         BusinessException ex = assertThrows(BusinessException.class, () -> {
             authenticationService.login(validRequest);
         });
-        
+
         assertEquals(HttpStatus.TOO_MANY_REQUESTS, ex.getEstado());
         assertTrue(ex.getMessage().contains("bloqueada temporalmente"));
         verify(authenticationManager, never()).authenticate(any());

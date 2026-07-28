@@ -34,7 +34,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CajaController {
     private final CajaService cajaService;
-    
+
     private final UsuarioRepository usuarioRepository;
 
     @PostMapping("/abrir")
@@ -98,10 +98,10 @@ public class CajaController {
     }
 
     private MovimientoCajaResponseDTO mapMovimientoToDTO(MovimientoCaja m) {
-        String nombreUsuario = m.getUsuarioId() != null 
+        String nombreUsuario = m.getUsuarioId() != null
             ? usuarioRepository.findById(m.getUsuarioId()).map(u -> u.getUsername()).orElse(null)
             : null;
-            
+
         return new MovimientoCajaResponseDTO(
             m.getId(),
             m.getSesionCaja() != null ? m.getSesionCaja().getId() : null,

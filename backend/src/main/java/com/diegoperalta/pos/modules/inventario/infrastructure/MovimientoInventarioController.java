@@ -20,7 +20,7 @@ import java.util.UUID;
 public class MovimientoInventarioController {
 
     private final MovimientoInventarioRepository movimientoRepository;
-    
+
     private final UsuarioRepository usuarioRepository;
 
     @GetMapping
@@ -37,7 +37,7 @@ public class MovimientoInventarioController {
         String nombreCompleto = mov.getUsuarioId() != null
             ? usuarioRepository.findById(mov.getUsuarioId()).map(u -> u.getNombreCompleto()).orElse(null)
             : null;
-            
+
         return new MovimientoInventarioResponseDTO(
             mov.getId(),
             mov.getProducto() != null ? mov.getProducto().getId() : null,

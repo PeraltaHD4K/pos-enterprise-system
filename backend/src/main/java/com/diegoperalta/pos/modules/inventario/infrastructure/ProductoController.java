@@ -35,7 +35,7 @@ import java.util.UUID;
 @RequestMapping("/inventario/productos")
 @RequiredArgsConstructor
 public class ProductoController {
-    
+
     private final ProductoService productoService;
 
     @GetMapping

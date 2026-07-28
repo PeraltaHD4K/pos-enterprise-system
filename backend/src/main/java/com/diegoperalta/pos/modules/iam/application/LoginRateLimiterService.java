@@ -25,7 +25,7 @@ public class LoginRateLimiterService {
             lockouts.put(ip, Instant.now().plus(1, ChronoUnit.MINUTES));
             return false;
         }
-        
+
         return true;
     }
 

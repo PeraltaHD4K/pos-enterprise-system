@@ -34,17 +34,17 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class CompraService {
-    
+
     private final CompraRepository compraRepository;
-    
+
     private final ProveedorRepository proveedorRepository;
-    
+
     private final UsuarioRepository usuarioRepository;
-    
+
     private final ProductoRepository productoRepository;
-    
+
     private final ProductoService productoService;
-    
+
     private final CurrentUserProvider userProvider;
 
     @Transactional

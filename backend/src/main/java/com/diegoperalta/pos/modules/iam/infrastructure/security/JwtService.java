@@ -32,7 +32,7 @@ public class JwtService {
                 .findFirst()
                 .map(authority -> authority.getAuthority())
                 .orElse("ROLE_USER");
-        
+
         extraclaims.put("role", role);
         return generateToken(extraclaims, userDetails);
     }

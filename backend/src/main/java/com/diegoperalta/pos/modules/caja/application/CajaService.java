@@ -37,19 +37,19 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class CajaService {
-    
+
     private final SesionCajaRepository sesionCajaRepository;
 
-    
+
     private final UsuarioRepository usuarioRepository;
 
-    
+
     private final VentaRepository ventaRepository;
 
-    
+
     private final MovimientoCajaRepository movimientoCajaRepository;
 
-    
+
     private final CurrentUserProvider userProvider;
 
     @Value("${app.business.time-zone}")
@@ -206,20 +206,20 @@ public class CajaService {
 
         // Construcción del Ticket
         TicketBuilder tb = new TicketBuilder(32);
-        
+
         // Formatter para el ticket (usaremos zona del sistema para imprimir)
         DateTimeFormatter fechaFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
                 .withZone(ZoneId.of(businessTimeZone));
 
         Usuario usuarioDeSesion = usuarioRepository.findById(sesion.getUsuarioId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
-                
+
         // 1. Cabecera
         tb.centrar("CORTE DE CAJA (Z)")
           .lineaDivisoria()
           .texto("Cajero: ").texto(usuarioDeSesion.getUsername()).saltoDeLinea()
           .texto("Inicio: ").texto(fechaFmt.format(sesion.getFechaApertura())).saltoDeLinea();
-          
+
         if (sesion.getFechaCierre() != null) {
             tb.texto("Fin:    ").texto(fechaFmt.format(sesion.getFechaCierre())).saltoDeLinea();
         }

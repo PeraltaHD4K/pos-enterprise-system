@@ -17,7 +17,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class ProveedorService {
-    
+
     private final ProveedorRepository repository;
 
     public List<ProveedorResponseDTO> listarTodos() {

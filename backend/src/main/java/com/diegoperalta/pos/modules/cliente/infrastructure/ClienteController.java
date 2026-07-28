@@ -27,7 +27,7 @@ import java.util.UUID;
 @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")
 @RequiredArgsConstructor
 public class ClienteController {
-    
+
     private final ClienteService clienteService;
 
     @GetMapping

@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ConfiguracionController {
 
-    
+
     private final ConfiguracionService configService;
 
     @GetMapping

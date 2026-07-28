@@ -39,21 +39,21 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RegistrarVentaUseCase {
 
-    
+
     private final VentaRepository ventaRepository;
-    
+
     private final ProductoRepository productoRepository;
-    
+
     private final ProductoService productoService;
-    
+
     private final ClienteRepository clienteRepository;
-    
+
     private final SesionCajaRepository sesionCajaRepository;
-    
+
     private final CurrentUserProvider userProvider;
-    
+
     private final ApplicationEventPublisher eventPublisher;
-    
+
     private final UsuarioRepository usuarioRepository;
 
     @Transactional
@@ -127,7 +127,7 @@ public class RegistrarVentaUseCase {
         venta.setCambio(cambio);
 
         Venta ventaGuardada = ventaRepository.save(venta);
-        
+
         productoService.registrarSalidasPorVentaBatch(salidasBatch, ventaGuardada.getId(), usuario);
 
         eventPublisher.publishEvent(new VentaCompletadaEvent(

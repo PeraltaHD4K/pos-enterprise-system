@@ -49,27 +49,27 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class VentaService {
 
-    
+
     private final VentaRepository ventaRepository;
-    
+
     private final ProductoRepository productoRepository;
-    
+
     private final ProductoService productoService;
-    
+
     private final ClienteRepository clienteRepository;
-    
+
     private final UsuarioRepository usuarioRepository;
-    
+
     private final SesionCajaRepository sesionCajaRepository;
-    
+
     private final CurrentUserProvider userProvider;
-    
+
     private final AutorizacionService autorizacionService;
-    
+
     private final RegistrarVentaUseCase registrarVentaUseCase;
-    
+
     private final CancelarVentaUseCase cancelarVentaUseCase;
-    
+
     private final ApplicationEventPublisher eventPublisher;
 
     @Value("${app.business.time-zone}")

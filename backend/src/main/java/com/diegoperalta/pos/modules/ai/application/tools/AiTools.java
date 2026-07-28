@@ -38,10 +38,10 @@ public class AiTools {
         Instant fin = now.truncatedTo(ChronoUnit.DAYS).plusDays(1).toInstant();
 
         ReporteGananciasDTO reporte = ventaReporteService.generarReporteGanancias(inicio, fin);
-        
+
         return new ConsultarVentasResponse(
-            reporte.getTotalVentas(), 
-            reporte.getTotalTransacciones(), 
+            reporte.getTotalVentas(),
+            reporte.getTotalTransacciones(),
             reporte.getGananciaBruta()
         );
     }
@@ -55,13 +55,13 @@ public class AiTools {
         List<Producto> productosBajos = productoRepository.encontrarProductosConStockBajo();
         List<ProductoBajoStockDTO> dtos = productosBajos.stream()
             .map(p -> new ProductoBajoStockDTO(
-                p.getNombre(), 
-                p.getSku(), 
-                p.getStockActual() != null ? p.getStockActual() : 0, 
+                p.getNombre(),
+                p.getSku(),
+                p.getStockActual() != null ? p.getStockActual() : 0,
                 p.getStockMinimo() != null ? p.getStockMinimo() : 0
             ))
             .collect(Collectors.toList());
-        
+
         return new ConsultarInventarioResponse(dtos);
     }
 
@@ -73,14 +73,14 @@ public class AiTools {
         List<SesionCaja> cajasAbiertas = sesionCajaRepository.findAll().stream()
             .filter(c -> "ABIERTA".equals(c.getEstado()))
             .collect(Collectors.toList());
-        
+
         BigDecimal saldoSuma = BigDecimal.ZERO;
         for (SesionCaja caja : cajasAbiertas) {
             if (caja.getSaldoInicial() != null) {
                 saldoSuma = saldoSuma.add(caja.getSaldoInicial());
             }
         }
-        
+
         return new ConsultarEstadoCajaResponse(cajasAbiertas.size(), saldoSuma);
     }
 }

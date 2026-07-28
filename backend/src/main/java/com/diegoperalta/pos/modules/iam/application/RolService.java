@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class RolService {
-    
+
     private final RolRepository rolRepository;
 
     public List<RolResponseDTO> listarTodos() {

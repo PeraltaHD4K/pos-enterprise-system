@@ -29,11 +29,11 @@ import java.util.UUID;
 @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')")
 @RequiredArgsConstructor
 public class CompraController {
-    
+
     private final CompraService compraService;
 
     private final CompraRepository compraRepository;
-    
+
     private final UsuarioRepository usuarioRepository;
 
     @PostMapping
