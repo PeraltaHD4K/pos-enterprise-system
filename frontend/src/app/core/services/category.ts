@@ -4,7 +4,7 @@ import { environment } from '../../../environments/environment'; // Importar el 
 import { Observable } from 'rxjs';
 
 export interface Categoria {
-  id: number;
+  id: string;
   nombre: string;
   descripcion?: string;
   activo?: boolean;
@@ -27,7 +27,7 @@ export class Category {
     return this.http.get<Categoria[]>(this.apiUrl);
   }
 
-  getById(id: number): Observable<Categoria> {
+  getById(id: string): Observable<Categoria> {
     return this.http.get<Categoria>(`${this.apiUrl}/${id}`);
   }
 
@@ -35,11 +35,11 @@ export class Category {
     return this.http.post<Categoria>(this.apiUrl, data);
   }
 
-  update(id: number, data: CategoriaRequest): Observable<Categoria> {
+  update(id: string, data: CategoriaRequest): Observable<Categoria> {
     return this.http.put<Categoria>(`${this.apiUrl}/${id}`, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

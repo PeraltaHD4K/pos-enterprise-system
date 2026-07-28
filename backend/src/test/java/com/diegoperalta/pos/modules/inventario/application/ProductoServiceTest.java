@@ -27,6 +27,7 @@ import com.diegoperalta.pos.modules.inventario.domain.Producto;
 import com.diegoperalta.pos.modules.inventario.infrastructure.CategoriaRepository;
 import com.diegoperalta.pos.modules.inventario.infrastructure.MovimientoInventarioRepository;
 import com.diegoperalta.pos.modules.inventario.infrastructure.ProductoRepository;
+import java.util.UUID;
 
 @ExtendWith(MockitoExtension.class)
 class ProductoServiceTest {
@@ -54,7 +55,7 @@ class ProductoServiceTest {
     @BeforeEach
     void setUp() {
         productoMock = new Producto();
-        productoMock.setId(1L);
+        productoMock.setId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         productoMock.setNombre("Coca Cola");
         productoMock.setStockActual(10); // Empezamos con 10
 
@@ -64,14 +65,14 @@ class ProductoServiceTest {
 
         usuarioMock = new Usuario();
         usuarioMock.setUsername("admin_test");
-        usuarioMock.setId(2L);
+        usuarioMock.setId(UUID.fromString("00000000-0000-0000-0000-000000000002"));
         usuarioMock.setRol(rolAdmin); // 👈 El usuario debe tener rol
     }
 
     @Test
     void ajustarStock_DeberiaSumarStockYRegistrarMovimiento() {
         // --- GIVEN ---
-        Long idProducto = 1L;
+        UUID idProducto = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
         // Creamos el DTO
         AjusteStockDTO dto = new AjusteStockDTO();
@@ -103,14 +104,14 @@ class ProductoServiceTest {
     @Test
     void ajustarStock_DeberiaLanzarError_SiStockResultanteEsNegativo() {
         // --- GIVEN ---
-        Long idProducto = 1L;
+        UUID idProducto = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
         AjusteStockDTO dto = new AjusteStockDTO();
         dto.setCantidad(-20); // Queremos quitar 20, pero solo hay 10
         dto.setMotivo("Error intencional");
 
         // --- STUBBING ---
-        when(productoRepository.findById(1L)).thenReturn(Optional.of(productoMock));
+        when(productoRepository.findById(UUID.fromString("00000000-0000-0000-0000-000000000001"))).thenReturn(Optional.of(productoMock));
         when(userProvider.getCurrentUserDetails()).thenReturn(usuarioMock);
 
         // --- WHEN & THEN ---

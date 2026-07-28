@@ -9,21 +9,19 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.diegoperalta.pos.modules.compra.domain.Compra;
+import java.util.UUID;
 
 @Repository
-public interface CompraRepository extends JpaRepository<Compra, Long> {
+public interface CompraRepository extends JpaRepository<Compra, UUID> {
 
     @Query("SELECT c FROM Compra c " +
             "JOIN FETCH c.proveedor " +
-            "JOIN FETCH c.usuario " +
             "ORDER BY c.fechaPedido DESC")
     List<Compra> findAllConDatos();
 
     @Query("SELECT c FROM Compra c " +
             "JOIN FETCH c.proveedor " +
-            "JOIN FETCH c.usuario " +
             "JOIN FETCH c.detalles d " +
-            "JOIN FETCH d.producto " +
             "WHERE c.id = :id")
-    Optional<Compra> findByIdConDetalles(@Param("id") Long id);
+    Optional<Compra> findByIdConDetalles(@Param("id") UUID id);
 }

@@ -20,6 +20,7 @@ import com.diegoperalta.pos.modules.compra.application.dto.ProveedorResponseDTO;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/compras/proveedores")
@@ -36,7 +37,7 @@ public class ProveedorController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProveedorResponseDTO> obtener(@PathVariable Long id) {
+    public ResponseEntity<ProveedorResponseDTO> obtener(@PathVariable UUID id) {
         return ResponseEntity.ok(service.obtenerPorId(id));
     }
 
@@ -46,14 +47,14 @@ public class ProveedorController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProveedorResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody ProveedorDTO dto) {
+    public ResponseEntity<ProveedorResponseDTO> actualizar(@PathVariable UUID id, @Valid @RequestBody ProveedorDTO dto) {
         return ResponseEntity.ok(service.actualizar(id, dto));
     }
 
     // SOLO ADMIN PUEDE BORRAR
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
         service.eliminar(id);
         return ResponseEntity.noContent().build();
     }

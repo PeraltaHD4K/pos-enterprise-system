@@ -29,6 +29,7 @@ import com.diegoperalta.pos.modules.inventario.infrastructure.CategoriaRepositor
 import com.diegoperalta.pos.modules.inventario.infrastructure.MovimientoInventarioRepository;
 import com.diegoperalta.pos.modules.inventario.infrastructure.ProductoRepository;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -86,7 +87,7 @@ public class ProductoService {
     }
 
     @Transactional
-    public Producto ajustarStock(Long productoId, AjusteStockDTO dto) {
+    public Producto ajustarStock(UUID productoId, AjusteStockDTO dto) {
         Usuario usuario = userProvider.getCurrentUserDetails();
         boolean estaAutorizado = "ADMIN".equals(usuario.getRol().getNombre()) ||
                 "GERENTE".equals(usuario.getRol().getNombre());
@@ -114,7 +115,7 @@ public class ProductoService {
 
         MovimientoInventario movimiento = new MovimientoInventario();
         movimiento.setProducto(producto);
-        movimiento.setUsuario(usuario);
+        movimiento.setUsuarioId(usuario.getId());
         movimiento.setTipoMovimiento("AJUSTE_MANUAL");
         movimiento.setCantidad(dto.getCantidad());
         movimiento.setStockAnterior(stockAnterior);
@@ -131,7 +132,7 @@ public class ProductoService {
     }
 
     @Transactional
-    public void registrarSalidasPorVentaBatch(List<SalidaVentaInfo> salidas, Long ventaId, Usuario usuario) {
+    public void registrarSalidasPorVentaBatch(List<SalidaVentaInfo> salidas, UUID ventaId, Usuario usuario) {
         List<MovimientoInventario> movimientos = new java.util.ArrayList<>();
         List<Producto> productosModificados = new java.util.ArrayList<>();
 
@@ -152,7 +153,7 @@ public class ProductoService {
 
             MovimientoInventario movimiento = new MovimientoInventario();
             movimiento.setProducto(producto);
-            movimiento.setUsuario(usuario);
+            movimiento.setUsuarioId(usuario.getId());
             movimiento.setTipoMovimiento("VENTA");
             movimiento.setCantidad(cantidad * -1);
             movimiento.setStockAnterior(stockActual);
@@ -167,7 +168,7 @@ public class ProductoService {
     }
 
     @Transactional
-    public void registrarEntradasPorCompraBatch(List<EntradaCompraInfo> entradas, Long compraId, Usuario usuario) {
+    public void registrarEntradasPorCompraBatch(List<EntradaCompraInfo> entradas, UUID compraId, Usuario usuario) {
         List<MovimientoInventario> movimientos = new java.util.ArrayList<>();
         List<Producto> productosModificados = new java.util.ArrayList<>();
 
@@ -195,7 +196,7 @@ public class ProductoService {
 
             MovimientoInventario mov = new MovimientoInventario();
             mov.setProducto(producto);
-            mov.setUsuario(usuario);
+            mov.setUsuarioId(usuario.getId());
             mov.setTipoMovimiento("COMPRA");
             mov.setCantidad(cantidad);
             mov.setStockAnterior(stockActual);
@@ -223,7 +224,7 @@ public class ProductoService {
     }
 
     @Transactional
-    public void devolverStockPorCancelacion(Long productoId, Integer cantidad, String folioVenta) {
+    public void devolverStockPorCancelacion(UUID productoId, Integer cantidad, String folioVenta) {
         Producto producto = productoRepository.findById(productoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + productoId));
 
@@ -235,7 +236,7 @@ public class ProductoService {
 
         MovimientoInventario movimiento = new MovimientoInventario();
         movimiento.setProducto(producto);
-        movimiento.setUsuario(userProvider.getCurrentUserDetails());
+        movimiento.setUsuarioId(userProvider.getCurrentUserDetails().getId());
         movimiento.setTipoMovimiento("ENTRADA");
         movimiento.setMotivo("CANCELACION_VENTA");
         movimiento.setReferencia("FOLIO: " + folioVenta);
@@ -246,14 +247,14 @@ public class ProductoService {
         movimientoRepository.save(movimiento);
     }
 
-    public Producto obtenerPorId(Long id) {
+    public Producto obtenerPorId(UUID id) {
         return productoRepository.findById(id)
                 .filter(Producto::getActivo)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
     }
 
     @Transactional
-    public Producto actualizarProducto(Long id, ProductoRegistroDTO dto) {
+    public Producto actualizarProducto(UUID id, ProductoRegistroDTO dto) {
         Producto producto = obtenerPorId(id);
 
         // Validar que si cambia el SKU, no choque con otro
@@ -286,7 +287,7 @@ public class ProductoService {
     }
 
     @Transactional
-    public void eliminarProducto(Long id) {
+    public void eliminarProducto(UUID id) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
 

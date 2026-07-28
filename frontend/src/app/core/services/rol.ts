@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface Rol {
-  id: number;
+  id: string;
   nombre: string;
 }
 

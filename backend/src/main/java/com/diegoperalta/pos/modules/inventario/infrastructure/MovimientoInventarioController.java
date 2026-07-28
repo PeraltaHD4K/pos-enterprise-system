@@ -8,18 +8,20 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.diegoperalta.pos.modules.inventario.application.dto.MovimientoInventarioResponseDTO;
 import com.diegoperalta.pos.modules.inventario.domain.MovimientoInventario;
+import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("inventario/movimientos")
 @RequiredArgsConstructor
 public class MovimientoInventarioController {
 
-    
     private final MovimientoInventarioRepository movimientoRepository;
+    
+    private final UsuarioRepository usuarioRepository;
 
     @GetMapping
     public ResponseEntity<List<MovimientoInventarioResponseDTO>> listarMovimientos() {
@@ -27,17 +29,21 @@ public class MovimientoInventarioController {
     }
 
     @GetMapping("/producto/{id}")
-    public ResponseEntity<List<MovimientoInventarioResponseDTO>> obtenerKardexProducto(@PathVariable Long id) {
+    public ResponseEntity<List<MovimientoInventarioResponseDTO>> obtenerKardexProducto(@PathVariable UUID id) {
         return ResponseEntity.ok(movimientoRepository.findByProductoId(id).stream().map(this::mapToDTO).toList());
     }
 
     private MovimientoInventarioResponseDTO mapToDTO(MovimientoInventario mov) {
+        String nombreCompleto = mov.getUsuarioId() != null
+            ? usuarioRepository.findById(mov.getUsuarioId()).map(u -> u.getNombreCompleto()).orElse(null)
+            : null;
+            
         return new MovimientoInventarioResponseDTO(
             mov.getId(),
             mov.getProducto() != null ? mov.getProducto().getId() : null,
             mov.getProducto() != null ? mov.getProducto().getNombre() : null,
-            mov.getUsuario() != null ? mov.getUsuario().getId() : null,
-            mov.getUsuario() != null ? mov.getUsuario().getNombreCompleto() : null,
+            mov.getUsuarioId(),
+            nombreCompleto,
             mov.getTipoMovimiento(),
             mov.getMotivo(),
             mov.getCantidad(),

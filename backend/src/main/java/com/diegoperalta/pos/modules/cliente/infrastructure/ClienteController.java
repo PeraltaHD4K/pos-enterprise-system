@@ -20,6 +20,7 @@ import com.diegoperalta.pos.modules.cliente.application.dto.ClienteResponseDTO;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/clientes")
@@ -45,7 +46,7 @@ public class ClienteController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ClienteResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody ClienteDTO dto) {
+    public ResponseEntity<ClienteResponseDTO> actualizar(@PathVariable UUID id, @Valid @RequestBody ClienteDTO dto) {
         return ResponseEntity.ok(clienteService.actualizarCliente(id, dto));
     }
 }

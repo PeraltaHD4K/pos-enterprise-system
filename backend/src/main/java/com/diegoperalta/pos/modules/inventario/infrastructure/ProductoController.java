@@ -29,6 +29,7 @@ import com.diegoperalta.pos.modules.inventario.application.dto.ProductoResponseD
 import com.diegoperalta.pos.modules.inventario.domain.Producto;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/inventario/productos")
@@ -55,26 +56,26 @@ public class ProductoController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")
-    public ResponseEntity<ProductoResponseDTO> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<ProductoResponseDTO> obtenerPorId(@PathVariable UUID id) {
         return ResponseEntity.ok(mapToDTO(productoService.obtenerPorId(id)));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProductoResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody ProductoRegistroDTO dto) {
+    public ResponseEntity<ProductoResponseDTO> actualizar(@PathVariable UUID id, @Valid @RequestBody ProductoRegistroDTO dto) {
         return ResponseEntity.ok(mapToDTO(productoService.actualizarProducto(id, dto)));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
         productoService.eliminarProducto(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{productoId}/stock")
     @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")
-    public ResponseEntity<ProductoResponseDTO> actualizarStock(@PathVariable Long productoId,
+    public ResponseEntity<ProductoResponseDTO> actualizarStock(@PathVariable UUID productoId,
             @Valid @RequestBody AjusteStockDTO dto) {
         Producto producto = productoService.ajustarStock(productoId, dto);
 

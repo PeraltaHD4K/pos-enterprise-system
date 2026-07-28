@@ -14,6 +14,7 @@ import com.diegoperalta.pos.modules.inventario.application.dto.CategoriaResponse
 import com.diegoperalta.pos.modules.inventario.domain.Categoria;
 import com.diegoperalta.pos.modules.inventario.infrastructure.CategoriaRepository;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -28,13 +29,13 @@ public class CategoriaService {
     }
 
     @Transactional(readOnly = true)
-    public CategoriaResponseDTO obtenerCategoriaPorId(Long id) {
+    public CategoriaResponseDTO obtenerCategoriaPorId(UUID id) {
         Categoria categoria = obtenerEntidadCategoriaPorId(id);
         return mapToDTO(categoria);
     }
 
     @Transactional(readOnly = true)
-    private Categoria obtenerEntidadCategoriaPorId(Long id) {
+    private Categoria obtenerEntidadCategoriaPorId(UUID id) {
         return categoriaRepository.findById(id)
                 .filter(c -> Boolean.TRUE.equals(c.getActivo()))
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + id));
@@ -58,7 +59,7 @@ public class CategoriaService {
     }
 
     @Transactional
-    public CategoriaResponseDTO actualizarCategoria(Long id, CategoriaDTO dto) {
+    public CategoriaResponseDTO actualizarCategoria(UUID id, CategoriaDTO dto) {
         Categoria categoria = obtenerEntidadCategoriaPorId(id);
 
         // Validar duplicados al editar
@@ -75,7 +76,7 @@ public class CategoriaService {
     }
 
     @Transactional
-    public void eliminarCategoria(Long id) {
+    public void eliminarCategoria(UUID id) {
         Categoria categoria = obtenerEntidadCategoriaPorId(id);
 
         // Soft Delete

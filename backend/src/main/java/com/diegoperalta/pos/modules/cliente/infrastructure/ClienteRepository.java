@@ -8,8 +8,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.diegoperalta.pos.modules.cliente.domain.Cliente;
+import java.util.UUID;
 
-public interface ClienteRepository extends JpaRepository<Cliente, Long> {
+public interface ClienteRepository extends JpaRepository<Cliente, UUID> {
 
     @Query("SELECT c FROM Cliente c WHERE " +
             "LOWER(c.nombre) LIKE LOWER(CONCAT('%', :query, '%')) OR " +

@@ -107,8 +107,9 @@ public class VentaService {
             dto.setTotalVenta(venta.getTotalVenta());
             dto.setEstado(venta.getEstado());
             dto.setNombreVendedor(usuario.getUsername());
-            if (venta.getCliente() != null) {
-                dto.setNombreCliente(venta.getCliente().getNombre());
+            if (venta.getClienteId() != null) {
+                clienteRepository.findById(venta.getClienteId())
+                        .ifPresent(c -> dto.setNombreCliente(c.getNombre()));
             }
             return dto;
         });

@@ -5,16 +5,17 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.util.UUID;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class MovimientoInventarioResponseDTO {
-    private Long id;
-    private Long productoId;
+    private UUID id;
+    private UUID productoId;
     private String productoNombre;
-    private Long usuarioId;
+    private UUID usuarioId;
     private String usuarioNombre;
     private String tipoMovimiento;
     private String motivo;

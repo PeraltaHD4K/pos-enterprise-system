@@ -9,10 +9,11 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
+import java.util.UUID;
 
 @Data
 public class VentaRegistroDTO {
-    private Long clienteId; // Opcional, puede ser null para publico en general
+    private UUID clienteId; // Opcional, puede ser null para publico en general
 
     @NotBlank(message = "El método de pago es obligatorio")
     private String metodoPago;

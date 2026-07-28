@@ -6,12 +6,13 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
+import java.util.UUID;
 
 @Data
 public class ItemCompraDTO {
 
     @NotNull(message = "El ID del producto es obligatorio")
-    private Long productoId;
+    private UUID productoId;
 
     @NotNull(message = "La cantidad pedida es obligatoria")
     @Min(value = 1, message = "La cantidad pedida debe ser al menos 1")

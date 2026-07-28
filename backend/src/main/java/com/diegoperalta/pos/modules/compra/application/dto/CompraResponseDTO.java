@@ -4,10 +4,11 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import lombok.Data;
+import java.util.UUID;
 
 @Data
 public class CompraResponseDTO {
-    private Long id;
+    private UUID id;
     private String folioFactura;
     private String nombreProveedor;
     private String nombreUsuario;

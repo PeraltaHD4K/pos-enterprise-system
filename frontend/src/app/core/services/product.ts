@@ -6,7 +6,7 @@ import { Categoria } from './category';
 import { Page } from './page';
 
 export interface MovimientoInventario {
-  id: number;
+  id: string;
   tipoMovimiento: string; // VENTA, COMPRA, AJUSTE, etc.
   cantidad: number;
   stockAnterior: number;
@@ -20,7 +20,7 @@ export interface MovimientoInventario {
 }
 
 export interface Producto {
-  id: number;
+  id: string;
   sku: string;
   codigoBarras: string;
   nombre: string;
@@ -42,7 +42,7 @@ export interface ProductoRequest {
   precioVenta: number;
   costoPromedio: number;
   stockMinimo: number;
-  categoriaId: number; // Solo el ID, no el objeto
+  categoriaId: string; // Solo el ID, no el objeto
   ultimoCostoCompra?: number;
 }
 
@@ -59,7 +59,7 @@ export class Product {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/inventario/productos`;
 
-  getKardex(productoId: number): Observable<MovimientoInventario[]> {
+  getKardex(productoId: string): Observable<MovimientoInventario[]> {
     // Apunta al nuevo controller que creamos
     return this.http.get<MovimientoInventario[]>(`${environment.apiUrl}/inventario/movimientos/producto/${productoId}`);
   }
@@ -77,7 +77,7 @@ export class Product {
   }
 
   // Obtener por ID (necesario para editar)
-  getById(id: number): Observable<Producto> {
+  getById(id: string): Observable<Producto> {
     // Nota: Tu controller actual NO tiene getById directo, usa la lista o búsqueda.
     // Te sugiero agregarlo o filtrar en el front. 
     // Por ahora, asumiremos que agregas @GetMapping("/{id}") en Java o usamos filter en el componente.
@@ -89,15 +89,15 @@ export class Product {
     return this.http.post<Producto>(this.apiUrl, data);
   }
 
-  update(id: number, data: ProductoRequest): Observable<Producto> {
+  update(id: string, data: ProductoRequest): Observable<Producto> {
     return this.http.put<Producto>(`${this.apiUrl}/${id}`, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  updateStock(id: number, data: AjusteStockRequest): Observable<Producto> {
+  updateStock(id: string, data: AjusteStockRequest): Observable<Producto> {
     return this.http.patch<Producto>(`${this.apiUrl}/${id}/stock`, data);
   }
 }

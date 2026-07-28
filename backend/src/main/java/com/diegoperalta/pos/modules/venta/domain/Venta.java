@@ -26,6 +26,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import java.util.UUID;
+import com.diegoperalta.pos.common.domain.AuditableEntity;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Getter
 @Setter
@@ -33,13 +37,16 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@SQLDelete(sql = "UPDATE ventas SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 @Entity
 @Table(name = "ventas")
-public class Venta {
+public class Venta extends AuditableEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "uuid", updatable = false)
     @EqualsAndHashCode.Include
-    private Long id;
+    private UUID id;
 
     @Column(nullable = false, unique = true)
     private String folio; // Ej: V-0001
@@ -49,15 +56,11 @@ public class Venta {
     @ToString.Exclude
     private SesionCaja sesionCaja;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cliente_id")
-    @ToString.Exclude
-    private Cliente cliente;
+    @Column(name = "cliente_id")
+    private UUID clienteId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id")
-    @ToString.Exclude
-    private Usuario usuario;
+    @Column(name = "usuario_id")
+    private UUID usuarioId;
 
     private Instant fecha = Instant.now();
 

@@ -26,7 +26,7 @@ export class CreateUser implements OnInit {
   roles$: Observable<Rol[]> | undefined;
 
   isEditMode = false;
-  userId: number | null = null;
+  userId: string | null = null;
 
   ngOnInit(): void {
     // 1. Inicializar Formulario
@@ -44,7 +44,7 @@ export class CreateUser implements OnInit {
       const id = params.get('id');
       if (id) {
         this.isEditMode = true;
-        this.userId = Number(id);
+        this.userId = id;
         this.cargarDatosUsuario(this.userId);
 
         // En modo edición, la contraseña es opcional
@@ -54,7 +54,7 @@ export class CreateUser implements OnInit {
     });
   }
 
-  cargarDatosUsuario(id: number) {
+  cargarDatosUsuario(id: string) {
     this.userService.getUsuario(id).subscribe({
       next: (u) => {
         // Llenar el formulario

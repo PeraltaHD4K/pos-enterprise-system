@@ -4,7 +4,7 @@ import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
 
 export interface Proveedor {
-  id: number;
+  id: string;
   empresa: string;
   contacto?: string;
   telefono: string;
@@ -32,7 +32,7 @@ export class Supplier {
     return this.http.get<Proveedor[]>(this.apiUrl);
   }
 
-  getById(id: number): Observable<Proveedor> {
+  getById(id: string): Observable<Proveedor> {
     return this.http.get<Proveedor>(`${this.apiUrl}/${id}`);
   }
 
@@ -40,11 +40,11 @@ export class Supplier {
     return this.http.post<Proveedor>(this.apiUrl, data);
   }
 
-  update(id: number, data: ProveedorRequest): Observable<Proveedor> {
+  update(id: string, data: ProveedorRequest): Observable<Proveedor> {
     return this.http.put<Proveedor>(`${this.apiUrl}/${id}`, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

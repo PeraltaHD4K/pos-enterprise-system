@@ -7,9 +7,9 @@ import { Usuario } from './user';
 
 // 1. Lo que viene del Backend (Lectura)
 export interface DetalleCompra {
-  id: number;
+  id: string;
   producto: {
-    id: number;
+    id: string;
     nombre: string;
     sku: string;
     // ... otros campos de producto si los necesitas visualmente
@@ -23,7 +23,7 @@ export interface DetalleCompra {
 }
 
 export interface Compra {
-  id: number;
+  id: string;
   folioFactura?: string;
   proveedor: Proveedor;
   usuario: Usuario;
@@ -38,7 +38,7 @@ export interface Compra {
 
 // 2. Lo que enviamos al Backend (Escritura)
 export interface ItemCompraRequest {
-  productoId: number;
+  productoId: string;
   cantidadPedida: number;
   unidadesPorCaja: number; // Por defecto 1
   costoTotal: number; // El costo global de esa línea
@@ -46,7 +46,7 @@ export interface ItemCompraRequest {
 }
 
 export interface CompraRequest {
-  proveedorId: number;
+  proveedorId: string;
   folioFactura: string;
   observaciones?: string;
   estado: 'PENDIENTE' | 'COMPLETADA'; // Para soportar tus flujos de preventa
@@ -65,7 +65,7 @@ export class Purchase {
     return this.http.get<Compra[]>(this.apiUrl);
   }
 
-  getById(id: number): Observable<Compra> {
+  getById(id: string): Observable<Compra> {
     return this.http.get<Compra>(`${this.apiUrl}/${id}`);
   }
 
@@ -74,7 +74,7 @@ export class Purchase {
   }
 
   // Endpoint extra que vi en tu controller
-  confirmarRecepcion(id: number): Observable<Compra> {
+  confirmarRecepcion(id: string): Observable<Compra> {
     return this.http.post<Compra>(`${this.apiUrl}/confirmar/${id}`, {});
   }
 }

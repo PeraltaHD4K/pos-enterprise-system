@@ -32,6 +32,7 @@ import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
 import com.diegoperalta.pos.modules.venta.infrastructure.VentaRepository;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -60,14 +61,14 @@ public class CajaService {
         Usuario usuario = userProvider.getCurrentUserDetails();
 
         // 2. VALIDACIÓN: ¿Ya tiene una caja abierta?
-        if (sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA").isPresent()) {
+        if (sesionCajaRepository.findByUsuarioIdAndEstado(usuario.getId(), "ABIERTA").isPresent()) {
             throw new BusinessException("El usuario ya tiene una sesion de caja abierta. Debe cerrar la caja actual",
                     HttpStatus.CONFLICT);
         }
 
         // 3. Crear la sesión
         SesionCaja sesion = new SesionCaja();
-        sesion.setUsuario(usuario);
+        sesion.setUsuarioId(usuario.getId());
         sesion.setSaldoInicial(dto.getSaldoInicial());
         sesion.setEstado("ABIERTA");
         sesion.setFechaApertura(Instant.now());
@@ -80,11 +81,11 @@ public class CajaService {
         Usuario usuario = userProvider.getCurrentUserDetails(); // El que está intentando cerrar
 
         // 1. Buscar la caja abierta del usuario
-        SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
+        SesionCaja sesion = sesionCajaRepository.findByUsuarioIdAndEstado(usuario.getId(), "ABIERTA")
                 .orElseThrow(() -> new BusinessException("No hay sesion abierta para cerrar", HttpStatus.BAD_REQUEST));
 
         // VALIDACIÓN DE SEGURIDAD
-        if (!sesion.getUsuario().getId().equals(usuario.getId())) {
+        if (!sesion.getUsuarioId().equals(usuario.getId())) {
             throw new BusinessException("No puedes cerrar una caja que no te pertenece", HttpStatus.FORBIDDEN);
         }
 
@@ -120,7 +121,7 @@ public class CajaService {
     @Transactional(readOnly = true)
     public CorteXDTO generarCorteX() {
         Usuario usuario = userProvider.getCurrentUserDetails();
-        SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
+        SesionCaja sesion = sesionCajaRepository.findByUsuarioIdAndEstado(usuario.getId(), "ABIERTA")
                 .orElseThrow(() -> new BusinessException("No hay sesión abierta para generar corte.",
                         HttpStatus.BAD_REQUEST));
 
@@ -148,7 +149,7 @@ public class CajaService {
     public MovimientoCaja registrarMovimiento(NuevoMovimientoCajaDTO dto) {
         Usuario usuario = userProvider.getCurrentUserDetails();
 
-        SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
+        SesionCaja sesion = sesionCajaRepository.findByUsuarioIdAndEstado(usuario.getId(), "ABIERTA")
                 .orElseThrow(() -> new BusinessException("No hay sesión abierta.", HttpStatus.BAD_REQUEST));
 
         if (dto.getTipo().equals("RETIRO")) {
@@ -170,7 +171,7 @@ public class CajaService {
 
         MovimientoCaja mov = new MovimientoCaja();
         mov.setSesionCaja(sesion);
-        mov.setUsuario(usuario); // Ahora sí existe la columna en BD
+        mov.setUsuarioId(usuario.getId()); // Ahora sí existe la columna en BD
         mov.setMonto(dto.getMonto());
         mov.setTipo(dto.getTipo());
         mov.setMotivo(dto.getMotivo()); // Asignamos el motivo
@@ -180,20 +181,20 @@ public class CajaService {
 
     public Optional<SesionCaja> obtenerSesionActual() {
         Usuario usuario = userProvider.getCurrentUserDetails();
-        return sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA");
+        return sesionCajaRepository.findByUsuarioIdAndEstado(usuario.getId(), "ABIERTA");
     }
 
     @Transactional(readOnly = true)
     public List<MovimientoCaja> obtenerMovimientosSesionActual() {
         Usuario usuario = userProvider.getCurrentUserDetails();
-        SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
+        SesionCaja sesion = sesionCajaRepository.findByUsuarioIdAndEstado(usuario.getId(), "ABIERTA")
                 .orElseThrow(() -> new BusinessException("No hay sesión abierta.", HttpStatus.BAD_REQUEST));
 
         return movimientoCajaRepository.listarPorSesionConUsuario(sesion);
     }
 
     @Transactional(readOnly = true)
-    public String generarTicketCorteZ(Long sesionId) {
+    public String generarTicketCorteZ(UUID sesionId) {
         SesionCaja sesion = sesionCajaRepository.findById(sesionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sesión no encontrada"));
 
@@ -210,10 +211,13 @@ public class CajaService {
         DateTimeFormatter fechaFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
                 .withZone(ZoneId.of(businessTimeZone));
 
+        Usuario usuarioDeSesion = usuarioRepository.findById(sesion.getUsuarioId())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+                
         // 1. Cabecera
         tb.centrar("CORTE DE CAJA (Z)")
           .lineaDivisoria()
-          .texto("Cajero: ").texto(sesion.getUsuario().getUsername()).saltoDeLinea()
+          .texto("Cajero: ").texto(usuarioDeSesion.getUsername()).saltoDeLinea()
           .texto("Inicio: ").texto(fechaFmt.format(sesion.getFechaApertura())).saltoDeLinea();
           
         if (sesion.getFechaCierre() != null) {

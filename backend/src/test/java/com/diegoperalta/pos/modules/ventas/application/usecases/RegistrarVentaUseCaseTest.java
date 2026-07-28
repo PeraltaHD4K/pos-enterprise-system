@@ -34,6 +34,7 @@ import com.diegoperalta.pos.modules.venta.application.dto.VentaRegistroDTO;
 import com.diegoperalta.pos.modules.venta.application.dto.VentaResponseDTO;
 import com.diegoperalta.pos.modules.venta.domain.Venta;
 import com.diegoperalta.pos.modules.venta.infrastructure.VentaRepository;
+import java.util.UUID;
 
 @ExtendWith(MockitoExtension.class)
 class RegistrarVentaUseCaseTest {
@@ -68,18 +69,18 @@ class RegistrarVentaUseCaseTest {
     void setUp() {
         // Configuramos datos falsos que simulan venir de la BD
         usuarioMock = new Usuario();
-        usuarioMock.setId(1L);
+        usuarioMock.setId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         usuarioMock.setUsername("admin");
 
         clienteMock = new Cliente();
-        clienteMock.setId(1L);
+        clienteMock.setId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         clienteMock.setNombre("Cliente Test");
 
         sesionMock = new SesionCaja();
         sesionMock.setEstado("ABIERTA");
 
         productoMock = new Producto();
-        productoMock.setId(10L);
+        productoMock.setId(UUID.fromString("00000000-0000-0000-0000-000000000005"));
         productoMock.setPrecioVenta(new BigDecimal("100.00")); // Precio $100
         productoMock.setCostoPromedio(new BigDecimal("50.00"));
         productoMock.setStockActual(10);
@@ -89,19 +90,19 @@ class RegistrarVentaUseCaseTest {
     void registrarVenta_DeberiaCalcularTotalCorrectamente() {
         // --- GIVEN (Dado estos datos de entrada...) ---
         VentaRegistroDTO dto = new VentaRegistroDTO();
-        dto.setClienteId(1L);
+        dto.setClienteId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         dto.setMetodoPago("EFECTIVO");
         dto.setMontoPagado(new BigDecimal("200.00"));
 
         ItemVentaDTO item = new ItemVentaDTO();
-        item.setProductoId(10L);
+        item.setProductoId(UUID.fromString("00000000-0000-0000-0000-000000000005"));
         item.setCantidad(2); // Compramos 2 unidades
         dto.setItems(List.of(item));
 
         // --- STUBBING (Cuando el servicio pida datos, devolvemos los mocks...) ---
         when(userProvider.getCurrentUserDetails()).thenReturn(usuarioMock); // Simulamos usuario logueado
-        when(sesionCajaRepository.findByUsuarioAndEstado(usuarioMock, "ABIERTA")).thenReturn(Optional.of(sesionMock));
-        when(clienteRepository.findById(1L)).thenReturn(Optional.of(clienteMock));
+        when(sesionCajaRepository.findByUsuarioIdAndEstado(usuarioMock.getId(), "ABIERTA")).thenReturn(Optional.of(sesionMock));
+        when(clienteRepository.findById(UUID.fromString("00000000-0000-0000-0000-000000000001"))).thenReturn(Optional.of(clienteMock));
         when(productoRepository.findAllById(any())).thenReturn(List.of(productoMock));
 
         // Simulamos el guardado retornando la misma venta que entra

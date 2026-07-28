@@ -28,18 +28,18 @@ export class SupplierForm implements OnInit {
   });
 
   isEditMode = false;
-  currentId: number | null = null;
+  currentId: string | null = null;
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEditMode = true;
-      this.currentId = Number(id);
+      this.currentId = id;
       this.cargarDatos(this.currentId);
     }
   }
 
-  cargarDatos(id: number) {
+  cargarDatos(id: string) {
     this.supplierService.getById(id).subscribe({
       next: (prov) => {
         this.form.patchValue(prov); // patchValue mapea automático los nombres iguales

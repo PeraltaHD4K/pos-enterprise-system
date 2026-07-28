@@ -4,10 +4,11 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 import lombok.Data;
+import java.util.UUID;
 
 @Data
 public class VentaResumenDTO {
-    private Long id;
+    private UUID id;
     private String folio;
     private Instant fecha;
     private BigDecimal totalVenta;

@@ -21,6 +21,7 @@ import com.diegoperalta.pos.modules.cliente.domain.Cliente;
 import com.diegoperalta.pos.modules.cliente.infrastructure.ClienteRepository;
 import com.diegoperalta.pos.modules.iam.application.ports.CurrentUserProvider;
 import com.diegoperalta.pos.modules.iam.domain.Usuario;
+import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
 import com.diegoperalta.pos.modules.inventario.application.ProductoService;
 import com.diegoperalta.pos.modules.inventario.domain.Producto;
 import com.diegoperalta.pos.modules.inventario.infrastructure.ProductoRepository;
@@ -52,22 +53,27 @@ public class RegistrarVentaUseCase {
     private final CurrentUserProvider userProvider;
     
     private final ApplicationEventPublisher eventPublisher;
+    
+    private final UsuarioRepository usuarioRepository;
 
     @Transactional
     public VentaResponseDTO ejecutar(VentaRegistroDTO dto) {
         Usuario usuario = userProvider.getCurrentUserDetails();
 
-        SesionCaja sesion = sesionCajaRepository.findByUsuarioAndEstado(usuario, "ABIERTA")
+        SesionCaja sesion = sesionCajaRepository.findByUsuarioIdAndEstado(usuario.getId(), "ABIERTA")
                 .orElseThrow(() -> new BusinessException("No hay sesión de caja abierta. Abra caja primero.", HttpStatus.BAD_REQUEST));
 
-        Long idClienteParaBuscar = dto.getClienteId() != null ? dto.getClienteId() : 1L;
-        Cliente cliente = clienteRepository.findById(idClienteParaBuscar)
-                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con ID: " + idClienteParaBuscar));
+        UUID idClienteParaBuscar = dto.getClienteId();
+        Cliente cliente = null;
+        if (idClienteParaBuscar != null) {
+            cliente = clienteRepository.findById(idClienteParaBuscar)
+                    .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con ID: " + idClienteParaBuscar));
+        }
 
         Venta venta = new Venta();
         venta.setSesionCaja(sesion);
-        venta.setCliente(cliente);
-        venta.setUsuario(usuario);
+        venta.setClienteId(cliente != null ? cliente.getId() : null);
+        venta.setUsuarioId(usuario.getId());
         venta.setMetodoPago(dto.getMetodoPago());
         venta.setFolio(UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         venta.setDetalles(new ArrayList<>());
@@ -79,14 +85,14 @@ public class RegistrarVentaUseCase {
         venta = ventaRepository.save(venta);
         BigDecimal totalAcumulado = BigDecimal.ZERO;
 
-        List<Long> productoIds = dto.getItems().stream().map(ItemVentaDTO::getProductoId).toList();
+        List<UUID> productoIds = dto.getItems().stream().map(ItemVentaDTO::getProductoId).toList();
         List<Producto> productosEncontrados = productoRepository.findAllById(productoIds);
         if (productosEncontrados.size() != productoIds.size()) {
-            List<Long> encontradosIds = productosEncontrados.stream().map(Producto::getId).toList();
-            List<Long> faltantes = productoIds.stream().filter(id -> !encontradosIds.contains(id)).toList();
+            List<UUID> encontradosIds = productosEncontrados.stream().map(Producto::getId).toList();
+            List<UUID> faltantes = productoIds.stream().filter(id -> !encontradosIds.contains(id)).toList();
             throw new ResourceNotFoundException("Productos no encontrados con IDs: " + faltantes);
         }
-        Map<Long, Producto> productosMap = productosEncontrados.stream().collect(Collectors.toMap(Producto::getId, p -> p));
+        Map<UUID, Producto> productosMap = productosEncontrados.stream().collect(Collectors.toMap(Producto::getId, p -> p));
 
         List<ProductoService.SalidaVentaInfo> salidasBatch = new java.util.ArrayList<>();
 
@@ -96,7 +102,7 @@ public class RegistrarVentaUseCase {
 
             DetalleVenta detalle = new DetalleVenta();
             detalle.setVenta(venta);
-            detalle.setProducto(producto);
+            detalle.setProductoId(producto.getId());
             detalle.setCantidad(item.getCantidad());
             detalle.setPrecioUnitario(producto.getPrecioVenta());
 
@@ -140,16 +146,19 @@ public class RegistrarVentaUseCase {
         dto.setTotalVenta(venta.getTotalVenta());
         dto.setMontoPagado(venta.getMontoPagado());
         dto.setCambio(venta.getCambio());
-        if (venta.getCliente() != null) {
-            dto.setNombreCliente(venta.getCliente().getNombre());
+        if (venta.getClienteId() != null) {
+            clienteRepository.findById(venta.getClienteId())
+                    .ifPresent(c -> dto.setNombreCliente(c.getNombre()));
         }
-        if (venta.getUsuario() != null) {
-            dto.setNombreVendedor(venta.getUsuario().getUsername());
+        if (venta.getUsuarioId() != null) {
+            usuarioRepository.findById(venta.getUsuarioId())
+                    .ifPresent(u -> dto.setNombreVendedor(u.getUsername()));
         }
         List<VentaItemResponseDTO> items = venta.getDetalles().stream().map(d -> {
             VentaItemResponseDTO item = new VentaItemResponseDTO();
-            item.setProductoId(d.getProducto().getId());
-            item.setNombreProducto(d.getProducto().getNombre());
+            item.setProductoId(d.getProductoId());
+            productoRepository.findById(d.getProductoId())
+                    .ifPresent(p -> item.setNombreProducto(p.getNombre()));
             item.setCantidad(d.getCantidad());
             item.setPrecioUnitario(d.getPrecioUnitario());
             item.setSubtotal(d.getSubtotal());

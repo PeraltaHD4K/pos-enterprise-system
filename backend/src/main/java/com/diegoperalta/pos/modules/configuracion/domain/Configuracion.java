@@ -7,13 +7,18 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import com.diegoperalta.pos.common.domain.AuditableEntity;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Data
+@SQLDelete(sql = "UPDATE configuracion SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 @Entity
 @Table(name = "configuracion")
 @NoArgsConstructor
 @AllArgsConstructor
-public class Configuracion {
+public class Configuracion extends AuditableEntity {
     @Id
     @Column(length = 50)
     private String clave;

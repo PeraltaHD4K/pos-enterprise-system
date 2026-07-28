@@ -21,6 +21,7 @@ import com.diegoperalta.pos.modules.iam.application.dto.UsuarioResponseDTO;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/usuarios")
@@ -43,19 +44,19 @@ public class UsuarioController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UsuarioResponseDTO> obtener(@PathVariable Long id) {
+    public ResponseEntity<UsuarioResponseDTO> obtener(@PathVariable UUID id) {
         return ResponseEntity.ok(usuarioService.obtenerPorId(id));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UsuarioResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody UsuarioEdicionDTO dto) {
+    public ResponseEntity<UsuarioResponseDTO> actualizar(@PathVariable UUID id, @Valid @RequestBody UsuarioEdicionDTO dto) {
         return ResponseEntity.ok(usuarioService.actualizarUsuario(id, dto));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> cambiarEstado(@PathVariable Long id) {
+    public ResponseEntity<Void> cambiarEstado(@PathVariable UUID id) {
         usuarioService.toggleEstadoUsuario(id);
         return ResponseEntity.noContent().build();
     }

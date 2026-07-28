@@ -3,11 +3,12 @@ package com.diegoperalta.pos.modules.venta.application.dto;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import java.util.UUID;
 
 @Data
 public class ItemVentaDTO {
     @NotNull(message = "El ID del producto es obligatorio")
-    private Long productoId;
+    private UUID productoId;
 
     @NotNull(message = "La cantidad es obligatoria")
     @Min(value = 1, message = "La cantidad debe ser al menos 1")

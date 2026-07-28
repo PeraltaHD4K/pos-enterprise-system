@@ -21,6 +21,7 @@ import com.diegoperalta.pos.modules.inventario.application.dto.CategoriaResponse
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/inventario/categorias")
@@ -35,7 +36,7 @@ public class CategoriaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CategoriaResponseDTO> obtener(@PathVariable Long id) {
+    public ResponseEntity<CategoriaResponseDTO> obtener(@PathVariable UUID id) {
         return ResponseEntity.ok(categoriaService.obtenerCategoriaPorId(id));
     }
 
@@ -47,13 +48,13 @@ public class CategoriaController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<CategoriaResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody CategoriaDTO dto) {
+    public ResponseEntity<CategoriaResponseDTO> actualizar(@PathVariable UUID id, @Valid @RequestBody CategoriaDTO dto) {
         return ResponseEntity.ok(categoriaService.actualizarCategoria(id, dto));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
         categoriaService.eliminarCategoria(id);
         return ResponseEntity.noContent().build();
     }

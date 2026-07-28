@@ -37,6 +37,7 @@ import com.diegoperalta.pos.modules.iam.application.ports.CurrentUserProvider;
 import com.diegoperalta.pos.modules.inventario.application.ProductoService;
 import com.diegoperalta.pos.modules.inventario.domain.Producto;
 import com.diegoperalta.pos.modules.inventario.infrastructure.ProductoRepository;
+import java.util.UUID;
 
 @ExtendWith(MockitoExtension.class)
 class CompraServiceTest {
@@ -65,15 +66,15 @@ class CompraServiceTest {
     @BeforeEach
     void setUp() {
         usuarioMock = new Usuario();
-        usuarioMock.setId(1L);
+        usuarioMock.setId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         usuarioMock.setUsername("admin");
 
         proveedorMock = new Proveedor();
-        proveedorMock.setId(1L);
+        proveedorMock.setId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         proveedorMock.setEmpresa("Zorro Abarrotero");
 
         productoMock = new Producto();
-        productoMock.setId(1L);
+        productoMock.setId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         productoMock.setNombre("Coca Cola");
         productoMock.setStockActual(0);
         // Configuramos un precio histórico para las pruebas de "Memoria"
@@ -84,11 +85,11 @@ class CompraServiceTest {
     void registrarCompra_Completada_Manual_NoDuplicaSuma() {
         // --- GIVEN ---
         CompraRegistroDTO dto = new CompraRegistroDTO();
-        dto.setProveedorId(1L);
+        dto.setProveedorId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         dto.setEstado("COMPLETADA");
 
         ItemCompraDTO item = new ItemCompraDTO();
-        item.setProductoId(1L);
+        item.setProductoId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         item.setCantidadPedida(10);
         item.setUnidadesPorCaja(1);
         // El usuario ingresa el precio manual (ignora la memoria)
@@ -97,7 +98,7 @@ class CompraServiceTest {
         dto.setItems(List.of(item));
 
         // --- STUBBING ---
-        when(proveedorRepository.findById(1L)).thenReturn(Optional.of(proveedorMock));
+        when(proveedorRepository.findById(UUID.fromString("00000000-0000-0000-0000-000000000001"))).thenReturn(Optional.of(proveedorMock));
         when(userProvider.getCurrentUserDetails()).thenReturn(usuarioMock);
         when(productoRepository.findAllById(any())).thenReturn(List.of(productoMock));
 
@@ -120,11 +121,11 @@ class CompraServiceTest {
     void registrarCompra_Pendiente_PrecioCiego_UsaMemoria() {
         // --- GIVEN (Escenario "Jarritos Ciego") ---
         CompraRegistroDTO dto = new CompraRegistroDTO();
-        dto.setProveedorId(1L);
+        dto.setProveedorId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         dto.setEstado("PENDIENTE");
 
         ItemCompraDTO item = new ItemCompraDTO();
-        item.setProductoId(1L);
+        item.setProductoId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         item.setCantidadPedida(2); // 2 cajas
         item.setUnidadesPorCaja(24); // 48 piezas total
         item.setCostoTotal(null); // 👈 NULL: El sistema debe calcularlo
@@ -133,7 +134,7 @@ class CompraServiceTest {
 
         // --- STUBBING ---
         when(userProvider.getCurrentUserDetails()).thenReturn(usuarioMock);
-        when(proveedorRepository.findById(1L)).thenReturn(Optional.of(proveedorMock));
+        when(proveedorRepository.findById(UUID.fromString("00000000-0000-0000-0000-000000000001"))).thenReturn(Optional.of(proveedorMock));
         when(productoRepository.findAllById(any())).thenReturn(List.of(productoMock));
 
         when(compraRepository.save(any(Compra.class))).thenAnswer(i -> i.getArguments()[0]);
@@ -157,11 +158,11 @@ class CompraServiceTest {
         productoMock.setUltimoCostoCompra(null);
 
         CompraRegistroDTO dto = new CompraRegistroDTO();
-        dto.setProveedorId(1L);
+        dto.setProveedorId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         dto.setEstado("PENDIENTE");
 
         ItemCompraDTO item = new ItemCompraDTO();
-        item.setProductoId(1L);
+        item.setProductoId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         item.setCantidadPedida(1);
         item.setCostoTotal(null); // Null y sin historia
 
@@ -169,7 +170,7 @@ class CompraServiceTest {
 
         // --- STUBBING ---
         when(userProvider.getCurrentUserDetails()).thenReturn(usuarioMock);
-        when(proveedorRepository.findById(1L)).thenReturn(Optional.of(proveedorMock));
+        when(proveedorRepository.findById(UUID.fromString("00000000-0000-0000-0000-000000000001"))).thenReturn(Optional.of(proveedorMock));
         when(productoRepository.findAllById(any())).thenReturn(List.of(productoMock));
         when(compraRepository.save(any(Compra.class))).thenAnswer(i -> i.getArguments()[0]);
 
@@ -185,12 +186,12 @@ class CompraServiceTest {
     void confirmarRecepcion_DeberiaProcesarPendienteYActualizarStock() {
         // --- GIVEN ---
         Compra compraExistente = new Compra();
-        compraExistente.setId(5L);
+        compraExistente.setId(UUID.fromString("00000000-0000-0000-0000-000000000005"));
         compraExistente.setEstado("PENDIENTE");
         compraExistente.setDetalles(new ArrayList<>());
 
         DetalleCompra detalle = new DetalleCompra();
-        detalle.setProducto(productoMock);
+        detalle.setProductoId(productoMock.getId());
         detalle.setCantidadPedida(10);
         detalle.setUnidadesPorCaja(1);
         detalle.setCostoTotalRenglon(new BigDecimal("200.00")); // Ya venía con precio
@@ -198,16 +199,17 @@ class CompraServiceTest {
         compraExistente.getDetalles().add(detalle);
 
         when(userProvider.getCurrentUserDetails()).thenReturn(usuarioMock);
-        when(compraRepository.findById(5L)).thenReturn(Optional.of(compraExistente));
+        when(compraRepository.findById(UUID.fromString("00000000-0000-0000-0000-000000000005"))).thenReturn(Optional.of(compraExistente));
         when(compraRepository.save(any(Compra.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(productoRepository.findById(productoMock.getId())).thenReturn(Optional.of(productoMock));
 
         // --- WHEN ---
-        Compra resultado = compraService.confirmarRecepcion(5L);
+        Compra resultado = compraService.confirmarRecepcion(UUID.fromString("00000000-0000-0000-0000-000000000005"));
 
         // --- THEN ---
         assertEquals("COMPLETADA", resultado.getEstado());
 
         // Verificar llamada a batch
-        verify(productoService, times(1)).registrarEntradasPorCompraBatch(any(), eq(5L), eq(usuarioMock));
+        verify(productoService, times(1)).registrarEntradasPorCompraBatch(any(), eq(UUID.fromString("00000000-0000-0000-0000-000000000005")), eq(usuarioMock));
     }
 }

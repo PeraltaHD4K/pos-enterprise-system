@@ -3,10 +3,11 @@ package com.diegoperalta.pos.modules.caja.application.dto;
 import java.math.BigDecimal;
 import java.time.Instant;
 import lombok.Data;
+import java.util.UUID;
 
 @Data
 public class SesionCajaResponseDTO {
-    private Long id;
+    private UUID id;
     private String nombreUsuario;
     private Instant fechaApertura;
     private Instant fechaCierre;

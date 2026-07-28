@@ -39,7 +39,7 @@ export class PurchaseList implements OnInit {
     });
   }
 
-  confirmar(id: number) {
+  confirmar(id: string) {
     if (confirm('¿Confirmas que has recibido esta mercancía? Esto aumentará el stock.')) {
       this.purchaseService.confirmarRecepcion(id).subscribe({
         next: (compraActualizada) => {

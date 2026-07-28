@@ -22,17 +22,20 @@ import com.diegoperalta.pos.modules.caja.application.dto.NuevoMovimientoCajaDTO;
 import com.diegoperalta.pos.modules.caja.application.dto.SesionCajaResponseDTO;
 import com.diegoperalta.pos.modules.caja.domain.MovimientoCaja;
 import com.diegoperalta.pos.modules.caja.domain.SesionCaja;
+import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/caja")
 @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'CAJERO')")
 @RequiredArgsConstructor
 public class CajaController {
-    
     private final CajaService cajaService;
+    
+    private final UsuarioRepository usuarioRepository;
 
     @PostMapping("/abrir")
     public ResponseEntity<SesionCajaResponseDTO> abrirCaja(@Valid @RequestBody AperturaCajaDTO dto) {
@@ -69,7 +72,7 @@ public class CajaController {
     }
 
     @GetMapping("/ticket-cierre/{id}")
-    public ResponseEntity<String> obtenerTicketCierre(@PathVariable Long id) {
+    public ResponseEntity<String> obtenerTicketCierre(@PathVariable UUID id) {
         String ticket = cajaService.generarTicketCorteZ(id);
 
         return ResponseEntity.ok()
@@ -80,8 +83,9 @@ public class CajaController {
     private SesionCajaResponseDTO mapToDTO(SesionCaja s) {
         SesionCajaResponseDTO dto = new SesionCajaResponseDTO();
         dto.setId(s.getId());
-        if (s.getUsuario() != null) {
-            dto.setNombreUsuario(s.getUsuario().getUsername());
+        if (s.getUsuarioId() != null) {
+            usuarioRepository.findById(s.getUsuarioId())
+                    .ifPresent(u -> dto.setNombreUsuario(u.getUsername()));
         }
         dto.setFechaApertura(s.getFechaApertura());
         dto.setFechaCierre(s.getFechaCierre());
@@ -94,10 +98,14 @@ public class CajaController {
     }
 
     private MovimientoCajaResponseDTO mapMovimientoToDTO(MovimientoCaja m) {
+        String nombreUsuario = m.getUsuarioId() != null 
+            ? usuarioRepository.findById(m.getUsuarioId()).map(u -> u.getUsername()).orElse(null)
+            : null;
+            
         return new MovimientoCajaResponseDTO(
             m.getId(),
             m.getSesionCaja() != null ? m.getSesionCaja().getId() : null,
-            m.getUsuario() != null ? m.getUsuario().getUsername() : null,
+            nombreUsuario,
             m.getMonto(),
             m.getTipo(),
             m.getMotivo(),

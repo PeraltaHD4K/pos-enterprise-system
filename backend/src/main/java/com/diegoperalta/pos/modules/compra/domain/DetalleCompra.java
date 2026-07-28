@@ -19,6 +19,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import java.math.BigDecimal;
+import java.util.UUID;
+import com.diegoperalta.pos.common.domain.AuditableEntity;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Getter
 @Setter
@@ -26,14 +30,17 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@SQLDelete(sql = "UPDATE detalle_compras SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 @Entity
 @Table(name = "detalle_compras")
-public class DetalleCompra {
+public class DetalleCompra extends AuditableEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "uuid", updatable = false)
     @EqualsAndHashCode.Include
-    private Long id;
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "compra_id", nullable = false)
@@ -41,10 +48,8 @@ public class DetalleCompra {
     @ToString.Exclude
     private Compra compra;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "producto_id", nullable = false)
-    @ToString.Exclude
-    private Producto producto;
+    @Column(name = "producto_id")
+    private UUID productoId;
 
     @Column(name = "cantidad_pedida", nullable = false)
     private Integer cantidadPedida;

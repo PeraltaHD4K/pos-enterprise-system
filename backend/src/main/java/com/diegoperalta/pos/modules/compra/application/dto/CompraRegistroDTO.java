@@ -7,12 +7,13 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import java.util.UUID;
 
 @Data
 public class CompraRegistroDTO {
 
     @NotNull(message = "El proveedor es obligatorio")
-    private Long proveedorId;
+    private UUID proveedorId;
 
     private String folioFactura;
 

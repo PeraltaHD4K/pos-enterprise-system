@@ -14,6 +14,7 @@ import com.diegoperalta.pos.modules.cliente.application.dto.ClienteResponseDTO;
 import com.diegoperalta.pos.modules.cliente.domain.Cliente;
 import com.diegoperalta.pos.modules.cliente.infrastructure.ClienteRepository;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +45,7 @@ public class ClienteService {
         return mapToDTO(clienteRepository.save(cliente));
     }
 
-    public ClienteResponseDTO actualizarCliente(Long id, ClienteDTO dto) {
+    public ClienteResponseDTO actualizarCliente(UUID id, ClienteDTO dto) {
         Cliente cliente = buscarPorId(id);
 
         cliente.setNombre(dto.getNombre());
@@ -55,7 +56,7 @@ public class ClienteService {
         return mapToDTO(clienteRepository.save(cliente));
     }
 
-    public Cliente buscarPorId(Long id) {
+    public Cliente buscarPorId(UUID id) {
         return clienteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
     }

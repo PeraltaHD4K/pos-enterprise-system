@@ -25,7 +25,7 @@ export class CategoryForm implements OnInit {
   });
 
   isEditMode = false;
-  currentId: number | null = null;
+  currentId: string | null = null;
 
   ngOnInit(): void {
     // Verificamos si hay un ID en la URL (ej: /edit/5)
@@ -33,12 +33,12 @@ export class CategoryForm implements OnInit {
 
     if (id) {
       this.isEditMode = true;
-      this.currentId = Number(id);
+      this.currentId = id;
       this.cargarDatos(this.currentId);
     }
   }
 
-  cargarDatos(id: number) {
+  cargarDatos(id: string) {
     // Pedimos al backend los datos de la categoría para rellenar el form
     this.categoryService.getById(id).subscribe({
       next: (cat) => {

@@ -3,6 +3,7 @@ package com.diegoperalta.pos.modules.iam.application.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import java.util.UUID;
 
 @Data
 public class UsuarioEdicionDTO {
@@ -16,5 +17,5 @@ public class UsuarioEdicionDTO {
     private String password;
 
     @NotNull(message = "El rol es obligatorio")
-    private Long rolId;
+    private UUID rolId;
 }

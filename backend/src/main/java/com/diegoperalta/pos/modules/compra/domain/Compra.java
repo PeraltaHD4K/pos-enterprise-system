@@ -23,6 +23,10 @@ import java.time.LocalDate;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import com.diegoperalta.pos.common.domain.AuditableEntity;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Getter
 @Setter
@@ -30,14 +34,17 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@SQLDelete(sql = "UPDATE compras SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 @Entity
 @Table(name = "compras")
-public class Compra {
+public class Compra extends AuditableEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "uuid", updatable = false)
     @EqualsAndHashCode.Include
-    private Long id;
+    private UUID id;
 
     @Column(name = "folio_factura")
     private String folioFactura; // El folio que viene en el papel del proveedor
@@ -47,10 +54,8 @@ public class Compra {
     @ToString.Exclude
     private Proveedor proveedor;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false)
-    @ToString.Exclude
-    private Usuario usuario;
+    @Column(name = "usuario_id")
+    private UUID usuarioId;
 
     @Column(name = "fecha_pedido", nullable = false)
     private Instant fechaPedido = Instant.now();

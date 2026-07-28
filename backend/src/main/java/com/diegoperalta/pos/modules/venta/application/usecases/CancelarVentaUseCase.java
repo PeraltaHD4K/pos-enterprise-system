@@ -17,6 +17,9 @@ import com.diegoperalta.pos.modules.venta.application.dto.VentaItemResponseDTO;
 import com.diegoperalta.pos.modules.venta.domain.DetalleVenta;
 import com.diegoperalta.pos.modules.venta.domain.Venta;
 import com.diegoperalta.pos.modules.venta.infrastructure.VentaRepository;
+import com.diegoperalta.pos.modules.cliente.infrastructure.ClienteRepository;
+import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
+import com.diegoperalta.pos.modules.inventario.infrastructure.ProductoRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -29,6 +32,12 @@ public class CancelarVentaUseCase {
     private final VentaRepository ventaRepository;
     
     private final ProductoService productoService;
+    
+    private final ClienteRepository clienteRepository;
+    
+    private final UsuarioRepository usuarioRepository;
+    
+    private final ProductoRepository productoRepository;
 
     @Transactional
     public VentaResponseDTO ejecutar(String folio, AutorizacionDTO autorizacion) {
@@ -43,7 +52,7 @@ public class CancelarVentaUseCase {
 
         for (DetalleVenta detalle : venta.getDetalles()) {
             productoService.devolverStockPorCancelacion(
-                    detalle.getProducto().getId(), detalle.getCantidad(), venta.getFolio());
+                    detalle.getProductoId(), detalle.getCantidad(), venta.getFolio());
         }
         venta.setEstado("CANCELADA");
         return mapToVentaResponseDTO(ventaRepository.save(venta));
@@ -59,16 +68,19 @@ public class CancelarVentaUseCase {
         dto.setTotalVenta(venta.getTotalVenta());
         dto.setMontoPagado(venta.getMontoPagado());
         dto.setCambio(venta.getCambio());
-        if (venta.getCliente() != null) {
-            dto.setNombreCliente(venta.getCliente().getNombre());
+        if (venta.getClienteId() != null) {
+            clienteRepository.findById(venta.getClienteId())
+                    .ifPresent(c -> dto.setNombreCliente(c.getNombre()));
         }
-        if (venta.getUsuario() != null) {
-            dto.setNombreVendedor(venta.getUsuario().getUsername());
+        if (venta.getUsuarioId() != null) {
+            usuarioRepository.findById(venta.getUsuarioId())
+                    .ifPresent(u -> dto.setNombreVendedor(u.getUsername()));
         }
         List<VentaItemResponseDTO> items = venta.getDetalles().stream().map(d -> {
             VentaItemResponseDTO item = new VentaItemResponseDTO();
-            item.setProductoId(d.getProducto().getId());
-            item.setNombreProducto(d.getProducto().getNombre());
+            item.setProductoId(d.getProductoId());
+            productoRepository.findById(d.getProductoId())
+                    .ifPresent(p -> item.setNombreProducto(p.getNombre()));
             item.setCantidad(d.getCantidad());
             item.setPrecioUnitario(d.getPrecioUnitario());
             item.setSubtotal(d.getSubtotal());

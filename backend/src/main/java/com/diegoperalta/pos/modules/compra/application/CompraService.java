@@ -29,6 +29,7 @@ import com.diegoperalta.pos.modules.inventario.application.ProductoService;
 import com.diegoperalta.pos.modules.inventario.domain.Producto;
 import com.diegoperalta.pos.modules.inventario.infrastructure.ProductoRepository;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -61,7 +62,7 @@ public class CompraService {
 
         Compra compra = new Compra();
         compra.setProveedor(proveedor);
-        compra.setUsuario(usuario);
+        compra.setUsuarioId(usuario.getId());
         compra.setFolioFactura(dto.getFolioFactura());
         compra.setObservaciones(dto.getObservaciones());
 
@@ -82,9 +83,9 @@ public class CompraService {
         BigDecimal totalCompra = BigDecimal.ZERO;
         compra.setDetalles(new ArrayList<>());
 
-        List<Long> productoIds = dto.getItems().stream().map(ItemCompraDTO::getProductoId).toList();
+        List<UUID> productoIds = dto.getItems().stream().map(ItemCompraDTO::getProductoId).toList();
         List<Producto> productosEncontrados = productoRepository.findAllById(productoIds);
-        java.util.Map<Long, Producto> productosMap = productosEncontrados.stream().collect(java.util.stream.Collectors.toMap(Producto::getId, p -> p));
+        java.util.Map<UUID, Producto> productosMap = productosEncontrados.stream().collect(java.util.stream.Collectors.toMap(Producto::getId, p -> p));
         List<ProductoService.EntradaCompraInfo> entradasBatch = new java.util.ArrayList<>();
 
         for (ItemCompraDTO item : dto.getItems()) {
@@ -96,7 +97,7 @@ public class CompraService {
             // 1. Crear Detalle
             DetalleCompra detalle = new DetalleCompra();
             detalle.setCompra(compra);
-            detalle.setProducto(producto);
+            detalle.setProductoId(producto.getId());
 
             detalle.setCantidadPedida(item.getCantidadPedida());
             detalle.setUnidadesPorCaja(item.getUnidadesPorCaja() != null ? item.getUnidadesPorCaja() : 1);
@@ -146,7 +147,7 @@ public class CompraService {
     }
 
     @Transactional
-    public Compra confirmarRecepcion(Long compraId) {
+    public Compra confirmarRecepcion(UUID compraId) {
         Compra compra = compraRepository.findById(compraId)
                 .orElseThrow(() -> new ResourceNotFoundException("Compra no encontrada"));
 
@@ -171,8 +172,8 @@ public class CompraService {
                 if (totalPiezas.compareTo(BigDecimal.ZERO) > 0) {
                     BigDecimal unitario = detalle.getCostoTotalRenglon().divide(totalPiezas, 4, RoundingMode.HALF_UP);
                     detalle.setCostoUnitarioCalculado(unitario);
-
-                    entradasBatch.add(new ProductoService.EntradaCompraInfo(detalle.getProducto(), totalPiezas.intValue(), unitario));
+                    Producto p = productoRepository.findById(detalle.getProductoId()).orElseThrow();
+                    entradasBatch.add(new ProductoService.EntradaCompraInfo(p, totalPiezas.intValue(), unitario));
                 }
                 totalReal = totalReal.add(detalle.getCostoTotalRenglon());
             }

@@ -15,16 +15,23 @@ import com.diegoperalta.pos.modules.configuracion.application.ConfiguracionServi
 import com.diegoperalta.pos.modules.venta.domain.DetalleVenta;
 import com.diegoperalta.pos.modules.venta.domain.Venta;
 import com.diegoperalta.pos.modules.venta.infrastructure.VentaRepository;
+import com.diegoperalta.pos.modules.cliente.infrastructure.ClienteRepository;
+import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
+import com.diegoperalta.pos.modules.inventario.infrastructure.ProductoRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class TicketService {
-    
     private final VentaRepository ventaRepository;
 
-    
     private final ConfiguracionService configService;
+    
+    private final UsuarioRepository usuarioRepository;
+    
+    private final ClienteRepository clienteRepository;
+    
+    private final ProductoRepository productoRepository;
 
     @Value("${app.business.time-zone:UTC}")
     private String businessTimeZone;
@@ -50,20 +57,27 @@ public class TicketService {
         if (config.containsKey("DIRECCION")) {
             tb.centrar(config.get("DIRECCION"));
         }
+        String nombreUsuario = venta.getUsuarioId() != null 
+            ? usuarioRepository.findById(venta.getUsuarioId()).map(u -> u.getUsername()).orElse("Cajero") : "Cajero";
+        String nombreCliente = venta.getClienteId() != null
+            ? clienteRepository.findById(venta.getClienteId()).map(c -> c.getNombre()).orElse("Publico en General") : "Publico en General";
+
         tb.centrar("RFC: " + config.getOrDefault("RFC", "XAXX010101000"))
           .saltoDeLinea()
           .texto("Folio: ").texto(venta.getFolio()).saltoDeLinea()
           .texto("Fecha: ").texto(fechaFormateada).saltoDeLinea()
-          .texto("Cajero: ").texto(venta.getUsuario().getUsername()).saltoDeLinea()
-          .texto("Cliente: ").texto(venta.getCliente().getNombre()).saltoDeLinea()
+          .texto("Cajero: ").texto(nombreUsuario).saltoDeLinea()
+          .texto("Cliente: ").texto(nombreCliente).saltoDeLinea()
           .lineaDivisoria()
           .texto("CANT  PRODUCTO           TOTAL\n")
           .lineaDivisoria();
 
         for (DetalleVenta detalle : venta.getDetalles()) {
+            String nombreProducto = detalle.getProductoId() != null
+                ? productoRepository.findById(detalle.getProductoId()).map(p -> p.getNombre()).orElse("Producto") : "Producto";
             tb.itemLista(
                 detalle.getCantidad().toString(), 
-                detalle.getProducto().getNombre(), 
+                nombreProducto, 
                 String.format("%.2f", detalle.getSubtotal())
             );
         }

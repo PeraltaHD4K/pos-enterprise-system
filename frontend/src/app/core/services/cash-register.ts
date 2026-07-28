@@ -4,7 +4,7 @@ import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
 
 export interface SesionCaja {
-  id: number;
+  id: string;
   usuario: any;
   fechaApertura: string;
   fechaCierre?: string;
@@ -70,7 +70,7 @@ export class CashRegister {
     return this.http.get<any[]>(`${this.apiUrl}/movimientos`);
   }
 
-  obtenerTicketCierre(idSesion: number): Observable<string> {
+  obtenerTicketCierre(idSesion: string): Observable<string> {
     return this.http.get(`${this.apiUrl}/ticket-cierre/${idSesion}`, { responseType: 'text' });
   }
 }

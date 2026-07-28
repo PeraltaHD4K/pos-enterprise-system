@@ -26,19 +26,19 @@ export class CustomerForm implements OnInit {
   });
 
   isEditMode = signal(false); // Signal para controlar UI
-  clientId: number | null = null;
+  clientId: string | null = null;
   isLoading = signal(false);
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEditMode.set(true);
-      this.clientId = Number(id);
+      this.clientId = id;
       this.cargarDatos(this.clientId);
     }
   }
 
-  cargarDatos(id: number) {
+  cargarDatos(id: string) {
     this.isLoading.set(true);
     this.form.disable(); // Deshabilitar mientras carga
 

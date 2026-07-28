@@ -23,6 +23,7 @@ import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
 import com.diegoperalta.pos.modules.iam.application.ports.CurrentUserProvider;
 import com.diegoperalta.pos.modules.venta.infrastructure.VentaRepository;
+import java.util.UUID;
 
 @ExtendWith(MockitoExtension.class)
 class CajaServiceTest {
@@ -48,12 +49,12 @@ class CajaServiceTest {
     @BeforeEach
     void setUp() {
         usuarioMock = new Usuario();
-        usuarioMock.setId(1L);
+        usuarioMock.setId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         usuarioMock.setUsername("cajero");
 
         sesionAbiertaMock = new SesionCaja();
-        sesionAbiertaMock.setId(5L);
-        sesionAbiertaMock.setUsuario(usuarioMock);
+        sesionAbiertaMock.setId(UUID.fromString("00000000-0000-0000-0000-000000000005"));
+        sesionAbiertaMock.setUsuarioId(usuarioMock.getId());
         sesionAbiertaMock.setSaldoInicial(new BigDecimal("500.00"));
         sesionAbiertaMock.setEstado("ABIERTA");
     }
@@ -66,7 +67,7 @@ class CajaServiceTest {
 
         // --- STUBBING ---
         when(userProvider.getCurrentUserDetails()).thenReturn(usuarioMock);
-        when(sesionCajaRepository.findByUsuarioAndEstado(usuarioMock, "ABIERTA"))
+        when(sesionCajaRepository.findByUsuarioIdAndEstado(usuarioMock.getId(), "ABIERTA"))
                 .thenReturn(Optional.of(sesionAbiertaMock));
 
         // Simulamos VENTAS por $200
@@ -99,7 +100,7 @@ class CajaServiceTest {
 
         when(userProvider.getCurrentUserDetails()).thenReturn(usuarioMock);
 
-        when(sesionCajaRepository.findByUsuarioAndEstado(usuarioMock, "ABIERTA"))
+        when(sesionCajaRepository.findByUsuarioIdAndEstado(usuarioMock.getId(), "ABIERTA"))
                 .thenReturn(Optional.empty());
 
         assertThrows(BusinessException.class, () -> cajaService.cerrarCaja(dto));

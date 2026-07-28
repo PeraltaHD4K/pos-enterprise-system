@@ -10,8 +10,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.diegoperalta.pos.modules.inventario.domain.Producto;
+import java.util.UUID;
 
-public interface ProductoRepository extends JpaRepository<Producto, Long> {
+public interface ProductoRepository extends JpaRepository<Producto, UUID> {
     Page<Producto> findByActivoTrue(Pageable pageable);
 
     @Query("SELECT p FROM Producto p JOIN FETCH p.categoria WHERE " +

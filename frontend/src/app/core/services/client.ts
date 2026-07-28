@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface Cliente {
-  id: number;
+  id: string;
   nombre: string;
   telefono?: string;
   email?: string;
@@ -32,7 +32,7 @@ export class Client {
     return this.http.get<Cliente[]>(this.apiUrl);
   }
 
-  getById(id: number): Observable<Cliente> {
+  getById(id: string): Observable<Cliente> {
     return this.http.get<Cliente>(`${this.apiUrl}/${id}`);
   }
 
@@ -40,7 +40,7 @@ export class Client {
     return this.http.post<Cliente>(this.apiUrl, client);
   }
 
-  update(id: number, client: ClienteDTO): Observable<Cliente> {
+  update(id: string, client: ClienteDTO): Observable<Cliente> {
     return this.http.put<Cliente>(`${this.apiUrl}/${id}`, client);
   }
 }

@@ -4,12 +4,12 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface Rol {
-  id: number;
+  id: string;
   nombre: string;
 }
 
 export interface Usuario {
-  id: number;
+  id: string;
   nombreCompleto: string;
   username: string;
   activo: boolean;
@@ -20,13 +20,13 @@ export interface UsuarioRegistro {
   nombreCompleto: string;
   username: string;
   password: string;
-  rolId: number;
+  rolId: string;
 }
 
 export interface UsuarioEdicion {
   nombreCompleto: string;
   username: string;
-  rolId: number;
+  rolId: string;
   password?: string; // Opcional
 }
 
@@ -45,15 +45,15 @@ export class User {
     return this.http.post<Usuario>(this.apiURL, usuario);
   }
 
-  getUsuario(id: number): Observable<Usuario> {
+  getUsuario(id: string): Observable<Usuario> {
     return this.http.get<Usuario>(`${this.apiURL}/${id}`);
   }
 
-  actualizarUsuario(id: number, usuario: UsuarioEdicion): Observable<Usuario> {
+  actualizarUsuario(id: string, usuario: UsuarioEdicion): Observable<Usuario> {
     return this.http.put<Usuario>(`${this.apiURL}/${id}`, usuario);
   }
 
-  toggleEstado(id: number): Observable<void> {
+  toggleEstado(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiURL}/${id}`);
   }
 }

@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
+import java.util.UUID;
 
 @Data
 public class ProductoRegistroDTO {
@@ -33,5 +34,5 @@ public class ProductoRegistroDTO {
     private Integer stockMinimo;
 
     @NotNull(message = "La categoría es obligatoria")
-    private Long categoriaId;
+    private UUID categoriaId;
 }

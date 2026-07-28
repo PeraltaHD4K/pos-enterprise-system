@@ -2,10 +2,11 @@ package com.diegoperalta.pos.modules.inventario.application.dto;
 
 import java.math.BigDecimal;
 import lombok.Data;
+import java.util.UUID;
 
 @Data
 public class ProductoResponseDTO {
-    private Long id;
+    private UUID id;
     private String sku;
     private String codigoBarras;
     private String nombre;
@@ -17,5 +18,5 @@ public class ProductoResponseDTO {
     private Integer stockMinimo;
     private Boolean activo;
     private String categoriaNombre;
-    private Long categoriaId;
+    private UUID categoriaId;
 }

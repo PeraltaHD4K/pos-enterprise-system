@@ -32,11 +32,11 @@ export class StockAdjustment implements OnInit {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.cargarProducto(Number(id));
+      this.cargarProducto(id);
     }
   }
 
-  cargarProducto(id: number) {
+  cargarProducto(id: string) {
     this.productService.getById(id).subscribe({
       next: (data) => {
         this.producto = data;

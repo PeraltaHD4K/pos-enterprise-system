@@ -28,19 +28,19 @@ export interface ProductoTop {
 }
 
 export interface ItemVentaRequest {
-  productoId: number;
+  productoId: string;
   cantidad: number;
 }
 
 export interface VentaRequest {
-  clienteId?: number | null; // Null para venta público general
+  clienteId?: string | null; // Null para venta público general
   metodoPago: 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA';
   montoPagado: number; // Cuánto dinero entregó el cliente
   items: ItemVentaRequest[];
 }
 
 export interface VentaResponse {
-  id: number;
+  id: string;
   folio: string;
   totalVenta: number;
   cambio: number;

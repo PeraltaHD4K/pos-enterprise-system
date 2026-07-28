@@ -37,7 +37,7 @@ export class SupplierList implements OnInit {
     });
   }
 
-  borrar(id: number) {
+  borrar(id: string) {
     if (confirm('¿Estás seguro de eliminar este proveedor?')) {
       this.supplierService.delete(id).subscribe({
         next: () => {

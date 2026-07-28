@@ -16,9 +16,10 @@ import com.diegoperalta.pos.modules.caja.domain.SesionCaja;
 import com.diegoperalta.pos.modules.venta.application.dto.ProductoTopDTO;
 import com.diegoperalta.pos.modules.venta.application.dto.TotalesReporteDTO;
 import com.diegoperalta.pos.modules.venta.domain.Venta;
+import java.util.UUID;
 
 @Repository
-public interface VentaRepository extends JpaRepository<Venta, Long> {
+public interface VentaRepository extends JpaRepository<Venta, UUID> {
         // JPQL: Suma el totalVenta de todas las ventas que pertenezcan a la sesión X
         // COALESCE(..., 0) sirve para que si no hay ventas, devuelva 0 en vez de null
         @Query("SELECT COALESCE(SUM(v.totalVenta), 0) FROM Venta v WHERE v.sesionCaja = :sesion AND v.estado = 'COMPLETADA'")
@@ -37,26 +38,22 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
         BigDecimal sumarVentasOtrosMetodos(@Param("sesion") SesionCaja sesion);
 
         @Query("SELECT v FROM Venta v " +
-                        "JOIN FETCH v.usuario " +
-                        "LEFT JOIN FETCH v.cliente " +
                         "WHERE v.fecha BETWEEN :inicio AND :fin " +
                         "AND v.estado = 'COMPLETADA'")
         List<Venta> buscarVentasEnRango(@Param("inicio") Instant inicio, @Param("fin") Instant fin);
 
         @Query("SELECT v FROM Venta v " +
-                        "JOIN FETCH v.usuario " +
-                        "LEFT JOIN FETCH v.cliente " +
-                        "JOIN FETCH v.detalles d " +
-                        "JOIN FETCH d.producto " +
+                        "LEFT JOIN FETCH v.detalles d " +
                         "WHERE v.id = :id")
-        Optional<Venta> findByIdConDetalles(@Param("id") Long id);
+        Optional<Venta> findByIdConDetalles(@Param("id") UUID id);
 
         @Query("SELECT new com.diegoperalta.pos.modules.venta.application.dto.ProductoTopDTO(" +
-                        "d.producto.nombre, SUM(d.cantidad), SUM(d.subtotal)) " +
+                        "p.nombre, SUM(d.cantidad), SUM(d.subtotal)) " +
                         "FROM DetalleVenta d " +
+                        "JOIN com.diegoperalta.pos.modules.inventario.domain.Producto p ON d.productoId = p.id " +
                         "WHERE d.venta.fecha BETWEEN :inicio AND :fin " +
                         "AND d.venta.estado = 'COMPLETADA' " +
-                        "GROUP BY d.producto.nombre " +
+                        "GROUP BY p.nombre " +
                         "ORDER BY SUM(d.subtotal) DESC")
         List<ProductoTopDTO> encontrarTopProductos(
                         @Param("inicio") Instant inicio,
@@ -77,7 +74,7 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
                         "FROM ventas v " +
                         "JOIN detalle_ventas d ON v.id = d.venta_id " +
                         "WHERE v.fecha BETWEEN :inicio AND :fin AND v.estado = 'COMPLETADA' " +
-                        "GROUP BY to_char(v.fecha AT TIME ZONE :timeZone, :formato) " +
+                        "GROUP BY 1 " +
                         "ORDER BY etiqueta", nativeQuery = true)
         List<Object[]> agruparVentasPorTiempo(
                         @Param("inicio") Instant inicio,
@@ -86,18 +83,13 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
                         @Param("timeZone") String timeZone);
 
         @Query(value = "SELECT v FROM Venta v " +
-                        "JOIN FETCH v.usuario " +
-                        "LEFT JOIN FETCH v.cliente " +
                         "ORDER BY v.fecha DESC", countQuery = "SELECT COUNT(v) FROM Venta v")
         Page<Venta> findAllConRelaciones(Pageable pageable);
 
         @Query("SELECT v FROM Venta v " +
-                        "JOIN FETCH v.usuario " +
-                        "LEFT JOIN FETCH v.cliente " +
-                        "JOIN FETCH v.detalles d " +
-                        "JOIN FETCH d.producto " +
+                        "LEFT JOIN FETCH v.detalles d " +
                         "WHERE v.folio = :folio")
         Optional<Venta> findByFolioConDetalles(@Param("folio") String folio);
 
-        Page<Venta> findByUsuarioIdAndFechaBetweenOrderByFechaDesc(Long usuarioId, Instant inicio, Instant fin, Pageable pageable);
+        Page<Venta> findByUsuarioIdAndFechaBetweenOrderByFechaDesc(UUID usuarioId, Instant inicio, Instant fin, Pageable pageable);
 }

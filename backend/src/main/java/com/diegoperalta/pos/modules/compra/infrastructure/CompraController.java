@@ -18,9 +18,11 @@ import com.diegoperalta.pos.modules.compra.application.dto.CompraResponseDTO;
 import com.diegoperalta.pos.modules.compra.domain.Compra;
 import com.diegoperalta.pos.modules.compra.infrastructure.CompraRepository;
 import java.util.stream.Collectors;
+import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/compras")
@@ -30,8 +32,9 @@ public class CompraController {
     
     private final CompraService compraService;
 
-    
     private final CompraRepository compraRepository;
+    
+    private final UsuarioRepository usuarioRepository;
 
     @PostMapping
     public ResponseEntity<CompraResponseDTO> registrarCompra(@Valid @RequestBody CompraRegistroDTO dto) {
@@ -40,7 +43,7 @@ public class CompraController {
     }
 
     @PostMapping("/confirmar/{id}")
-    public ResponseEntity<CompraResponseDTO> confirmarRecepcion(@PathVariable Long id) {
+    public ResponseEntity<CompraResponseDTO> confirmarRecepcion(@PathVariable UUID id) {
         Compra compraConfirmada = compraService.confirmarRecepcion(id);
         return ResponseEntity.ok(mapToDTO(compraConfirmada));
     }
@@ -51,7 +54,7 @@ public class CompraController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CompraResponseDTO> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<CompraResponseDTO> obtenerPorId(@PathVariable UUID id) {
         return compraRepository.findByIdConDetalles(id)
                 .map(this::mapToDTO)
                 .map(ResponseEntity::ok)
@@ -65,8 +68,9 @@ public class CompraController {
         if (c.getProveedor() != null) {
             dto.setNombreProveedor(c.getProveedor().getEmpresa());
         }
-        if (c.getUsuario() != null) {
-            dto.setNombreUsuario(c.getUsuario().getUsername());
+        if (c.getUsuarioId() != null) {
+            usuarioRepository.findById(c.getUsuarioId())
+                    .ifPresent(u -> dto.setNombreUsuario(u.getUsername()));
         }
         dto.setFechaPedido(c.getFechaPedido());
         dto.setFechaRecepcion(c.getFechaRecepcion());

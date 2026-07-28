@@ -68,7 +68,7 @@ export class PurchaseForm implements OnInit {
         this.form.disable();     // Bloquear cabecera
         this.itemForm.disable(); // Bloquear formulario de items
       }
-      this.cargarCompra(Number(id));
+      this.cargarCompra(id);
     }
   }
 
@@ -76,7 +76,7 @@ export class PurchaseForm implements OnInit {
 
   // Se ejecuta cuando eliges un producto del dropdown
   onProductoChange() {
-    const id = Number(this.itemForm.get('productoId')?.value);
+    const id = this.itemForm.get('productoId')?.value;
 
     // Buscamos el producto completo para tener su 'ultimoCostoCompra'
     this.products$?.subscribe(page => {
@@ -124,7 +124,7 @@ export class PurchaseForm implements OnInit {
 
       if (prod) {
         const nuevoItem = {
-          productoId: Number(productoId),
+          productoId: productoId,
           nombreProducto: prod.nombre,
           sku: prod.sku,
           cantidadPedida: Number(cantidadPedida),
@@ -160,7 +160,7 @@ export class PurchaseForm implements OnInit {
 
   // --- CARGA DE DATOS (MODO VER) ---
 
-  cargarCompra(id: number) {
+  cargarCompra(id: string) {
     this.purchaseService.getById(id).subscribe({
       next: (compra) => {
         // Llenar Cabecera
@@ -210,7 +210,7 @@ export class PurchaseForm implements OnInit {
     // Armamos el JSON final
     const payload: CompraRequest = {
       ...this.form.value,
-      proveedorId: Number(this.form.value.proveedorId),
+      proveedorId: this.form.value.proveedorId,
       items: this.items.map(i => ({
         productoId: i.productoId,
         cantidadPedida: i.cantidadPedida,

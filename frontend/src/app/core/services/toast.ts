@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 
 export interface Toast {
-  id: number;
+  id: string;
   message: string;
   title?: string;
   type: 'success' | 'error' | 'warning' | 'info';
@@ -21,7 +21,7 @@ export class ToastService {
       return;
     }
 
-    const id = this.counter++;
+    const id = (this.counter++).toString();
     const newToast: Toast = { id, message, type, title };
 
     this.toasts.update(current => [...current, newToast]);
@@ -37,7 +37,7 @@ export class ToastService {
   warning(msg: string, title: string = 'Cuidado') { this.show(msg, 'warning', title); }
   info(msg: string, title: string = 'Info') { this.show(msg, 'info', title); }
 
-  remove(id: number) {
+  remove(id: string) {
     this.toasts.update(current => current.filter(t => t.id !== id));
   }
 }

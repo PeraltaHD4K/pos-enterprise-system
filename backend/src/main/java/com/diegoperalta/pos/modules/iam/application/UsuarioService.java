@@ -17,6 +17,7 @@ import com.diegoperalta.pos.modules.iam.domain.Usuario;
 import com.diegoperalta.pos.modules.iam.infrastructure.RolRepository;
 import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -55,7 +56,7 @@ public class UsuarioService {
         return usuarioRepository.findAll().stream().map(this::mapToDTO).toList();
     }
 
-    public UsuarioResponseDTO actualizarUsuario(Long id, UsuarioEdicionDTO dto) {
+    public UsuarioResponseDTO actualizarUsuario(UUID id, UsuarioEdicionDTO dto) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
@@ -83,7 +84,7 @@ public class UsuarioService {
         return mapToDTO(usuarioRepository.save(usuario));
     }
 
-    public void toggleEstadoUsuario(Long id) {
+    public void toggleEstadoUsuario(UUID id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
@@ -91,7 +92,7 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
-    public UsuarioResponseDTO obtenerPorId(Long id) {
+    public UsuarioResponseDTO obtenerPorId(UUID id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
         return mapToDTO(usuario);

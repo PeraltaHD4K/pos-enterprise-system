@@ -12,6 +12,7 @@ import com.diegoperalta.pos.modules.compra.application.dto.ProveedorResponseDTO;
 import com.diegoperalta.pos.modules.compra.domain.Proveedor;
 import com.diegoperalta.pos.modules.compra.infrastructure.ProveedorRepository;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -23,12 +24,12 @@ public class ProveedorService {
         return repository.findByActivoTrue().stream().map(this::mapToDTO).toList();
     }
 
-    public ProveedorResponseDTO obtenerPorId(Long id) {
+    public ProveedorResponseDTO obtenerPorId(UUID id) {
         Proveedor proveedor = obtenerEntidadPorId(id);
         return mapToDTO(proveedor);
     }
 
-    private Proveedor obtenerEntidadPorId(Long id) {
+    private Proveedor obtenerEntidadPorId(UUID id) {
         return repository.findById(id)
                 .filter(Proveedor::isActivo)
                 .orElseThrow(() -> new ResourceNotFoundException("Proveedor no encontrado con ID: " + id));
@@ -43,14 +44,14 @@ public class ProveedorService {
     }
 
     @Transactional
-    public ProveedorResponseDTO actualizar(Long id, ProveedorDTO dto) {
+    public ProveedorResponseDTO actualizar(UUID id, ProveedorDTO dto) {
         Proveedor proveedor = obtenerEntidadPorId(id); // Reusa la lógica de búsqueda segura
         mapDtoToEntity(dto, proveedor);
         return mapToDTO(repository.save(proveedor));
     }
 
     @Transactional
-    public void eliminar(Long id) {
+    public void eliminar(UUID id) {
         Proveedor proveedor = obtenerEntidadPorId(id);
         proveedor.setActivo(false); // Soft Delete
         repository.save(proveedor);

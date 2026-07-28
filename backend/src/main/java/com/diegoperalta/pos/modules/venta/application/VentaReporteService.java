@@ -27,6 +27,8 @@ import com.diegoperalta.pos.modules.venta.application.dto.VentaResumenDTO;
 import com.diegoperalta.pos.modules.venta.domain.DetalleVenta;
 import com.diegoperalta.pos.modules.venta.domain.Venta;
 import com.diegoperalta.pos.modules.venta.infrastructure.VentaRepository;
+import com.diegoperalta.pos.modules.cliente.infrastructure.ClienteRepository;
+import com.diegoperalta.pos.modules.iam.infrastructure.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -35,6 +37,10 @@ public class VentaReporteService {
 
     
     private final VentaRepository ventaRepository;
+    
+    private final ClienteRepository clienteRepository;
+    
+    private final UsuarioRepository usuarioRepository;
 
     @Value("${app.business.time-zone}")
     private String businessTimeZone;
@@ -114,11 +120,13 @@ public class VentaReporteService {
         dto.setFecha(venta.getFecha());
         dto.setTotalVenta(venta.getTotalVenta());
         dto.setEstado(venta.getEstado());
-        if (venta.getCliente() != null) {
-            dto.setNombreCliente(venta.getCliente().getNombre());
+        if (venta.getClienteId() != null) {
+            clienteRepository.findById(venta.getClienteId())
+                    .ifPresent(c -> dto.setNombreCliente(c.getNombre()));
         }
-        if (venta.getUsuario() != null) {
-            dto.setNombreVendedor(venta.getUsuario().getUsername());
+        if (venta.getUsuarioId() != null) {
+            usuarioRepository.findById(venta.getUsuarioId())
+                    .ifPresent(u -> dto.setNombreVendedor(u.getUsername()));
         }
         return dto;
     }

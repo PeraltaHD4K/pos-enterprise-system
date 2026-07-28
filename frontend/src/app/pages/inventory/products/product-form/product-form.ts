@@ -35,7 +35,7 @@ export class ProductForm implements OnInit {
   });
 
   isEditMode = false;
-  currentId: number | null = null;
+  currentId: string | null = null;
   categorias$: Observable<Categoria[]> | undefined; // Observable para llenar el select
 
   ngOnInit(): void {
@@ -46,12 +46,12 @@ export class ProductForm implements OnInit {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEditMode = true;
-      this.currentId = Number(id);
+      this.currentId = id;
       this.cargarDatos(this.currentId);
     }
   }
 
-  cargarDatos(id: number) {
+  cargarDatos(id: string) {
     this.productService.getById(id).subscribe({
       next: (prod) => {
         // Rellenamos el formulario

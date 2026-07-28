@@ -41,7 +41,7 @@ export class CategoryList implements OnInit {
     });
   }
 
-  borrar(id: number) {
+  borrar(id: string) {
     if (confirm('¿Estás seguro de eliminar esta categoría?')) {
       this.categoryService.delete(id).subscribe({
         next: () => {

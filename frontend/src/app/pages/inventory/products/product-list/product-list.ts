@@ -61,7 +61,7 @@ export class ProductList implements OnInit {
     }
   }
 
-  borrar(id: number) {
+  borrar(id: string) {
     if (confirm('¿Estás seguro de eliminar este producto?')) {
       this.productService.delete(id).subscribe({
         next: () => {
